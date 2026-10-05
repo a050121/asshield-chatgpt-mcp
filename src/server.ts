@@ -230,7 +230,7 @@ const httpServer = createServer(async (req, res) => {
   res.end(JSON.stringify({ error: "Not found" }));
 });
 
-httpServer.listen(config.port, () => {
+httpServer.listen(config.port, "0.0.0.0", () => {
   const storeMode = config.useMemoryStore ? "memory (./data/store.json)" : "supabase";
   console.log(`Asshield MCP server listening on http://localhost:${config.port}/mcp`);
   console.log(`Store mode: ${storeMode}`);
