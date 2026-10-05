@@ -9,3 +9,6 @@ services:
     envVars:
       - key: PORT
         value: "8787"
+      # Set in the Render dashboard to the token from the OpenAI plugin portal.
+      - key: OPENAI_APPS_CHALLENGE_TOKEN
+        sync: false

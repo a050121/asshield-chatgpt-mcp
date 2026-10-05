@@ -38,6 +38,15 @@ asshield-chatgpt-mvp/
 │       └── 001_init.sql
 ├── public/
 │   └── quote-widget.html
+├── chatgpt-plugin/
+│   └── asshield-insurance/      # Public ChatGPT/Codex plugin package (ZIP source)
+│       ├── plugin.json
+│       ├── mcp.json
+│       ├── skills/asshield-quote-intake/SKILL.md
+│       └── assets/
+├── docs/                        # Privacy / terms / support page drafts
+├── scripts/build-plugin-zip.sh
+├── SUBMISSION.md                # Directory submission checklist + blockers
 ├── Dockerfile
 ├── render.yaml
 ├── .env.example
@@ -118,9 +127,47 @@ Then use:
 https://YOUR-NGROK-DOMAIN/mcp
 ```
 
-as the MCP URL in ChatGPT Developer Mode.
+as the MCP URL in ChatGPT Developer Mode (private testing only; see "Publishing to the ChatGPT directory" below for the public app).
 
 OpenAI's current quickstart uses the same basic pattern: an MCP server exposed through a public HTTPS `/mcp` endpoint and connected in ChatGPT Developer Mode.
+
+## Publishing to the ChatGPT directory (public app)
+
+Production MCP endpoint: `https://asshield-chatgpt-mcp.onrender.com/mcp` (health: `/health`).
+
+OpenAI now distributes Apps SDK apps as **plugins** in one directory shared by ChatGPT and Codex. The package is in `chatgpt-plugin/asshield-insurance/`:
+
+- `plugin.json`: Agent Plugins manifest. OpenAI listing fields, 5 positive / 3 negative review cases, and publication settings live under `extensions.com.openai`.
+- `mcp.json`: points to the Render MCP URL (`streamable-http`).
+- `skills/asshield-quote-intake/SKILL.md`: onboarding workflow that enforces the "never bound" rule.
+- `assets/`: light and dark logos and composer icons.
+
+Build the upload ZIP:
+
+```bash
+./scripts/build-plugin-zip.sh   # -> dist/asshield-insurance-plugin-1.0.0.zip
+```
+
+Upload it on the Plugins page of the OpenAI Platform Dashboard. See **[SUBMISSION.md](SUBMISSION.md)** for the full checklist and current blockers.
+
+### Published app vs. private Developer Mode MCP
+
+| | Private Developer Mode MCP | Published app (plugin) |
+|---|---|---|
+| Who can use it | Only the account that added it (Developer Mode). Full write-capable MCP is officially Business/Enterprise/Edu; Plus access is inconsistent | Any ChatGPT/Codex user in the listed countries, found by searching the directory |
+| How it's added | ChatGPT → Plugins → + → Create custom MCP server, paste the URL | ZIP upload on platform.openai.com → automated checks → human review → Publish |
+| Identity | None | Verified individual or business (Asshield Insurance) in the Platform org |
+| Required listing material | None | Name, subtitle, description, logo, website/support/privacy/terms URLs, test cases, demo video |
+| Server URL | Any HTTPS URL, tunnels allowed | Stable public HTTPS, domain-verified via `/.well-known/openai-apps-challenge`. Can't change after publication without OpenAI support |
+| Tool metadata | Anything that works | Clear descriptions plus explicit `readOnlyHint` / `destructiveHint` / `openWorldHint` on every tool (added in `src/server.ts`) |
+| Updates | Click Refresh in ChatGPT | Daily automated scan of the MCP server. New or changed tools go live after automated checks. Manifest or skill changes need a new ZIP and review |
+| Policy | Developer's own risk | Must follow OpenAI's plugin guidelines: privacy policy, data minimization, no restricted data, suitable for ages 13+, no ads or upsells |
+
+The MCP server code is the same in both cases. Publishing adds the package, verification, policy pages, and review.
+
+### Domain verification
+
+Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the token shown in the plugin portal. The server then returns it as plain text at `/.well-known/openai-apps-challenge` (404 when unset).
 
 ## MCP tools included
 

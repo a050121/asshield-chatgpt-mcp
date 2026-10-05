@@ -17,7 +17,7 @@ import {
 const app = new McpServer(
   {
     name: "asshield-insurance",
-    version: "0.1.0"
+    version: "0.2.0"
   },
   {
     instructions:
@@ -31,6 +31,11 @@ app.registerTool(
     title: "Start an Asshield quote",
     description:
       "Start a new insurance quote intake for Auto, Home, Auto + Home, or Renters.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       product: z.enum(["auto", "home", "auto_home", "renters"]),
       state: z.string().length(2),
@@ -51,6 +56,11 @@ app.registerTool(
   {
     title: "Save quote contact",
     description: "Save the customer's contact information for an active Asshield quote.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       first_name: z.string().min(1),
@@ -75,6 +85,11 @@ app.registerTool(
     title: "Add driver",
     description:
       "Add a driver to an active auto quote. Do not request or return a driver's license number in this MVP.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       first_name: z.string().min(1),
@@ -98,6 +113,11 @@ app.registerTool(
   {
     title: "Add vehicle",
     description: "Add a vehicle to an active auto quote.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       year: z.number().int().min(1900).max(2100),
@@ -124,6 +144,11 @@ app.registerTool(
     title: "Save current policy",
     description:
       "Save the customer's current carrier, premium, renewal date, and main coverage details.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       carrier: z.string().optional(),
@@ -151,6 +176,11 @@ app.registerTool(
     title: "Save consent",
     description:
       "Record a customer's affirmative consent. Never infer consent; accepted must reflect an explicit user choice.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       consent_type: z.enum(["quote_authorization", "sms", "email"]),
@@ -171,7 +201,12 @@ app.registerTool(
   {
     title: "Check quote completeness",
     description:
-      "Check what information is still needed before a quote can be submitted.",
+      "Read-only check of what information is still needed before a quote intake can be submitted. Does not change any data.",
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid()
     }
@@ -190,7 +225,12 @@ app.registerTool(
   {
     title: "Submit quote request",
     description:
-      "Submit a completed quote intake to Asshield. This does not bind coverage.",
+      "Send a completed quote intake to Asshield Insurance for a licensed agent to review. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time send; it does not bind, issue, or guarantee coverage or a price.",
+    annotations: {
+      readOnlyHint: false,
+      destructiveHint: true,
+      openWorldHint: false
+    },
     inputSchema: {
       quote_id: z.string().uuid(),
       notes: z.string().max(2000).optional()
@@ -212,7 +252,21 @@ const httpServer = createServer(async (req, res) => {
     return;
   }
 
-  if (req.url === "/mcp") {
+  // OpenAI plugin portal domain verification. Set OPENAI_APPS_CHALLENGE_TOKEN
+  // to the exact token shown in the portal; the response is the bare token.
+  if (req.method === "GET" && req.url === "/.well-known/openai-apps-challenge") {
+    const token = process.env.OPENAI_APPS_CHALLENGE_TOKEN?.trim();
+    if (!token) {
+      res.writeHead(404, { "content-type": "text/plain" });
+      res.end("Not configured");
+      return;
+    }
+    res.writeHead(200, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" });
+    res.end(token);
+    return;
+  }
+
+  if (req.url === "/mcp" || req.url?.startsWith("/mcp?")) {
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined
     });
