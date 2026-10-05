@@ -13,6 +13,7 @@ interface StoreData {
   vehicles: Row[];
   current_policies: Row[];
   consents: Row[];
+  activities: Row[];
 }
 
 const EMPTY: StoreData = {
@@ -21,7 +22,8 @@ const EMPTY: StoreData = {
   drivers: [],
   vehicles: [],
   current_policies: [],
-  consents: []
+  consents: [],
+  activities: []
 };
 
 function load(): StoreData {
@@ -35,7 +37,8 @@ function load(): StoreData {
       drivers: parsed.drivers ?? [],
       vehicles: parsed.vehicles ?? [],
       current_policies: parsed.current_policies ?? [],
-      consents: parsed.consents ?? []
+      consents: parsed.consents ?? [],
+      activities: parsed.activities ?? []
     };
   } catch {
     return structuredClone(EMPTY);

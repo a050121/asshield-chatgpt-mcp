@@ -26,6 +26,9 @@ export type LeadSnapshot = {
   vehicles: Record<string, unknown>[];
   current_policies: Record<string, unknown>[];
   consents: Record<string, unknown>[];
+  line_details?: Record<string, unknown>;
+  /** Flat line-specific summary for Zapier/email templates. */
+  details_summary?: string;
 };
 
 export type NotifyResult = {
@@ -104,6 +107,10 @@ function buildTextBody(lead: LeadSnapshot): string {
     lines.push("");
   }
 
+  if (lead.details_summary) {
+    lines.push(`Details summary: ${lead.details_summary}`, "");
+  }
+
   if (lead.notes) {
     lines.push(`Notes: ${lead.notes}`, "");
   }
@@ -131,7 +138,11 @@ async function postWebhook(lead: LeadSnapshot): Promise<NotifyResult["webhook"]>
       body: JSON.stringify({
         event: "quote.submitted",
         received_at: new Date().toISOString(),
-        lead
+        lead,
+        // Flat aliases for Zapier email templates (also on lead.details_summary)
+        details_summary: lead.details_summary ?? "",
+        product: lead.product ?? "",
+        quote_id: lead.quote_id
       })
     });
     if (!res.ok) {

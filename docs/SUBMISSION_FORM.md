@@ -3,7 +3,7 @@
 Copy-paste-ready answers for the Plugins directory upload + review form.
 Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.0.0.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.1.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -14,7 +14,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **App / plugin name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.0.0 |
+| **Version** | 1.1.0 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -25,35 +25,37 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 ### Long description
 
 ```
-Asshield Insurance is an independent insurance agency. This app helps you start a quote request for auto, home, auto + home, or renters insurance right in the conversation.
+Asshield Insurance is an independent insurance agency. This app helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.
 
 What it does:
 - Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)
 - Saves your name and how you prefer to be contacted
-- Adds drivers and vehicles for auto quotes
-- Records your current carrier, premium, renewal date, and main coverages so an agent can compare options
+- For commercial lines, records business profile details (never FEIN/SSN)
+- Adds drivers/riders and vehicles/bikes/units where needed
+- Records boat, golf cart, GL, and workers' comp specialty details
+- Records your current carrier and coverages so an agent can compare options
 - Records your explicit consent before anything is sent
 - Checks what is still missing, then sends the completed request to an Asshield licensed agent
 
-Who it is for: people who want an Asshield agent to prepare an insurance quote for them.
+Who it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.
 
-Limitations: this app collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. A licensed Asshield agent reviews every request and follows up using your preferred contact method. The app never asks for Social Security numbers, driver's license numbers, payment card details, or passwords.
+Limitations: this app collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The app never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.
 ```
 
 ### Capabilities
 
-- Start an insurance quote request
-- Add drivers and vehicles
-- Record current policy details
-- Record explicit contact and quote consent
-- Check quote completeness
-- Send the quote request to a licensed agent
+- Start personal, commercial, and specialty insurance quote requests
+- Save business profile details for commercial lines
+- Add drivers, riders, and vehicles
+- Record boat, golf cart, GL, and workers' comp details
+- Record current policy details and explicit consent
+- Check quote completeness and send to a licensed agent
 
 ### Starter prompts (defaultPrompt)
 
 1. Start an auto insurance quote for me in Kentucky, ZIP 40505.
-2. I want a home and auto bundle quote in Florida.
-3. Help me get a renters insurance quote.
+2. I need a commercial auto quote for my small business in Florida.
+3. Help me get a boat insurance quote in Kentucky.
 
 ### Branding
 
@@ -97,98 +99,61 @@ Limitations: this app collects quote information only. It does not provide rates
 
 ---
 
-## 3. Tools (8) — annotation justifications for the review form
+## 3. Tools — annotation justifications
 
-Use these when the dashboard asks for a justification per annotation. Booleans are set in live `tools/list`.
+All tools set explicit `readOnlyHint` / `destructiveHint` / `openWorldHint` booleans.
 
-### start_quote
+| Tool | RO | DES | OW | Notes |
+|---|---|---|---|---|
+| start_quote | false | false | false | Creates quote when state licensed |
+| save_contact | false | false | false | Additive contact write |
+| save_business_details | false | false | false | Commercial/trucking business profile (no FEIN) |
+| save_line_details | false | false | false | GL / WC / boat / golf cart fields |
+| add_driver | false | false | false | Drivers/riders; no DL number |
+| add_vehicle | false | false | false | Vehicles/bikes/units; VIN optional |
+| save_current_policy | false | false | false | Additive policy snapshot |
+| save_consent | false | false | false | Explicit consent only |
+| get_missing_quote_fields | **true** | false | false | Read-only completeness |
+| submit_quote | false | **true** | false | Irreversible lead send; not a bind |
 
-- **Purpose:** Create a new quote intake for Auto / Home / Auto+Home / Renters when the state is licensed; otherwise return a polite unsupported response without creating a quote.
-- **Inputs:** `product` (enum), `state` (2-letter), `zip` (US ZIP).
-- **readOnlyHint: false** — Creates a persisted quote record when the state is supported.
-- **destructiveHint: false** — Additive create only; does not delete or overwrite other records; unsupported states create nothing.
-- **openWorldHint: false** — Writes only to Asshield’s private quote store, not a public internet surface.
+### Zapier / webhook field to add
 
-### save_contact
+Add **`details_summary`** (string) to the Zapier email template. It is sent both as:
+- `details_summary` (top-level flat alias on the webhook POST)
+- `lead.details_summary`
 
-- **Purpose:** Save name and preferred contact method for an active quote.
-- **Inputs:** `quote_id`, `first_name`, `last_name`; optional `phone`, `email`, `preferred_contact_method`.
-- **readOnlyHint: false** — Persists customer contact and links it to the quote.
-- **destructiveHint: false** — Additive / update of contact fields only.
-- **openWorldHint: false** — Private Asshield store only.
-- **Data note:** Does not collect SSN, driver’s license numbers, payment cards, or passwords.
+It is a single-line summary of business/line-specific intake (commercial, boat, golf cart, motorcycle, trucking, etc.).
 
-### add_driver
+### Restricted data
 
-- **Purpose:** Add a driver to an auto / auto+home quote.
-- **Inputs:** `quote_id`, `first_name`, `last_name`; optional `date_of_birth`, `relationship`, `license_state` (state code only — **not** a license number).
-- **readOnlyHint: false** / **destructiveHint: false** / **openWorldHint: false** — Additive private write.
-- **Data note:** Explicitly rejects collecting driver’s license numbers.
-
-### add_vehicle
-
-- **Purpose:** Add a vehicle to an auto / auto+home quote.
-- **Inputs:** `quote_id`, `year`, `make`, `model`; optional `vin`, `ownership`, `usage`, `annual_mileage`.
-- **readOnlyHint: false** / **destructiveHint: false** / **openWorldHint: false** — Additive private write.
-- **Data note:** VIN optional; no financing account / payment numbers.
-
-### save_current_policy
-
-- **Purpose:** Record current carrier, premium, renewal, limits, deductibles for comparison.
-- **Inputs:** `quote_id` plus optional policy fields.
-- **readOnlyHint: false** / **destructiveHint: false** / **openWorldHint: false** — Additive private write.
-
-### save_consent
-
-- **Purpose:** Record explicit consent (`quote_authorization`, `sms`, or `email`) with `accepted` reflecting the user’s real choice (never inferred).
-- **readOnlyHint: false** / **destructiveHint: false** / **openWorldHint: false** — Additive private write of consent records.
-
-### get_missing_quote_fields
-
-- **Purpose:** Read-only completeness check before submit.
-- **Inputs:** `quote_id`.
-- **readOnlyHint: true** — Does not modify data.
-- **destructiveHint: false** — Read-only tools use false.
-- **openWorldHint: false** — Reads private Asshield quote data only.
-
-### submit_quote
-
-- **Purpose:** One-time handoff of a complete quote request to Asshield for licensed-agent review. Does **not** bind, issue, or guarantee coverage or price.
-- **Inputs:** `quote_id`; optional `notes` (≤2000 chars).
-- **readOnlyHint: false** — Changes quote status to submitted and triggers internal lead notification.
-- **destructiveHint: true** — Irreversible outbound send / status change (cannot un-send the lead alert). ChatGPT should confirm with the user.
-- **openWorldHint: false** — Notification goes to Asshield’s first-party ops inbox / CRM webhook, not a public internet post.
-
----
+Never collect: SSN, FEIN/EIN, driver's license **numbers**, payment cards, passwords, PHI.
 
 ## 4. Positive test cases (exactly 5)
 
 ### P1 — Start quote in a licensed state
 - **Prompt:** Start an auto insurance quote for me in Kentucky, ZIP 40505.
 - **Tools:** `start_quote`
-- **Expected:** `supported: true`, quote created for KY 40505; asks for name/contact next; no price; no claim that coverage is in effect.
+- **Expected:** `supported: true` for KY 40505; ask for contact; no price; not bound.
 
 ### P2 — Out-of-state declined
 - **Prompt:** Start an auto insurance quote for me in California, ZIP 90210.
 - **Tools:** `start_quote`
-- **Expected:** `supported: false`; polite message that Asshield is not licensed in CA; lists licensed states; **no** further write tools; nothing submitted.
+- **Expected:** `supported: false`; list licensed states; no submit.
 
-### P3 — Contact + driver + vehicle
-- **Prompt:** My name is Jordan Test, email jordan.test@example.com, prefer email. Add me as a driver, born 1990-04-12, licensed in KY. I drive a 2021 Toyota Camry that I own and use to commute about 12,000 miles a year.
-- **Tools:** `save_contact`, `add_driver`, `add_vehicle`
-- **Expected:** Saves contact/driver/vehicle; does **not** ask for SSN or driver’s license number.
+### P3 — Commercial auto
+- **Prompt:** Start a commercial auto quote in Florida, ZIP 32548 for Acme Delivery LLC, a courier business with 4 employees, about $400k revenue, 3 cargo vans. My name is Jordan Test, email jordan.test@example.com.
+- **Tools:** `start_quote`, `save_contact`, `save_business_details`
+- **Expected:** Saves business profile without FEIN/SSN; continues intake.
 
-### P4 — Current policy + explicit consent
-- **Prompt:** I'm with State Farm now, paying $780 every 6 months, renewing 2026-12-01, 100/300 limits, $500 deductibles. Yes, I authorize Asshield to prepare a quote and email me.
-- **Tools:** `save_current_policy`, `save_consent`
-- **Expected:** Saves policy; records `quote_authorization` and `email` consent only because the user explicitly agreed.
+### P4 — Boat
+- **Prompt:** I want a boat insurance quote in Kentucky, ZIP 40505. It's a 2018 Sea Ray 24 feet with a 250 HP motor, stored at the marina for pleasure use. I'm Alex Example, phone 859-555-0100.
+- **Tools:** `start_quote`, `save_contact`, `save_line_details`
+- **Expected:** Saves boat year/make/length/HP/storage; no bind.
 
-### P5 — Completeness check, submit, and “am I covered?”
+### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
 - **Tools:** `get_missing_quote_fields`, `submit_quote`
-- **Expected:** Checks missing fields, confirms, submits; states a licensed agent will follow up; **clearly says no coverage is bound / not in effect**.
-
----
+- **Expected:** Submits only if complete; clearly says **no coverage is bound**.
 
 ## 5. Negative test cases (exactly 3)
 
@@ -197,7 +162,7 @@ Use these when the dashboard asks for a justification per annotation. Booleans a
 - **Expected refusal:** Explain the app only starts quote requests; coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy. Do not call `submit_quote` as a bind action.
 
 ### N2 — SSN volunteered
-- **Prompt:** Here's my SSN 123-45-6789, put it on my quote.
+- **Prompt:** Here's my SSN 123-45-6789 and FEIN 12-3456789, put them on my commercial quote.
 - **Expected refusal:** Say government IDs are not needed and must not be stored; do not put the SSN in any tool argument or notes.
 
 ### N3 — Instant price
@@ -225,7 +190,7 @@ Still useful for Josh’s own walkthrough (optional, not for the ZIP):
 ## 7. Release notes
 
 ```
-Initial release: insurance quote intake for auto, home, auto + home, and renters with licensed-state checks (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX), explicit consent capture, completeness check, and handoff to an Asshield licensed agent. Does not bind coverage or return prices in chat.
+Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, and motorcycle quote intake with business/line detail tools, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
 ```
 
 ---
@@ -244,6 +209,9 @@ Initial release: insurance quote intake for auto, home, auto + home, and renters
 ---
 
 ## 9. Ops checklist still on Josh
+
+0. Apply `db/migrations/002_expand_products_and_line_details.sql` in the Supabase SQL Editor for project `fezrvbugwvxiyebefcth` (expands product check + adds `quotes.line_details`). Until applied, the app maps new products onto legacy DB values and stores canonical `product_line` + details in JSON (`line_details` column or `activities` fallback).
+0b. Update Zapier email template to include field **`details_summary`**.
 
 1. Confirm licensed-state list with counsel (already encoded from published terms).
 2. Confirm 7-year retention + limitation-of-liability language (draft banners removed from live pages; substance still needs counsel sign-off).

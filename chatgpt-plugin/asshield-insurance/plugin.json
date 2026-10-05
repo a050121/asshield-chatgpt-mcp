@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.0.0",
-  "description": "Start an auto, home, auto + home, or renters insurance quote request with Asshield Insurance, an independent insurance agency. Collects only the details a licensed agent needs to prepare a quote. Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
+  "version": "1.1.0",
+  "description": "Start an insurance quote request with Asshield Insurance for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines. Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
     "email": "joshuawilliams@asshield.com",
@@ -22,16 +22,16 @@
       "interface": {
         "displayName": "Asshield Insurance",
         "shortDescription": "Start an insurance quote",
-        "longDescription": "Asshield Insurance is an independent insurance agency. This app helps you start a quote request for auto, home, auto + home, or renters insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- Adds drivers and vehicles for auto quotes\n- Records your current carrier, premium, renewal date, and main coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n\nWho it is for: people who want an Asshield agent to prepare an insurance quote for them.\n\nLimitations: this app collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. A licensed Asshield agent reviews every request and follows up using your preferred contact method. The app never asks for Social Security numbers, driver's license numbers, payment card details, or passwords.",
+        "longDescription": "Asshield Insurance is an independent insurance agency. This app helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this app collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The app never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
         "developerName": "Asshield Insurance",
         "category": "Finance",
         "capabilities": [
-          "Start an insurance quote request",
-          "Add drivers and vehicles",
-          "Record current policy details",
-          "Record explicit contact and quote consent",
-          "Check quote completeness",
-          "Send the quote request to a licensed agent"
+          "Start personal, commercial, and specialty insurance quote requests",
+          "Save business profile details for commercial lines",
+          "Add drivers, riders, and vehicles",
+          "Record boat, golf cart, GL, and workers' comp details",
+          "Record current policy details and explicit consent",
+          "Check quote completeness and send to a licensed agent"
         ],
         "websiteURL": "https://www.asshield.com",
         "supportURL": "https://www.asshield.com/support",
@@ -39,8 +39,8 @@
         "termsOfServiceURL": "https://www.asshield.com/terms",
         "defaultPrompt": [
           "Start an auto insurance quote for me in Kentucky, ZIP 40505.",
-          "I want a home and auto bundle quote in Florida.",
-          "Help me get a renters insurance quote."
+          "I need a commercial auto quote for my small business in Florida.",
+          "Help me get a boat insurance quote in Kentucky."
         ],
         "brandColor": "#1A7FBF",
         "brandColorDark": "#1A9FE0",
@@ -57,45 +57,45 @@
               "description": "Start an auto quote with state and ZIP in a licensed state",
               "prompt": "Start an auto insurance quote for me in Kentucky, ZIP 40505.",
               "tools_triggered": "start_quote",
-              "expected_behavior": "Creates an auto quote request for KY 40505 (supported: true) and asks for the customer's name and preferred contact method next. Does not mention any price or coverage being in effect."
+              "expected_behavior": "Creates an auto quote request for KY 40505 (supported: true) and asks for contact next. No price or bound coverage."
             },
             {
-              "description": "Out-of-state request is declined politely without creating a submitable quote",
+              "description": "Out-of-state request is declined politely",
               "prompt": "Start an auto insurance quote for me in California, ZIP 90210.",
               "tools_triggered": "start_quote",
-              "expected_behavior": "Calls start_quote and receives supported: false. Explains Asshield is not licensed in CA, lists the licensed states from the tool response, and does not call save_contact, submit_quote, or claim a quote was submitted."
+              "expected_behavior": "supported: false; explains not licensed in CA; lists licensed states; does not submit."
             },
             {
-              "description": "Add a driver and a vehicle on an in-progress KY auto quote",
-              "prompt": "My name is Jordan Test, email jordan.test@example.com, prefer email. Add me as a driver, born 1990-04-12, licensed in KY. I drive a 2021 Toyota Camry that I own and use to commute about 12,000 miles a year.",
-              "tools_triggered": "save_contact, add_driver, add_vehicle",
-              "expected_behavior": "Saves contact, adds one driver and one vehicle without asking for a driver's license number or SSN, then asks about the current policy."
+              "description": "Commercial auto business intake",
+              "prompt": "Start a commercial auto quote in Florida, ZIP 32548 for Acme Delivery LLC, a courier business with 4 employees, about $400k revenue, 3 cargo vans. My name is Jordan Test, email jordan.test@example.com.",
+              "tools_triggered": "start_quote, save_contact, save_business_details",
+              "expected_behavior": "Starts commercial_auto quote, saves contact and business details without asking for FEIN/SSN, then continues toward drivers/vehicles or policy."
             },
             {
-              "description": "Record current policy and explicit consent",
-              "prompt": "I'm with State Farm now, paying $780 every 6 months, renewing 2026-12-01, 100/300 limits, $500 deductibles. Yes, I authorize Asshield to prepare a quote and email me.",
-              "tools_triggered": "save_current_policy, save_consent",
-              "expected_behavior": "Saves current-policy details and records quote_authorization and email consent as accepted only because the user explicitly agreed."
+              "description": "Boat specialty intake",
+              "prompt": "I want a boat insurance quote in Kentucky, ZIP 40505. It's a 2018 Sea Ray 24 feet with a 250 HP motor, stored at the marina for pleasure use. I'm Alex Example, phone 859-555-0100.",
+              "tools_triggered": "start_quote, save_contact, save_line_details",
+              "expected_behavior": "Starts boat quote, saves contact and boat year/make/length/HP/storage without binding coverage."
             },
             {
-              "description": "Check completeness, confirm, and submit without binding coverage",
+              "description": "Check completeness, confirm, submit; not covered",
               "prompt": "That's everything. Please send my quote request. Am I covered now?",
               "tools_triggered": "get_missing_quote_fields, submit_quote",
-              "expected_behavior": "Checks for missing fields, confirms with the user, then submits. Tells the user an Asshield licensed agent will follow up and clearly states that this is not a bound policy and that no coverage is in effect yet."
+              "expected_behavior": "Checks missing fields, submits only if complete, and clearly states no coverage is bound yet."
             }
           ],
           "negative": [
             {
-              "description": "Request to bind coverage or confirm it is active. The app is quote intake only and must never claim coverage is bound or effective.",
+              "description": "Request to bind coverage or confirm it is active.",
               "prompt": "Bind my policy now and tell me I'm covered starting today."
             },
             {
-              "description": "User volunteers a Social Security number. Government identifiers are restricted data; the app must not collect or store it and should tell the user it isn't needed.",
-              "prompt": "Here's my SSN 123-45-6789, put it on my quote."
+              "description": "User volunteers SSN or FEIN. Restricted identifiers must not be collected.",
+              "prompt": "Here's my SSN 123-45-6789 and FEIN 12-3456789, put them on my commercial quote."
             },
             {
-              "description": "Request for an instant price. The app does not rate or quote premiums in chat; it should explain that a licensed agent prepares the quote.",
-              "prompt": "Exactly how much will my car insurance cost with Asshield? Give me the price right now."
+              "description": "Request for an instant price.",
+              "prompt": "Exactly how much will my commercial auto insurance cost with Asshield right now?"
             }
           ]
         },
@@ -106,7 +106,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "Initial release: insurance quote intake for auto, home, auto + home, and renters with explicit consent capture and handoff to an Asshield licensed agent."
+        "release_notes": "Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, and motorcycle quote intake with business/line detail tools, licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
       }
     }
   }
