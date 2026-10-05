@@ -1,0 +1,218 @@
+# Asshield Insurance — ChatGPT MCP MVP
+
+A starter Node.js + TypeScript MCP server for an Asshield Insurance quote-intake app.
+
+## What this MVP does
+
+- Starts Auto, Home, Auto + Home, and Renters quote sessions
+- Saves customer contact information
+- Adds drivers
+- Adds vehicles
+- Saves current-policy details
+- Records explicit quote/SMS/email consent
+- Checks quote completeness
+- Submits a quote request to Asshield
+- Tracks the lead source as `CHATGPT / ASSHIELD_CHATGPT_APP`
+
+This MVP intentionally **does not bind insurance coverage** and does not include carrier rating credentials.
+
+## Storage modes
+
+**Memory mode (default):** If `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY` is missing, the server uses an in-memory Map store persisted to `./data/store.json`. No database setup is required to run or deploy.
+
+**Supabase mode:** When both Supabase env vars are set, the server uses the Supabase Postgres client instead.
+
+## Project structure
+
+```text
+asshield-chatgpt-mvp/
+├── src/
+│   ├── config.ts
+│   ├── db.ts
+│   ├── memory-store.ts
+│   ├── quote-service.ts
+│   ├── server.ts
+│   └── types.ts
+├── db/
+│   └── migrations/
+│       └── 001_init.sql
+├── public/
+│   └── quote-widget.html
+├── Dockerfile
+├── render.yaml
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── README.md
+```
+
+## 1. Configure environment (optional Supabase)
+
+Copy `.env.example` to `.env`.
+
+```bash
+cp .env.example .env
+```
+
+Minimum for local / memory mode:
+
+```text
+PORT=8787
+```
+
+Optional Supabase (both required to leave memory mode):
+
+```text
+SUPABASE_URL=...
+SUPABASE_SERVICE_ROLE_KEY=...
+```
+
+If using Supabase, create a project, run `db/migrations/001_init.sql` in the SQL editor, then set the Project URL and service-role key. Never expose the service-role key in frontend/browser code.
+
+## 2. Install and run
+
+```bash
+npm install
+npm run dev
+```
+
+Health check:
+
+```text
+http://localhost:8787/health
+```
+
+MCP endpoint:
+
+```text
+http://localhost:8787/mcp
+```
+
+## 3. Deploy (Render)
+
+`render.yaml` defines a web service named `asshield-chatgpt-mcp` on port 8787 with health check `/health`. Or build from the included `Dockerfile` (`node:20-alpine`, exposes 8787).
+
+## 4. Test with MCP Inspector
+
+```bash
+npx @modelcontextprotocol/inspector@latest
+```
+
+Choose Streamable HTTP and connect to:
+
+```text
+http://localhost:8787/mcp
+```
+
+## 5. Connect to ChatGPT during development
+
+Expose the local server through an HTTPS tunnel such as ngrok:
+
+```bash
+ngrok http 8787
+```
+
+Then use:
+
+```text
+https://YOUR-NGROK-DOMAIN/mcp
+```
+
+as the MCP URL in ChatGPT Developer Mode.
+
+OpenAI's current quickstart uses the same basic pattern: an MCP server exposed through a public HTTPS `/mcp` endpoint and connected in ChatGPT Developer Mode.
+
+## MCP tools included
+
+### `start_quote`
+
+Creates a new quote record.
+
+Example intent:
+
+```text
+Start an auto quote in Kentucky, ZIP 40509.
+```
+
+### `save_contact`
+
+Adds the customer to the active quote.
+
+### `add_driver`
+
+Adds a driver. This MVP deliberately does not collect the driver's license number.
+
+### `add_vehicle`
+
+Adds year, make, model, optional VIN, use, ownership, and annual mileage.
+
+### `save_current_policy`
+
+Stores carrier, premium, renewal date, main limits, and deductibles.
+
+### `save_consent`
+
+Records explicit consent. Do not infer consent.
+
+### `get_missing_quote_fields`
+
+Checks whether the minimum intake is complete.
+
+### `submit_quote`
+
+Marks the intake submitted. It never represents the policy as bound or effective.
+
+## Recommended next build steps
+
+1. Add server-side authentication for Asshield staff.
+2. Add phone/email verification for consumers.
+3. Add secure declarations-page upload.
+4. Add document extraction into a staging table.
+5. Require user confirmation before extracted information becomes quote data.
+6. Add CRM webhook integration.
+7. Add EZLynx integration only through an authorized API/workflow.
+8. Add licensed-agent routing by state.
+9. Add abandonment events and follow-up workflows.
+10. Add a richer MCP App UI.
+
+## Security / insurance notes
+
+This is a software starter, not legal/compliance advice.
+
+Before production:
+
+- Encrypt sensitive PII at rest and in transit.
+- Minimize sensitive data returned to the model.
+- Do not return SSNs or full driver's-license values in tool responses.
+- Add audit logging.
+- Add data-retention policies.
+- Add explicit consent for quoting and messaging.
+- Add state/licensing eligibility rules.
+- Review TCPA and insurance privacy requirements with counsel/compliance.
+- Do not state that coverage is active until a carrier/authorized agency workflow confirms binding.
+- Do not scrape carrier portals or automate access that is not contractually/API authorized.
+
+## Suggested phase-2 tools
+
+```text
+upload_policy_document
+analyze_policy_document
+confirm_extracted_policy
+create_crm_lead
+assign_agent
+request_callback
+request_text
+get_quote_status
+```
+
+## Suggested source fields
+
+Every ChatGPT-originated lead should retain:
+
+```text
+source = CHATGPT
+source_detail = ASSHIELD_CHATGPT_APP
+campaign = CHATGPT_QUOTE
+```
+
+This gives you clean conversion reporting later.
