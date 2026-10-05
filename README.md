@@ -144,12 +144,12 @@ OpenAI's current quickstart uses the same basic pattern: an MCP server exposed t
 
 ## Publishing to the ChatGPT directory (public app)
 
-Production MCP endpoint: `https://asshield-chatgpt-mcp.onrender.com/mcp` (health: `/health`).
+Production MCP endpoint: `https://mcp.asshield.com/mcp` (health: `/health`).
 
 OpenAI now distributes Apps SDK apps as **plugins** in one directory shared by ChatGPT and Codex. The package is in `chatgpt-plugin/asshield-insurance/`:
 
 - `plugin.json`: Agent Plugins manifest. OpenAI listing fields, 5 positive / 3 negative review cases, and publication settings live under `extensions.com.openai`.
-- `mcp.json`: points to the Render MCP URL (`streamable-http`).
+- `mcp.json`: points to the production MCP URL at `https://mcp.asshield.com/mcp` (`streamable-http`).
 - `skills/asshield-quote-intake/SKILL.md`: onboarding workflow that enforces the "never bound" rule.
 - `assets/`: light and dark logos and composer icons.
 

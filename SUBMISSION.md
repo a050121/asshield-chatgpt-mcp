@@ -14,7 +14,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 | Item | Path | State |
 |---|---|---|
 | Plugin manifest (listing, review cases, publication) | `chatgpt-plugin/asshield-insurance/plugin.json` | Done. Validates against the Agent Plugins 1.0.0 schema |
-| MCP config → Render URL | `chatgpt-plugin/asshield-insurance/mcp.json` | Done (`https://asshield-chatgpt-mcp.onrender.com/mcp`) |
+| MCP config → Render URL | `chatgpt-plugin/asshield-insurance/mcp.json` | Updated to custom domain (`https://mcp.asshield.com/mcp`); DNS must verify before go-live |
 | Onboarding skill | `chatgpt-plugin/asshield-insurance/skills/asshield-quote-intake/SKILL.md` | Done |
 | Icons/logos (light + dark, square PNG) | `chatgpt-plugin/asshield-insurance/assets/` | Generated from the asshield.com mark. **Josh to approve** |
 | ZIP builder | `scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.0.0.zip` | Done |
@@ -33,7 +33,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
   - Platform **API Playground** → Tools → Add → MCP Server → the Render URL (shows raw request/response logs)
 
 ### 2. MCP server and hosting
-- [ ] **Final hostname (strongly recommended).** Move from `asshield-chatgpt-mcp.onrender.com` to a custom domain such as `mcp.asshield.com` (Render custom domain + DNS CNAME), then update `mcp.json`. Reasons: the URL can't change after publication without support, and public URLs must identify the same publisher.
+- [ ] **Final hostname (in progress).** Render custom domain `mcp.asshield.com` added (unverified). `mcp.json` / docs already point at `https://mcp.asshield.com/mcp`. Still need: DNS CNAME at Netlify DNS, then set Render env `PUBLIC_BASE_URL=https://mcp.asshield.com` after verify. Reasons: the URL can't change after publication without support, and public URLs must identify the same publisher.
 - [ ] **Persistent storage (BLOCKER — ops).** Code supports Supabase when `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set; otherwise memory/`data/store.json` (ephemeral on Render). **Josh:** create a Supabase project, run `db/migrations/001_init.sql`, set both env vars on Render, then redeploy. Steps: `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 - [ ] **Lead delivery (BLOCKER — ops).** Code notifies on `submit_quote` via `CRM_WEBHOOK_URL` and/or Resend/SMTP (`LEAD_NOTIFY_EMAIL`, `RESEND_API_KEY` or `SMTP_*`). **Josh:** configure at least one channel so leads reach `insurancelexky@gmail.com`. See `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.

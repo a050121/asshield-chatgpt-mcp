@@ -96,7 +96,7 @@ Service: `srv-db1tg8ss728c73e2fe7g` (`asshield-chatgpt-mcp`).
 |---|---|---|
 | `SUPABASE_URL` | yes (prod) | Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes (prod) | service_role secret |
-| `PUBLIC_BASE_URL` | already set | `https://asshield-chatgpt-mcp.onrender.com` |
+| `PUBLIC_BASE_URL` | switch after DNS verifies | currently onrender URL → set to `https://mcp.asshield.com` once `mcp.asshield.com` verifies |
 | `CRM_WEBHOOK_URL` | one of notify | preferred |
 | `LEAD_NOTIFY_EMAIL` | for email | `insurancelexky@gmail.com` |
 | `RESEND_API_KEY` | or SMTP | Resend |
@@ -109,7 +109,7 @@ Do **not** redeploy until Supabase URL + service role are set, or the instance s
 ## D. Verify after deploy
 
 ```bash
-curl -sS https://asshield-chatgpt-mcp.onrender.com/health
+curl -sS https://mcp.asshield.com/health
 # expect: "store":"supabase","notifications_configured":true
 ```
 
@@ -126,7 +126,7 @@ curl -X PUT "https://api.render.com/v1/services/srv-db1tg8ss728c73e2fe7g/env-var
   -H "Authorization: Bearer $RENDER_API_KEY" \
   -H "Content-Type: application/json" \
   -d '[
-    {"key":"PUBLIC_BASE_URL","value":"https://asshield-chatgpt-mcp.onrender.com"},
+    {"key":"PUBLIC_BASE_URL","value":"https://mcp.asshield.com"},
     {"key":"NODE_ENV","value":"production"},
     {"key":"SUPABASE_URL","value":"https://XXXX.supabase.co"},
     {"key":"SUPABASE_SERVICE_ROLE_KEY","value":"eyJ..."},
