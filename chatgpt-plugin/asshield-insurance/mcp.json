@@ -3,7 +3,7 @@
   "mcpServers": {
     "asshield-quote-intake": {
       "type": "streamable-http",
-      "url": "https://asshield-chatgpt-mcp.onrender.com/mcp"
+      "url": "https://mcp.asshield.com/mcp"
     }
   }
 }
