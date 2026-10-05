@@ -3,6 +3,11 @@ import { db } from "./db.js";
 import { memoryStore } from "./memory-store.js";
 import { notifyLeadSubmitted, type LeadSnapshot } from "./notify.js";
 import type { QuoteProduct } from "./types.js";
+import {
+  isLicensedState,
+  licensedStatesMessage,
+  LICENSED_STATES
+} from "./licensed-states.js";
 
 function requireDb() {
   if (!db) throw new Error("Supabase client is not configured");
@@ -14,9 +19,26 @@ export async function startQuote(input: {
   state: string;
   zip: string;
 }) {
+  const state = input.state.toUpperCase();
+
+  if (!isLicensedState(state)) {
+    return {
+      supported: false,
+      quote: null,
+      state,
+      zip: input.zip,
+      product: input.product,
+      licensed_states: [...LICENSED_STATES],
+      message:
+        `Asshield Insurance is not currently licensed to write insurance in ${state}. ` +
+        licensedStatesMessage() +
+        " Please contact Asshield if you have questions, or try again with a ZIP in a licensed state. No quote request was submitted."
+    };
+  }
+
   const payload = {
     product: input.product,
-    state: input.state.toUpperCase(),
+    state,
     zip: input.zip,
     source: "CHATGPT",
     source_detail: "ASSHIELD_CHATGPT_APP",
@@ -89,10 +111,20 @@ export async function saveContact(input: {
       completion_percentage: 20
     });
     if (!updated) throw new Error(`Quote not found: ${input.quote_id}`);
+    const quoteRow = memoryStore.getById("quotes", input.quote_id, ["product"]);
+    const product = String(quoteRow?.product ?? "");
+    const next_step =
+      product === "auto" || product === "auto_home" ? "drivers" : "current_policy_or_coverages";
     return {
       quote_id: input.quote_id,
-      customer,
-      next_step: "drivers"
+      customer: {
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        phone: customer.phone,
+        email: customer.email,
+        preferred_contact_method: customer.preferred_contact_method
+      },
+      next_step
     };
   }
 
@@ -115,10 +147,25 @@ export async function saveContact(input: {
 
   if (quoteError) throw quoteError;
 
+  const { data: quoteMeta } = await requireDb()
+    .from("quotes")
+    .select("product")
+    .eq("id", input.quote_id)
+    .single();
+  const product = String(quoteMeta?.product ?? "");
+  const next_step =
+    product === "auto" || product === "auto_home" ? "drivers" : "current_policy_or_coverages";
+
   return {
     quote_id: input.quote_id,
-    customer,
-    next_step: "drivers"
+    customer: {
+      first_name: customer.first_name,
+      last_name: customer.last_name,
+      phone: customer.phone,
+      email: customer.email,
+      preferred_contact_method: customer.preferred_contact_method
+    },
+    next_step
   };
 }
 
@@ -246,8 +293,20 @@ export async function saveCurrentPolicy(input: {
     collision_deductible: input.collision_deductible ?? null
   };
 
+  const policySelect = [
+    "quote_id",
+    "carrier",
+    "current_premium",
+    "premium_frequency",
+    "renewal_date",
+    "bodily_injury_limit",
+    "property_damage_limit",
+    "comp_deductible",
+    "collision_deductible"
+  ];
+
   if (config.useMemoryStore) {
-    const data = memoryStore.insert("current_policies", payload, ["*"]);
+    const data = memoryStore.insert("current_policies", payload, policySelect);
     memoryStore.update("quotes", input.quote_id, { completion_percentage: 75 });
     return { current_policy: data, next_step: "consent" };
   }
@@ -255,7 +314,9 @@ export async function saveCurrentPolicy(input: {
   const { data, error } = await requireDb()
     .from("current_policies")
     .insert(payload)
-    .select("*")
+    .select(
+      "quote_id, carrier, current_premium, premium_frequency, renewal_date, bodily_injury_limit, property_damage_limit, comp_deductible, collision_deductible"
+    )
     .single();
 
   if (error) throw error;
@@ -282,13 +343,19 @@ export async function saveConsent(input: {
 
   if (config.useMemoryStore) {
     const data = memoryStore.insert("consents", payload, selectFields);
-    return { consent: data };
+    return {
+      consent: {
+        quote_id: data.quote_id,
+        consent_type: data.consent_type,
+        accepted: data.accepted
+      }
+    };
   }
 
   const { data, error } = await requireDb()
     .from("consents")
     .insert(payload)
-    .select("id, quote_id, consent_type, accepted, created_at")
+    .select("quote_id, consent_type, accepted")
     .single();
 
   if (error) throw error;
@@ -318,8 +385,8 @@ export async function getMissingFields(quoteId: string) {
 
     const missing: string[] = [];
     if (!quote.customer_id) missing.push("customer_contact");
-    if (drivers.length === 0) missing.push("at_least_one_driver");
     if (quote.product === "auto" || quote.product === "auto_home") {
+      if (drivers.length === 0) missing.push("at_least_one_driver");
       if (vehicles.length === 0) missing.push("at_least_one_vehicle");
     }
     if (policies.length === 0) missing.push("current_policy_or_coverage_preferences");
@@ -349,8 +416,8 @@ export async function getMissingFields(quoteId: string) {
 
   const missing: string[] = [];
   if (!quote.customer_id) missing.push("customer_contact");
-  if ((drivers?.length ?? 0) === 0) missing.push("at_least_one_driver");
   if (quote.product === "auto" || quote.product === "auto_home") {
+    if ((drivers?.length ?? 0) === 0) missing.push("at_least_one_driver");
     if ((vehicles?.length ?? 0) === 0) missing.push("at_least_one_vehicle");
   }
   if ((policies?.length ?? 0) === 0) missing.push("current_policy_or_coverage_preferences");
@@ -509,9 +576,11 @@ export async function submitQuote(input: {
 
   return {
     submitted: true,
-    quote: quoteRow,
-    notify,
+    quote: {
+      id: quoteRow.id,
+      status: quoteRow.status
+    },
     message:
-      "Quote request submitted to Asshield. This is not confirmation of coverage or a bound policy."
+      "Quote request submitted to Asshield. This is not confirmation of coverage or a bound policy. A licensed Asshield agent will follow up using your preferred contact method."
   };
 }

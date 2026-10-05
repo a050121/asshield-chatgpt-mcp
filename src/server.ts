@@ -23,7 +23,7 @@ function createMcpServer(): McpServer {
     },
     {
       instructions:
-        "Help users start and complete insurance quote intake for Asshield Insurance. Never state that coverage is bound or effective. Before submitting a quote, call get_missing_quote_fields. Collect only information needed for the active quote."
+        "Help users start and complete insurance quote intake for Asshield Insurance for Auto, Home, Auto+Home, or Renters. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX); for other states explain Asshield cannot write there and do not submit. Before submitting, call get_missing_quote_fields. Never collect SSN, driver's license numbers, payment cards, or passwords."
     }
   );
 
@@ -32,7 +32,7 @@ function createMcpServer(): McpServer {
     {
       title: "Start an Asshield quote",
       description:
-        "Start a new insurance quote intake for Auto, Home, Auto + Home, or Renters.",
+        "Start a new insurance quote intake for Auto, Home, Auto + Home, or Renters in a state where Asshield is licensed (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). If the state is outside that list, returns a polite unsupported message and does not create a quote. Does not bind coverage or return a price.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -57,7 +57,8 @@ function createMcpServer(): McpServer {
     "save_contact",
     {
       title: "Save quote contact",
-      description: "Save the customer's contact information for an active Asshield quote.",
+      description:
+        "Save the customer's name and preferred contact details for an active Asshield quote. Collect only name plus at least one reachable phone or email. Do not collect SSN, driver's license numbers, payment cards, or passwords.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -114,7 +115,8 @@ function createMcpServer(): McpServer {
     "add_vehicle",
     {
       title: "Add vehicle",
-      description: "Add a vehicle to an active auto quote.",
+      description:
+        "Add a vehicle to an active auto quote (year, make, model; VIN and usage details optional). Do not collect payment or financing account numbers.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -145,7 +147,7 @@ function createMcpServer(): McpServer {
     {
       title: "Save current policy",
       description:
-        "Save the customer's current carrier, premium, renewal date, and main coverage details.",
+        "Save the customer's current carrier, premium, renewal date, and main coverage limits/deductibles for comparison. Optional fields only; skip anything the customer does not know.",
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,

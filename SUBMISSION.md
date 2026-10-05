@@ -37,8 +37,8 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 - [ ] **Persistent storage (BLOCKER — ops).** Code supports Supabase when `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set; otherwise memory/`data/store.json` (ephemeral on Render). **Josh:** create a Supabase project, run `db/migrations/001_init.sql`, set both env vars on Render, then redeploy. Steps: `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 - [ ] **Lead delivery (BLOCKER — ops).** Code notifies on `submit_quote` via `CRM_WEBHOOK_URL` and/or Resend/SMTP (`LEAD_NOTIFY_EMAIL`, `RESEND_API_KEY` or `SMTP_*`). **Josh:** configure at least one channel so leads reach `insurancelexky@gmail.com`. See `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.
-- [ ] **Licensed states only.** `start_quote` accepts any state. Reject or flag states where Asshield isn't licensed so results stay accurate.
-- [ ] **Response minimization.** The guidelines say not to return timestamps or internal IDs unless needed. Trim `created_at` (consent), `customer.id`, `submitted_at`, and `current_policy select *` from tool results. Keep `quote_id`.
+- [x] **Licensed states only.** `start_quote` accepts AL/AR/FL/GA/IN/KY/NC/OH/PA/SC/TN/TX; other states get `supported: false` and no quote record. See `src/licensed-states.ts`.
+- [x] **Response minimization.** Trimmed consent `created_at`/`id`, customer `id`, submit `notify`/`submitted_at`, and narrowed `current_policy` select. Keep `quote_id`.
 - [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all 8 tools.
 - [ ] **Domain verification at submission.** Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the exact portal token, redeploy, and check that `https://<mcp-host>/.well-known/openai-apps-challenge` returns only the token.
 
@@ -49,9 +49,8 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 
 ### 4. Listing URLs (all four are required for MCP review, HTTPS only)
 - [x] Website: `https://www.asshield.com`. Live.
-- [ ] **Privacy policy:** `https://www.asshield.com/privacy` is live but **missing** the ChatGPT app data, retention timelines, user access/deletion controls, and hosting recipients. Publish the addendum in `docs/PRIVACY_CHATGPT_APP_ADDENDUM_DRAFT.md` after counsel review.
-- [ ] **Terms of service:** `https://www.asshield.com/terms` returns **404**. Publish it.
-- [ ] **Support:** `https://www.asshield.com/support` returns **404**. Publish it (draft in `docs/TERMS_AND_SUPPORT_PAGES_DRAFT.md`).
+- [x] **Privacy / terms / support:** live at `/privacy`, `/terms`, `/support` with ChatGPT addendum. Draft/counsel banners removed Oct 5, 2026; counsel should still confirm retention + liability substance.
+- [x] Submission form copy: `docs/SUBMISSION_FORM.md` (also `/workspace/asshield-submission/SUBMISSION_FORM.md`).
 
 ### 5. Branding and listing
 - [ ] Approve the icons in `assets/` (512px logo + 128px composer icon, light and dark). Swap in official files if preferred: square, at least 48px, no larger than 5 MiB.
