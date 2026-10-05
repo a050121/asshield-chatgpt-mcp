@@ -1,6 +1,7 @@
 import { config } from "./config.js";
 import { db } from "./db.js";
 import { memoryStore } from "./memory-store.js";
+import { notifyLeadSubmitted, type LeadSnapshot } from "./notify.js";
 import type { QuoteProduct } from "./types.js";
 
 function requireDb() {
@@ -364,6 +365,84 @@ export async function getMissingFields(quoteId: string) {
   };
 }
 
+export async function loadLeadSnapshot(quoteId: string): Promise<LeadSnapshot> {
+  if (config.useMemoryStore) {
+    const quote = memoryStore.getById("quotes", quoteId);
+    if (!quote) throw new Error(`Quote not found: ${quoteId}`);
+    const customer = quote.customer_id
+      ? memoryStore.getById("customers", String(quote.customer_id))
+      : null;
+    return {
+      quote_id: quoteId,
+      submitted_at: (quote.submitted_at as string | null) ?? null,
+      product: (quote.product as string | null) ?? null,
+      state: (quote.state as string | null) ?? null,
+      zip: (quote.zip as string | null) ?? null,
+      status: (quote.status as string | null) ?? null,
+      notes: (quote.notes as string | null) ?? null,
+      source: String(quote.source ?? "CHATGPT"),
+      source_detail: String(quote.source_detail ?? "ASSHIELD_CHATGPT_APP"),
+      campaign: String(quote.campaign ?? "CHATGPT_QUOTE"),
+      customer: customer,
+      drivers: memoryStore.listByQuoteId("drivers", quoteId),
+      vehicles: memoryStore.listByQuoteId("vehicles", quoteId),
+      current_policies: memoryStore.listByQuoteId("current_policies", quoteId),
+      consents: memoryStore.listByQuoteId("consents", quoteId)
+    };
+  }
+
+  const client = requireDb();
+  const { data: quote, error: quoteError } = await client
+    .from("quotes")
+    .select(
+      "id, submitted_at, product, state, zip, status, notes, source, source_detail, campaign, customer_id"
+    )
+    .eq("id", quoteId)
+    .single();
+  if (quoteError) throw quoteError;
+
+  let customer: Record<string, unknown> | null = null;
+  if (quote.customer_id) {
+    const { data, error } = await client
+      .from("customers")
+      .select("id, first_name, last_name, phone, email, preferred_contact_method")
+      .eq("id", quote.customer_id)
+      .single();
+    if (error) throw error;
+    customer = data as Record<string, unknown>;
+  }
+
+  const [
+    { data: drivers },
+    { data: vehicles },
+    { data: policies },
+    { data: consents }
+  ] = await Promise.all([
+    client.from("drivers").select("*").eq("quote_id", quoteId),
+    client.from("vehicles").select("*").eq("quote_id", quoteId),
+    client.from("current_policies").select("*").eq("quote_id", quoteId),
+    client.from("consents").select("consent_type, accepted, created_at").eq("quote_id", quoteId)
+  ]);
+
+  return {
+    quote_id: quoteId,
+    submitted_at: quote.submitted_at ?? null,
+    product: quote.product ?? null,
+    state: quote.state ?? null,
+    zip: quote.zip ?? null,
+    status: quote.status ?? null,
+    notes: quote.notes ?? null,
+    source: quote.source ?? "CHATGPT",
+    source_detail: quote.source_detail ?? "ASSHIELD_CHATGPT_APP",
+    campaign: quote.campaign ?? "CHATGPT_QUOTE",
+    customer,
+    drivers: (drivers ?? []) as Record<string, unknown>[],
+    vehicles: (vehicles ?? []) as Record<string, unknown>[],
+    current_policies: (policies ?? []) as Record<string, unknown>[],
+    consents: (consents ?? []) as Record<string, unknown>[]
+  };
+}
+
 export async function submitQuote(input: {
   quote_id: string;
   notes?: string;
@@ -384,29 +463,54 @@ export async function submitQuote(input: {
   };
   const selectFields = ["id", "status", "submitted_at"];
 
+  let quoteRow: Record<string, unknown>;
+
   if (config.useMemoryStore) {
     const data = memoryStore.update("quotes", input.quote_id, patch, selectFields);
     if (!data) throw new Error(`Quote not found: ${input.quote_id}`);
-    return {
-      submitted: true,
-      quote: data,
-      message:
-        "Quote request submitted to Asshield. This is not confirmation of coverage or a bound policy."
+    quoteRow = data;
+  } else {
+    const { data, error } = await requireDb()
+      .from("quotes")
+      .update(patch)
+      .eq("id", input.quote_id)
+      .select("id, status, submitted_at")
+      .single();
+
+    if (error) throw error;
+    quoteRow = data as Record<string, unknown>;
+  }
+
+  let notify: Awaited<ReturnType<typeof notifyLeadSubmitted>> | null = null;
+  try {
+    const lead = await loadLeadSnapshot(input.quote_id);
+    notify = await notifyLeadSubmitted(lead);
+
+    if (!config.useMemoryStore) {
+      try {
+        await requireDb()
+          .from("activities")
+          .insert({
+            quote_id: input.quote_id,
+            event_type: "lead_notified",
+            event_data: notify
+          });
+      } catch (activityErr) {
+        console.error("[submit_quote] activity log failed:", activityErr);
+      }
+    }
+  } catch (notifyErr) {
+    console.error("[submit_quote] notify failed:", notifyErr);
+    notify = {
+      webhook: { attempted: false, ok: false, error: "snapshot_or_notify_threw" },
+      email: { attempted: false, ok: false, error: String(notifyErr) }
     };
   }
 
-  const { data, error } = await requireDb()
-    .from("quotes")
-    .update(patch)
-    .eq("id", input.quote_id)
-    .select("id, status, submitted_at")
-    .single();
-
-  if (error) throw error;
-
   return {
     submitted: true,
-    quote: data,
+    quote: quoteRow,
+    notify,
     message:
       "Quote request submitted to Asshield. This is not confirmation of coverage or a bound policy."
   };

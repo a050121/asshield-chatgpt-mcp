@@ -9,6 +9,29 @@ services:
     envVars:
       - key: PORT
         value: "8787"
+      # Set in the Render dashboard (do not commit secrets).
+      # Required for production persistence:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # At least one notify channel:
+      - key: CRM_WEBHOOK_URL
+        sync: false
+      - key: LEAD_NOTIFY_EMAIL
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: LEAD_NOTIFY_FROM
+        sync: false
       # Set in the Render dashboard to the token from the OpenAI plugin portal.
       - key: OPENAI_APPS_CHALLENGE_TOKEN
         sync: false

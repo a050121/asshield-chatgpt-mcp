@@ -13,6 +13,7 @@ import {
   getMissingFields,
   submitQuote
 } from "./quote-service.js";
+import { notificationConfigured } from "./notify.js";
 
 const app = new McpServer(
   {
@@ -248,7 +249,14 @@ app.registerTool(
 const httpServer = createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/health") {
     res.writeHead(200, { "content-type": "application/json" });
-    res.end(JSON.stringify({ ok: true, service: "asshield-insurance-mcp" }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        service: "asshield-insurance-mcp",
+        store: config.useMemoryStore ? "memory" : "supabase",
+        notifications_configured: notificationConfigured()
+      })
+    );
     return;
   }
 
@@ -288,4 +296,5 @@ httpServer.listen(config.port, "0.0.0.0", () => {
   const storeMode = config.useMemoryStore ? "memory (./data/store.json)" : "supabase";
   console.log(`Asshield MCP server listening on http://localhost:${config.port}/mcp`);
   console.log(`Store mode: ${storeMode}`);
+  console.log(`Lead notifications: ${notificationConfigured() ? "configured" : "NOT configured (set CRM_WEBHOOK_URL or email)"}`);
 });

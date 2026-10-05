@@ -22,6 +22,8 @@ This MVP intentionally **does not bind insurance coverage** and does not include
 
 **Supabase mode:** When both Supabase env vars are set, the server uses the Supabase Postgres client instead.
 
+**Lead notifications:** After a successful `submit_quote`, the server posts JSON to `CRM_WEBHOOK_URL` (if set) and/or emails `LEAD_NOTIFY_EMAIL` via Resend or SMTP. Configure at least one channel in production so Asshield receives the lead. Details: `docs/SUPABASE_AND_ALERTS_SETUP.md`.
+
 ## Project structure
 
 ```text
@@ -30,6 +32,7 @@ asshield-chatgpt-mvp/
 │   ├── config.ts
 │   ├── db.ts
 │   ├── memory-store.ts
+│   ├── notify.ts              # CRM webhook + Resend/SMTP on submit
 │   ├── quote-service.ts
 │   ├── server.ts
 │   └── types.ts
@@ -76,7 +79,15 @@ SUPABASE_URL=...
 SUPABASE_SERVICE_ROLE_KEY=...
 ```
 
-If using Supabase, create a project, run `db/migrations/001_init.sql` in the SQL editor, then set the Project URL and service-role key. Never expose the service-role key in frontend/browser code.
+Lead notifications (production — at least one channel):
+
+```text
+CRM_WEBHOOK_URL=https://hooks.example.com/asshield-leads
+LEAD_NOTIFY_EMAIL=insurancelexky@gmail.com
+RESEND_API_KEY=re_...          # or SMTP_HOST/SMTP_USER/SMTP_PASS for Gmail
+```
+
+If using Supabase, create a project, run `db/migrations/001_init.sql` in the SQL editor, then set the Project URL and service-role key. Never expose the service-role key in frontend/browser code. Full ops checklist: `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 
 ## 2. Install and run
 

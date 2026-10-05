@@ -34,8 +34,8 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 
 ### 2. MCP server and hosting
 - [ ] **Final hostname (strongly recommended).** Move from `asshield-chatgpt-mcp.onrender.com` to a custom domain such as `mcp.asshield.com` (Render custom domain + DNS CNAME), then update `mcp.json`. Reasons: the URL can't change after publication without support, and public URLs must identify the same publisher.
-- [ ] **Persistent storage (BLOCKER).** Production currently runs in memory mode (`data/store.json` on Render's ephemeral disk). A redeploy or restart deletes every lead. Set `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` on Render and run `db/migrations/001_init.sql`.
-- [ ] **Lead delivery (BLOCKER).** `submit_quote` only changes a status. No agent is notified. Add CRM webhook or email notification so a submitted request actually reaches Asshield. OpenAI rejects "trial or demo" apps.
+- [ ] **Persistent storage (BLOCKER — ops).** Code supports Supabase when `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set; otherwise memory/`data/store.json` (ephemeral on Render). **Josh:** create a Supabase project, run `db/migrations/001_init.sql`, set both env vars on Render, then redeploy. Steps: `docs/SUPABASE_AND_ALERTS_SETUP.md`.
+- [ ] **Lead delivery (BLOCKER — ops).** Code notifies on `submit_quote` via `CRM_WEBHOOK_URL` and/or Resend/SMTP (`LEAD_NOTIFY_EMAIL`, `RESEND_API_KEY` or `SMTP_*`). **Josh:** configure at least one channel so leads reach `insurancelexky@gmail.com`. See `docs/SUPABASE_AND_ALERTS_SETUP.md`.
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.
 - [ ] **Licensed states only.** `start_quote` accepts any state. Reject or flag states where Asshield isn't licensed so results stay accurate.
 - [ ] **Response minimization.** The guidelines say not to return timestamps or internal IDs unless needed. Trim `created_at` (consent), `customer.id`, `submitted_at`, and `current_policy select *` from tool results. Keep `quote_id`.
