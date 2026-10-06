@@ -175,7 +175,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 
 #### submit_quote
 - **readOnlyHint false:** Changes quote status to submitted and triggers outbound lead notification.
-- **Asshield estimate:** On success, `structuredContent.asshield_estimate` includes estimated starting prices (auto $65/mo per vehicle, homeowners $965/yr, auto+home both; other lines Agent will price this), a proposal outline, and a disclosure that estimates are not quotes. No coverage is bound.
+- **Asshield professional proposal:** On success, `structuredContent.asshield_estimate` is a branded Asshield Insurance proposal (date, reference, customer first name, agent contact) with per-vehicle coverages + $65/mo* each, homeowners $965/yr* when applicable, or Agent will price this for other lines, plus disclosure that estimates are not quotes. No coverage is bound.
 - **destructiveHint true:** Irreversible one-time lead send (cannot un-send the webhook/email); ChatGPT should confirm first. Does **not** bind coverage.
 - **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
 
@@ -233,7 +233,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 ### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
 - **Tools:** `get_missing_quote_fields`, `submit_quote`, `get_agent_contact`
-- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; confirmation shows Asshield **estimated starting price + proposal** with disclaimer (*Estimate only. Not a quote…*); clearly says **no coverage is bound**; may show agent contact. ChatGPT should treat estimates as not quotes.
+- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; confirmation shows Asshield **professional coverage proposal + estimate** (per-vehicle auto lines, homeowners block when applicable, disclosure panel); clearly says **no coverage is bound**; may show agent contact. ChatGPT should treat estimates as not quotes.
 
 ## 5. Negative test cases (exactly 3)
 

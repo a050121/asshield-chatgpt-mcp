@@ -244,32 +244,66 @@
         const ref = S.quote_id || "—";
         const cross = (S.cross_sell||[]).slice(0,3);
         const est = S.asshield_estimate;
-        const priceHtml = est && Array.isArray(est.lines) ? est.lines.map(line => {
-          if (line.kind === "agent_will_price") {
-            return `<p class="estimate-agent-price">${escapeHtml(line.label)}: Agent will price this</p>`;
-          }
-          return `<p class="estimate-price"><span class="amt">${escapeHtml(line.display)}</span></p>`;
-        }).join("") : "";
-        const proposalHtml = est && Array.isArray(est.proposal) && est.proposal.length
-          ? `<div class="proposal-box"><h3>Asshield proposal outline</h3><ul class="proposal-list">${
-              est.proposal.map(it => `<li><span class="pn">${escapeHtml(it.name)}</span><span class="pl">${escapeHtml(it.limit_or_detail)}</span></li>`).join("")
-            }</ul></div>`
-          : "";
         const discLead = (est && est.disclaimer_lead) || "*Estimate only. Not a quote or offer of insurance. No coverage is bound.";
         const discBody = (est && est.disclaimer_body) || "Your actual premium is based on the carrier, insurance score, claims history, driving and property records, and other carrier rating factors once your quote is processed by our agency. It may be higher or lower, and we do not represent that this is the price you will be offered once all reports and quotes are complete.";
-        const estimateHtml = est ? `<div class="estimate-box" id="estimate-box">
-            <p class="estimate-brand">Asshield Insurance</p>
-            <p class="estimate-title">Estimated starting price + proposal</p>
-            ${priceHtml}
+        function covList(items) {
+          if (!items || !items.length) return "";
+          return `<ul class="proposal-cov">${items.map(c => `<li><span class="cn">${escapeHtml(c.name)}</span><span class="cl">${escapeHtml(c.limit_or_detail)}</span></li>`).join("")}</ul>`;
+        }
+        let proposalInner = "";
+        if (est) {
+          const agent = est.agent || {};
+          const meta = [
+            est.proposal_date ? `<span><strong>Date</strong> ${escapeHtml(est.proposal_date)}</span>` : "",
+            (est.quote_reference || ref) ? `<span><strong>Reference</strong> ${escapeHtml(String(est.quote_reference || ref))}</span>` : "",
+            est.customer_first_name ? `<span><strong>Prepared for</strong> ${escapeHtml(est.customer_first_name)}</span>` : "",
+            est.product_label ? `<span><strong>Line</strong> ${escapeHtml(est.product_label)}</span>` : ""
+          ].filter(Boolean).join("");
+          const agentRow = `<div class="proposal-agent">Asshield licensed agents · ${escapeHtml(agent.phone || "859-368-0162")} · ${escapeHtml(agent.email || "quote@asshield.com")} · ${escapeHtml(agent.website || "asshield.com")}</div>`;
+          let sections = "";
+          (est.vehicles || []).forEach((v, i) => {
+            sections += `<div class="proposal-section">
+              <div class="proposal-sec-hd"><strong>Vehicle ${i + 1}</strong><span>${escapeHtml(v.label || "")}</span></div>
+              ${covList(v.coverages)}
+              <p class="estimate-price"><span class="amt">${escapeHtml(v.estimate_display || "")}</span></p>
+            </div>`;
+          });
+          if (est.home) {
+            sections += `<div class="proposal-section">
+              <div class="proposal-sec-hd"><strong>Homeowners</strong><span>Proposed coverages</span></div>
+              ${covList(est.home.coverages)}
+              <p class="estimate-price"><span class="amt">${escapeHtml(est.home.estimate_display || "")}</span></p>
+            </div>`;
+          }
+          if (est.other) {
+            sections += `<div class="proposal-section">
+              <div class="proposal-sec-hd"><strong>${escapeHtml(est.other.label || "Coverage")}</strong><span>Proposed</span></div>
+              ${covList(est.other.coverages)}
+              <p class="estimate-agent-price">${escapeHtml(est.other.pricing_display || "Agent will price this")}</p>
+            </div>`;
+          }
+          const totals = [];
+          if (est.totals?.auto_display) totals.push(`<p class="estimate-total">${escapeHtml(est.totals.auto_display)}</p>`);
+          if (est.totals?.home_display) totals.push(`<p class="estimate-total">${escapeHtml(est.totals.home_display)}</p>`);
+          if (est.totals?.other_display && !est.vehicles?.length && !est.home) totals.push(`<p class="estimate-total">${escapeHtml(est.totals.other_display)}</p>`);
+          proposalInner = `
+            <div class="proposal-letterhead">
+              <div class="proposal-brand">Asshield Insurance</div>
+              <div class="proposal-tag">Professional coverage proposal + estimate</div>
+              <div class="proposal-meta">${meta}</div>
+              ${agentRow}
+            </div>
+            ${sections}
+            <div class="proposal-totals">${totals.join("")}</div>
             <div class="estimate-disclosure" role="note">
               <span class="info-ico" aria-hidden="true">i</span>
               <div class="disc-body">
                 <p class="disc-lead">${escapeHtml(discLead)}</p>
                 <p class="disc-fine">${escapeHtml(discBody)}</p>
               </div>
-            </div>
-            ${proposalHtml}
-          </div>` : "";
+            </div>`;
+        }
+        const estimateHtml = est ? `<div class="estimate-box" id="estimate-box">${proposalInner}</div>` : "";
         root.innerHTML = `<div class="panel">
           <div class="success-hero">
             <div class="success-ring"><svg viewBox="0 0 48 48" fill="none" width="40" height="40">
@@ -780,16 +814,34 @@
       else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; }
       else if (mock==="confirmation") {
         S.phase="confirmation";
+        S.product="auto"; S.state="KY";
         S.asshield_estimate = {
           brand: "Asshield Insurance",
-          title: "Asshield estimate + proposal",
-          lines: [{ product:"auto", label:"Auto", kind:"priced", amount:65, frequency:"month", unit:"per_vehicle",
-            display:"Estimated starting at $65/mo per vehicle · $65/mo for 1 vehicle*", asterisk:true }],
-          proposal: [
-            { name:"Bodily injury liability", limit_or_detail:"100/300 (per person / per accident)" },
-            { name:"Property damage liability", limit_or_detail:"$100,000" },
-            { name:"Comprehensive & collision", limit_or_detail:"Subject to $1,000 deductible" }
-          ],
+          title: "Professional coverage proposal + estimate",
+          kind: "professional_proposal",
+          proposal_date: "2026-10-06",
+          quote_reference: "9936e32f-demo-quote",
+          customer_first_name: "Test",
+          agent: { name:"Asshield licensed agents", phone:"859-368-0162", email:"quote@asshield.com", website:"asshield.com" },
+          product: "auto", product_label: "Auto", state: "KY",
+          vehicles: [{
+            year: 2020, make: "Toyota", model: "Camry", vin_last4: "9186",
+            label: "2020 Toyota Camry (VIN …9186)",
+            coverages: [
+              { name:"Bodily Injury Liability", limit_or_detail:"100/300" },
+              { name:"Property Damage Liability", limit_or_detail:"100" },
+              { name:"Uninsured / Underinsured Motorist", limit_or_detail:"100/300" },
+              { name:"Comprehensive", limit_or_detail:"$500 deductible" },
+              { name:"Collision", limit_or_detail:"$500 deductible" },
+              { name:"Roadside Assistance", limit_or_detail:"Included in proposal" },
+              { name:"Rental Reimbursement", limit_or_detail:"Included in proposal" },
+              { name:"Personal Injury Protection (PIP)", limit_or_detail:"Proposed — state minimum / agent confirm" }
+            ],
+            estimate_monthly: 65,
+            estimate_display: "Estimated starting at $65/mo*"
+          }],
+          home: null, other: null,
+          totals: { auto_monthly: 65, home_annual: null, auto_display: "Auto total — estimated starting at $65/mo* (1 vehicle)", home_display: null, other_display: null },
           disclaimer_lead: "*Estimate only. Not a quote or offer of insurance. No coverage is bound.",
           disclaimer_body: "Your actual premium is based on the carrier, insurance score, claims history, driving and property records, and other carrier rating factors once your quote is processed by our agency. It may be higher or lower, and we do not represent that this is the price you will be offered once all reports and quotes are complete.",
           estimates_are_not_quotes: true, no_coverage_bound: true

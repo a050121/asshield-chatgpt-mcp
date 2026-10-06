@@ -1090,7 +1090,6 @@ export async function submitQuote(input: {
 
   const leadForEstimate = await loadLeadSnapshot(input.quote_id).catch(() => null);
   const product = String(leadForEstimate?.product || "");
-  const vehicleCount = Array.isArray(leadForEstimate?.vehicles) ? leadForEstimate!.vehicles.length : 0;
   let coveragePref: string | null = "medium";
   let deductiblePref: string | null = "medium";
   const notes = String(leadForEstimate?.notes || input.notes || "");
@@ -1105,9 +1104,16 @@ export async function submitQuote(input: {
     if (cm) coveragePref = cm[1];
     if (dm) deductiblePref = dm[1];
   }
+  const customer = (leadForEstimate?.customer || null) as Record<string, unknown> | null;
   const asshield_estimate = buildAsshieldEstimate({
     product: product || "auto",
-    vehicle_count: vehicleCount || 1,
+    state: leadForEstimate?.state ?? null,
+    quote_id: input.quote_id,
+    customer_first_name: customer?.first_name ? String(customer.first_name) : null,
+    vehicles: Array.isArray(leadForEstimate?.vehicles)
+      ? (leadForEstimate!.vehicles as Record<string, unknown>[])
+      : [],
+    line_details: (leadForEstimate?.line_details as Record<string, unknown>) || null,
     coverage_preference: coveragePref,
     deductible_preference: deductiblePref
   });
