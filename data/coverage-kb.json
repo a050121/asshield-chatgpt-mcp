@@ -1,0 +1,228 @@
+{
+  "disclaimer": "General information only — not insurance advice, a quote, or a coverage determination. An Asshield licensed agent will confirm what fits your situation. No coverage is bound by this explanation.",
+  "general_notes": [
+    "Most U.S. states require drivers to carry at least a minimum amount of auto liability insurance; exact limits and rules vary by state.",
+    "Workers' compensation requirements vary by state and often by employee count, industry, and business structure — an agent will confirm what applies.",
+    "Asshield writes personal, commercial, and recreational lines only in licensed states listed on the agent contact card."
+  ],
+  "lines": {
+    "auto": {
+      "id": "auto",
+      "label": "Auto",
+      "group": "personal",
+      "icon": "🚗",
+      "one_liner": "Protect your car and liability on the road.",
+      "covers": [
+        "Liability for injuries or property damage you cause while driving (subject to policy terms)",
+        "Optional physical damage coverages such as collision and comprehensive when selected",
+        "Common add-ons an agent may discuss: roadside assistance, rental reimbursement, uninsured/underinsured motorist"
+      ],
+      "common_add_ons": ["Roadside assistance", "Rental reimbursement", "UM/UIM", "Glass / comprehensive"],
+      "what_to_have_ready": [
+        "State and ZIP where the vehicles are principally garaged",
+        "Names and dates of birth for drivers (no driver's license number needed here)",
+        "Year, make, and model of each vehicle",
+        "Current carrier and approximate premium if you have a policy",
+        "Preferred contact phone or email"
+      ],
+      "cross_sell": ["home", "auto_home", "renters"]
+    },
+    "home": {
+      "id": "home",
+      "label": "Home",
+      "group": "personal",
+      "icon": "🏠",
+      "one_liner": "Help protect your house and belongings.",
+      "covers": [
+        "Dwelling and personal property protection subject to policy terms and limits",
+        "Personal liability for covered incidents at the insured location",
+        "Common topics an agent may discuss: deductible options, replacement cost vs. ACV, scheduled valuables"
+      ],
+      "common_add_ons": ["Scheduled personal property", "Water backup", "Identity fraud expense"],
+      "what_to_have_ready": [
+        "Property state and ZIP",
+        "Rough year built / construction type if known",
+        "Current home carrier and premium if any",
+        "Preferred contact info"
+      ],
+      "cross_sell": ["auto", "auto_home"]
+    },
+    "auto_home": {
+      "id": "auto_home",
+      "label": "Auto + Home",
+      "group": "personal",
+      "icon": "🏡",
+      "one_liner": "Bundle auto and home in one request.",
+      "covers": [
+        "Combines auto and homeowners intake so an agent can look at both together",
+        "Bundling may offer convenience; any discount is determined by carriers, not in this chat"
+      ],
+      "common_add_ons": ["Same as auto and home lines"],
+      "what_to_have_ready": [
+        "Driver and vehicle basics for auto",
+        "Property location basics for home",
+        "Current carriers if any",
+        "Preferred contact info"
+      ],
+      "cross_sell": ["renters", "umbrella"]
+    },
+    "renters": {
+      "id": "renters",
+      "label": "Renters",
+      "group": "personal",
+      "icon": "🔑",
+      "one_liner": "Cover belongings and liability in a rental.",
+      "covers": [
+        "Personal property inside a rented home or apartment (subject to limits)",
+        "Personal liability coverage for covered incidents",
+        "Loss of use / additional living expense topics an agent may discuss"
+      ],
+      "common_add_ons": ["Scheduled valuables", "Identity fraud expense"],
+      "what_to_have_ready": [
+        "Rental state and ZIP",
+        "Rough contents value estimate if known",
+        "Current renters carrier if any",
+        "Preferred contact info"
+      ],
+      "cross_sell": ["auto"]
+    },
+    "motorcycle": {
+      "id": "motorcycle",
+      "label": "Motorcycle",
+      "group": "personal",
+      "icon": "🏍️",
+      "one_liner": "Bike liability and physical damage options.",
+      "covers": [
+        "Liability while operating a motorcycle (subject to policy terms)",
+        "Optional physical damage for the bike when selected",
+        "Add-ons an agent may discuss: accessories, gear, roadside"
+      ],
+      "common_add_ons": ["Accessory coverage", "Roadside", "Gear / apparel"],
+      "what_to_have_ready": [
+        "Rider name and date of birth",
+        "Year, make, and model of the motorcycle",
+        "Garaging state and ZIP",
+        "Current carrier if any"
+      ],
+      "cross_sell": ["auto", "home"]
+    },
+    "commercial_auto": {
+      "id": "commercial_auto",
+      "label": "Commercial Auto",
+      "group": "commercial",
+      "icon": "🚚",
+      "one_liner": "Business vehicles and drivers.",
+      "covers": [
+        "Liability for business-use vehicles subject to policy terms",
+        "Optional physical damage for scheduled units",
+        "Agent may discuss hired/non-owned auto and driver standards"
+      ],
+      "common_add_ons": ["Hired & non-owned auto", "Trailer interchange"],
+      "what_to_have_ready": [
+        "Business name and type of operations",
+        "Business address state and ZIP",
+        "Driver and vehicle lists (no DL numbers in this chat)",
+        "Approximate revenue range and employee count",
+        "Current commercial auto carrier if any"
+      ],
+      "cross_sell": ["commercial_gl", "workers_comp"]
+    },
+    "commercial_gl": {
+      "id": "commercial_gl",
+      "label": "Commercial GL",
+      "group": "commercial",
+      "icon": "🏢",
+      "one_liner": "General liability for your operations.",
+      "covers": [
+        "Third-party bodily injury and property damage arising from covered business operations (subject to terms)",
+        "Agent may discuss products/completed operations and limit options"
+      ],
+      "common_add_ons": ["Additional insured endorsements", "Higher liability limits"],
+      "what_to_have_ready": [
+        "Business name and operations description",
+        "Years in business and employee count",
+        "Desired liability limit range if known",
+        "Business address state/ZIP"
+      ],
+      "cross_sell": ["commercial_auto", "workers_comp"]
+    },
+    "workers_comp": {
+      "id": "workers_comp",
+      "label": "Workers' Comp",
+      "group": "commercial",
+      "icon": "👷",
+      "one_liner": "Employee injury coverage where required.",
+      "covers": [
+        "Helps with medical and wage-related benefits for covered employee injuries subject to state systems and policy terms",
+        "Whether coverage is required depends on state rules, employee count, and business structure — an agent confirms"
+      ],
+      "common_add_ons": ["Employers liability limits discussion"],
+      "what_to_have_ready": [
+        "Business name and type of work",
+        "Approximate annual payroll",
+        "Employees by job type (plain description)",
+        "Business state/ZIP and employee count"
+      ],
+      "cross_sell": ["commercial_gl", "commercial_auto"]
+    },
+    "trucking": {
+      "id": "trucking",
+      "label": "Trucking",
+      "group": "commercial",
+      "icon": "🚛",
+      "one_liner": "For-hire and fleet trucking intake.",
+      "covers": [
+        "Commercial trucking liability and related coverages discussed with an agent",
+        "Intake captures radius, cargo type, and unit counts so the agency can market appropriately"
+      ],
+      "common_add_ons": ["Cargo", "Physical damage", "Trailer interchange"],
+      "what_to_have_ready": [
+        "DOT/MC number if you have one (optional)",
+        "Radius of operation and cargo type",
+        "Power unit and trailer counts",
+        "Driver and unit basics",
+        "Business name and contact"
+      ],
+      "cross_sell": ["commercial_gl", "workers_comp"]
+    },
+    "boat": {
+      "id": "boat",
+      "label": "Boat",
+      "group": "recreational",
+      "icon": "⛵",
+      "one_liner": "Watercraft liability and hull options.",
+      "covers": [
+        "Liability while operating a boat subject to policy terms",
+        "Optional hull/physical damage when selected",
+        "Agent may discuss navigation territory and storage"
+      ],
+      "common_add_ons": ["Trailer coverage", "On-water towing", "Personal property aboard"],
+      "what_to_have_ready": [
+        "Year, make, length, and motor HP",
+        "Where the boat is stored / how it is used",
+        "State and ZIP",
+        "Current boat carrier if any"
+      ],
+      "cross_sell": ["home", "auto"]
+    },
+    "golf_cart": {
+      "id": "golf_cart",
+      "label": "Golf Cart",
+      "group": "recreational",
+      "icon": "⛳",
+      "one_liner": "Cart liability and physical damage.",
+      "covers": [
+        "Liability for golf cart use subject to policy terms",
+        "Optional physical damage; street-legal use may affect options"
+      ],
+      "common_add_ons": ["Physical damage", "On-course vs. street use discussion"],
+      "what_to_have_ready": [
+        "Year and make of the cart",
+        "Whether it is street-legal",
+        "Typical usage (course, community, etc.)",
+        "State and ZIP"
+      ],
+      "cross_sell": ["home", "auto"]
+    }
+  }
+}

@@ -8,12 +8,19 @@ import {
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { config } from "./config.js";
 import { LICENSED_STATES } from "./licensed-states.js";
+import {
+  checklistFor,
+  crossSellFor,
+  getDisclaimer
+} from "./coverage-kb.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "..", "public");
 
 export const QUOTE_CARD_URI = "ui://widget/asshield-quote-card/v1.html";
 export const AGENT_CARD_URI = "ui://widget/asshield-agent-card/v1.html";
+export const OPTIONS_CARD_URI = "ui://widget/asshield-options-card/v1.html";
+export const COVERAGE_CARD_URI = "ui://widget/asshield-coverage-card/v1.html";
 
 function logoDataUri(): string {
   try {
@@ -30,7 +37,6 @@ function loadHtml(name: string): string {
   return readFileSync(join(publicDir, name), "utf8").replaceAll("LOGO_SRC", logoDataUri());
 }
 
-/** CSP for Asshield widgets — no external scripts; logo is inlined as data URI. */
 const uiCsp = {
   connectDomains: [] as string[],
   resourceDomains: [
@@ -45,85 +51,109 @@ const uiResourceMeta = {
   csp: uiCsp
 };
 
+function openaiWidgetMeta(description: string) {
+  return {
+    ui: uiResourceMeta,
+    "openai/widgetCSP": {
+      connect_domains: uiCsp.connectDomains,
+      resource_domains: uiCsp.resourceDomains
+    },
+    "openai/widgetDescription": description
+  };
+}
+
 export function registerWidgets(server: McpServer): void {
-  const quoteHtml = loadHtml("quote-card.html");
-  const agentHtml = loadHtml("agent-card.html");
-
-  registerAppResource(
-    server,
-    "asshield-quote-card",
-    QUOTE_CARD_URI,
+  const specs: { name: string; uri: string; file: string; description: string }[] = [
     {
-      description: "Asshield branded quote intake card (consent, progress, confirmation)",
-      mimeType: RESOURCE_MIME_TYPE,
-      _meta: { ui: uiResourceMeta }
+      name: "asshield-quote-card",
+      uri: QUOTE_CARD_URI,
+      file: "quote-card.html",
+      description: "Asshield guided quote card (consent, stepper form, review, confirmation)"
     },
-    async () => ({
-      contents: [
-        {
-          uri: QUOTE_CARD_URI,
-          mimeType: RESOURCE_MIME_TYPE,
-          text: quoteHtml,
-          _meta: {
-            ui: uiResourceMeta,
-            // ChatGPT Apps SDK compatibility (skybridge-era hosts)
-            "openai/widgetCSP": {
-              connect_domains: uiCsp.connectDomains,
-              resource_domains: uiCsp.resourceDomains
-            },
-            "openai/widgetDescription":
-              "Asshield quote card with privacy consent, progress editing, and confirmation."
-          }
-        }
-      ]
-    })
-  );
-
-  registerAppResource(
-    server,
-    "asshield-agent-card",
-    AGENT_CARD_URI,
     {
-      description: "Asshield agent contact card",
-      mimeType: RESOURCE_MIME_TYPE,
-      _meta: { ui: uiResourceMeta }
+      name: "asshield-agent-card",
+      uri: AGENT_CARD_URI,
+      file: "agent-card.html",
+      description: "Asshield agent contact card"
     },
-    async () => ({
-      contents: [
-        {
-          uri: AGENT_CARD_URI,
-          mimeType: RESOURCE_MIME_TYPE,
-          text: agentHtml,
-          _meta: {
-            ui: uiResourceMeta,
-            "openai/widgetCSP": {
-              connect_domains: uiCsp.connectDomains,
-              resource_domains: uiCsp.resourceDomains
-            },
-            "openai/widgetDescription": "Asshield agent contact and license verification card."
+    {
+      name: "asshield-options-card",
+      uri: OPTIONS_CARD_URI,
+      file: "options-card.html",
+      description: "Asshield insurance line picker (personal / commercial / recreational)"
+    },
+    {
+      name: "asshield-coverage-card",
+      uri: COVERAGE_CARD_URI,
+      file: "coverage-card.html",
+      description: "Asshield coverage overview and what-to-have-ready checklist"
+    }
+  ];
+
+  for (const spec of specs) {
+    const html = loadHtml(spec.file);
+    registerAppResource(
+      server,
+      spec.name,
+      spec.uri,
+      {
+        description: spec.description,
+        mimeType: RESOURCE_MIME_TYPE,
+        _meta: { ui: uiResourceMeta }
+      },
+      async () => ({
+        contents: [
+          {
+            uri: spec.uri,
+            mimeType: RESOURCE_MIME_TYPE,
+            text: html,
+            _meta: openaiWidgetMeta(spec.description)
           }
-        }
-      ]
-    })
-  );
+        ]
+      })
+    );
+  }
+}
+
+function toolMeta(uri: string, invoking: string, invoked: string) {
+  return {
+    ui: { resourceUri: uri },
+    "openai/outputTemplate": uri,
+    "openai/toolInvocation/invoking": invoking,
+    "openai/toolInvocation/invoked": invoked
+  };
 }
 
 export function quoteCardMeta() {
-  return {
-    ui: { resourceUri: QUOTE_CARD_URI },
-    "openai/outputTemplate": QUOTE_CARD_URI,
-    "openai/toolInvocation/invoking": "Updating Asshield quote card…",
-    "openai/toolInvocation/invoked": "Asshield quote card ready."
-  };
+  return toolMeta(
+    QUOTE_CARD_URI,
+    "Updating Asshield quote card…",
+    "Asshield quote card ready."
+  );
 }
 
 export function agentCardMeta() {
-  return {
-    ui: { resourceUri: AGENT_CARD_URI },
-    "openai/outputTemplate": AGENT_CARD_URI,
-    "openai/toolInvocation/invoking": "Loading Asshield agent contact…",
-    "openai/toolInvocation/invoked": "Asshield agent contact ready."
-  };
+  return toolMeta(
+    AGENT_CARD_URI,
+    "Loading Asshield agent contact…",
+    "Asshield agent contact ready."
+  );
+}
+
+export function optionsCardMeta() {
+  return toolMeta(
+    OPTIONS_CARD_URI,
+    "Loading Asshield insurance options…",
+    "Asshield insurance options ready."
+  );
+}
+
+export function coverageCardMeta() {
+  return toolMeta(
+    COVERAGE_CARD_URI,
+    "Loading coverage overview…",
+    "Coverage overview ready."
+  );
 }
 
 export function agentContactPayload() {
@@ -136,6 +166,8 @@ export function agentContactPayload() {
     phone_tel: config.agentPhoneTel,
     email: config.agentEmail,
     address: config.agentAddress,
+    street: config.agentStreet,
+    office_city_state_zip: config.officeCityStateZip || undefined,
     website: config.agencyWebsite,
     privacy_url: config.privacyUrl,
     licensed_states: [...LICENSED_STATES],
@@ -164,6 +196,10 @@ export function withQuoteWidget(
   const state =
     (result.state as string | undefined) || (quote?.state as string | undefined);
   const zip = (result.zip as string | undefined) || (quote?.zip as string | undefined);
+  const checklist = product ? checklistFor(product) : [];
+  const cross = product
+    ? crossSellFor(product).map((l) => ({ id: l.id, label: l.label, icon: l.icon }))
+    : [];
 
   const widget: Record<string, unknown> = {
     kind: "quote_card",
@@ -174,18 +210,23 @@ export function withQuoteWidget(
     state,
     zip,
     missing: (result.missing as string[] | undefined) || [],
-    fields: {
-      state,
-      zip,
-      product
-    },
+    checklist,
+    what_to_have_ready: checklist,
+    fields: { state, zip, product },
     message: result.message,
+    privacy_url: config.privacyUrl,
     no_coverage_bound: true,
+    callback_sla: config.callbackSlaText,
+    cross_sell: cross,
+    disclaimer: getDisclaimer(),
     agent: phase === "confirmation" ? agentContactPayload() : undefined
   };
 
   return {
     ...result,
+    what_to_have_ready: checklist,
+    callback_sla: config.callbackSlaText,
+    cross_sell: cross,
     widget
   };
 }

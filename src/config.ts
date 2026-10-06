@@ -9,6 +9,14 @@ const supabaseUrl = optional("SUPABASE_URL");
 const supabaseServiceRoleKey = optional("SUPABASE_SERVICE_ROLE_KEY");
 const useMemoryStore = !supabaseUrl || !supabaseServiceRoleKey;
 
+/** Street line only by default; city/ZIP appended when OFFICE_CITY_STATE_ZIP is set. */
+const agentStreet = process.env.AGENT_STREET ?? "2240 Executive Dr Ste 103";
+/** Optional city/state/ZIP (e.g. "Lexington, KY 40505") — omit until Josh confirms. */
+const officeCityStateZip = (process.env.OFFICE_CITY_STATE_ZIP ?? "").trim();
+const agentAddress = officeCityStateZip
+  ? `${agentStreet}, ${officeCityStateZip}`
+  : agentStreet;
+
 export const config = {
   port: Number(process.env.PORT ?? 8787),
   supabaseUrl,
@@ -35,10 +43,14 @@ export const config = {
   agentEmail: process.env.AGENT_EMAIL ?? "joshuawilliams@asshield.com",
   agentPhone: process.env.AGENT_PHONE ?? "859-368-0162",
   agentPhoneTel: process.env.AGENT_PHONE_TEL ?? "+18593680162",
-  agentAddress:
-    process.env.AGENT_ADDRESS ?? "2240 Executive Dr Ste 103, Lexington, KY 40505",
+  agentStreet,
+  officeCityStateZip,
+  agentAddress,
   agencyWebsite: process.env.AGENCY_WEBSITE ?? "https://www.asshield.com",
   privacyUrl: process.env.PRIVACY_URL ?? "https://www.asshield.com/privacy",
   naicLookupUrl:
-    process.env.NAIC_LOOKUP_URL ?? "https://content.naic.org/state-insurance-departments"
+    process.env.NAIC_LOOKUP_URL ?? "https://content.naic.org/state-insurance-departments",
+  /** Shown on confirmation timeline; keep soft unless Josh sets a firmer SLA. */
+  callbackSlaText:
+    process.env.CALLBACK_SLA_TEXT ?? "An agent will reach out soon"
 };

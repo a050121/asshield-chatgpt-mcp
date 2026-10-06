@@ -2,7 +2,7 @@
 
 Status as of **Oct 5, 2026**.
 
-**Do not upload 1.1.1 for final review:** `review.demo_recording_url` is still a placeholder. The listing is **the Asshield Insurance plugin** (it contains an MCP app). Researched against OpenAI's official docs (links at the bottom).
+**Do not upload 1.2.0 for final review:** `review.demo_recording_url` is still a placeholder. The listing is **the Asshield Insurance plugin** (it contains an MCP app). Researched against OpenAI's official docs (links at the bottom).
 
 ## What changed at OpenAI (read this first)
 
@@ -19,7 +19,7 @@ Status as of **Oct 5, 2026**.
 | MCP config → Render URL | `chatgpt-plugin/asshield-insurance/mcp.json` | Updated to custom domain (`https://mcp.asshield.com/mcp`); DNS must verify before go-live |
 | Onboarding skill | `chatgpt-plugin/asshield-insurance/skills/asshield-quote-intake/SKILL.md` | Done |
 | Icons/logos (light + dark, square PNG) | `chatgpt-plugin/asshield-insurance/assets/` | Generated from the asshield.com mark. **Josh to approve** |
-| ZIP builder | `scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.1.1.zip` | Done |
+| ZIP builder | `scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.2.0.zip` | Done |
 | Tool annotations (`readOnlyHint` / `destructiveHint` / `openWorldHint`) | `src/server.ts` | Done. Required by the guidelines |
 | Domain verification endpoint | `GET /.well-known/openai-apps-challenge` (env `OPENAI_APPS_CHALLENGE_TOKEN`) | Code done. Token gets set at submission time |
 | Privacy addendum draft | `docs/PRIVACY_CHATGPT_APP_ADDENDUM_DRAFT.md` | Draft. Needs publishing |
@@ -41,7 +41,7 @@ Status as of **Oct 5, 2026**.
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.
 - [x] **Licensed states only.** `start_quote` accepts AL/AR/FL/GA/IN/KY/NC/OH/PA/SC/TN/TX; other states get `supported: false` and no quote record. See `src/licensed-states.ts`.
 - [x] **Response minimization.** Trimmed consent `created_at`/`id`, customer `id`, submit `notify`/`submitted_at`, and narrowed `current_policy` select. Keep `quote_id`.
-- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all **11 tools** (including `get_agent_contact` + widget `_meta`).
+- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all **13 tools** (including `get_agent_contact` + widget `_meta`).
 - [ ] **Domain verification at submission.** Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the exact portal token, redeploy, and check that `https://<mcp-host>/.well-known/openai-apps-challenge` returns only the token.
 
 ### 3. Auth / OAuth
@@ -58,13 +58,13 @@ Status as of **Oct 5, 2026**.
 - [ ] Approve the icons in `assets/` (512px logo + 128px composer icon, light and dark). Swap in official files if preferred: square, at least 48px, no larger than 5 MiB.
 - [ ] Display name "Asshield Insurance". Subtitle "Start an insurance quote" (30 character limit). Category "Finance". Confirm the category exists in the dashboard picker.
 - [ ] **Review risk: the brand name.** Plugins must suit general audiences, including ages 13–17. A reviewer may question the name. Be ready to explain that it's a trademarked, state-licensed agency name (FL #L120146, KY #867084).
-- [ ] Screenshots: Custom Apps SDK widgets are present. If the portal requests screenshots, provide widget screenshots from `/workspace/asshield-submission/screens/` (consent, progress, confirmation, agent card; light/dark).
+- [ ] Screenshots: Custom Apps SDK widgets are present. If the portal requests screenshots, provide widget screenshots from `/workspace/asshield-submission/screens/v2/` (options, coverage, guided steps, confirmation timeline, agent; light/dark).
 - [ ] No pricing, discounts, or comparative claims in the listing (already compliant). No Lexington emphasis (compliant).
 
 ### 6. Review materials
 - [x] 5 positive and 3 negative test cases in `plugin.json` (imported automatically from the ZIP).
 - [ ] **Run all 5 positive + 3 negative test cases** against the production server before submitting. Correct `expected_behavior` if the results differ.
-- [ ] **Demo video URL (OpenAI hard blocker).** Record a walkthrough of the test cases and host it unlisted (YouTube/Loom). Add it as `review.demo_recording_url` in `plugin.json` or enter it in Review details. Until then, do not upload 1.1.1 for final review.
+- [ ] **Demo video URL (OpenAI hard blocker).** Record a walkthrough of the test cases and host it unlisted (YouTube/Loom). Add it as `review.demo_recording_url` in `plugin.json` or enter it in Review details. Until then, do not upload 1.2.0 for final review.
 - [ ] Release notes: done (`publication.release_notes`).
 - [ ] Countries: `["US"]`.
 
@@ -77,7 +77,7 @@ Status as of **Oct 5, 2026**.
 - No ads, no upsells, no checkout (`commerce: false`).
 
 ### 8. Submit
-1. `./scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.1.1.zip`
+1. `./scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.2.0.zip`
 2. Platform Dashboard → **Plugins** → *Upload new or existing plugin* → pick the verified identity → upload the ZIP.
 3. **Metadata & Skills**: fix any findings, then re-upload a corrected ZIP if needed.
 4. **MCPs** → Connect → URL, Authentication: none → domain challenge (step 2 above) → wait for the tool scan → fix issues → Rescan.

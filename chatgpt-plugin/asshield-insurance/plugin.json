@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.1.1",
-  "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines using 11 tools (quote intake + agent contact, with Apps SDK widgets). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
+  "version": "1.2.0",
+  "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal, commercial, and specialty lines using 13 tools with Apps SDK widgets (options picker, coverage Q&A, guided quote card, agent contact). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
     "email": "joshuawilliams@asshield.com",
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "Asshield Insurance",
         "shortDescription": "Start an insurance quote",
-        "longDescription": "Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n- Shows Asshield agent contact details (and a branded quote card with privacy consent in ChatGPT)\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
+        "longDescription": "Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n- Shows Asshield agent contact details and branded widgets (options picker, coverage Q&A, guided quote card)\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
         "developerName": "Asshield Insurance",
         "category": "Finance",
         "capabilities": [
@@ -32,16 +32,18 @@
           "Record boat, golf cart, GL, and workers' comp details",
           "Record current policy details and explicit consent",
           "Check quote completeness and send to a licensed agent",
-          "Show Asshield agent contact card (phone, email, office, licensed states)"
+          "Show Asshield agent contact card (phone, email, office, licensed states)",
+          "Browse insurance line options and general coverage Q&A (not advice)",
+          "Guided multi-step quote card with what-to-have-ready checklists"
         ],
         "websiteURL": "https://www.asshield.com",
         "supportURL": "https://www.asshield.com/support",
         "privacyPolicyURL": "https://www.asshield.com/privacy",
         "termsOfServiceURL": "https://www.asshield.com/terms",
         "defaultPrompt": [
+          "What insurance options can Asshield help me with?",
           "Start an auto insurance quote for me in Kentucky, ZIP 40505.",
-          "I need a commercial auto quote for my small business in Florida.",
-          "Help me get a boat insurance quote in Kentucky."
+          "What does commercial general liability usually cover?"
         ],
         "brandColor": "#1A7FBF",
         "brandColorDark": "#1A9FE0",
@@ -73,10 +75,10 @@
               "expected_behavior": "Starts commercial_auto quote, saves contact and business details without asking for FEIN/SSN, then continues toward drivers/vehicles or policy."
             },
             {
-              "description": "Boat specialty intake",
-              "prompt": "I want a boat insurance quote in Kentucky, ZIP 40505. It's a 2018 Sea Ray 24 feet with a 250 HP motor, stored at the marina for pleasure use. I'm Alex Example, phone 859-555-0100.",
-              "tools_triggered": "start_quote, save_contact, save_line_details",
-              "expected_behavior": "Starts boat quote, saves contact and boat year/make/length/HP/storage without binding coverage."
+              "description": "Coverage overview for commercial GL (general info)",
+              "prompt": "What does commercial general liability usually cover, and what should I have ready for a quote?",
+              "tools_triggered": "explain_coverage",
+              "expected_behavior": "Returns curated GL overview and checklist with disclaimer that it is general information not advice; offers to start a quote; does not bind coverage."
             },
             {
               "description": "Check completeness, confirm, submit; not covered",
@@ -108,7 +110,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "11 MCP tools including get_agent_contact and Apps SDK custom UI (quote consent/progress/confirmation card + agent contact card), personal/commercial/specialty quote intake (motorcycle and trucking), accurate annotations (submit_quote openWorldHint true for Zapier/email), licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
+        "release_notes": "13 MCP tools with advanced Apps SDK UX: insurance options picker, coverage Q&A knowledge base, guided multi-step quote card (save-as-you-go), confirmation timeline, and agent contact card. Personal/commercial/specialty intake with licensed-state checks. Quote intake only \u2014 does not bind coverage."
       }
     }
   }

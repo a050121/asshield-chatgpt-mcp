@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asshield Insurance Options</title>
+  <style>
+    :root {
+      --brand:#1A7FBF; --brand-bright:#1A9FE0; --navy:#0c2438; --ink:#071521;
+      --muted:#5b6d7e; --bg:#f5f8fb; --card:#fff; --line:rgba(12,36,56,.12);
+      --radius:16px; --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
+    }
+    html.theme-dark { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
+    html.theme-light { --bg:#f5f8fb; --card:#fff; --ink:#071521; --muted:#5b6d7e; --line:rgba(12,36,56,.12); --navy:#0c2438; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:var(--font); color:var(--ink); background:transparent; padding:8px; }
+    .card { max-width:520px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:0 8px 28px rgba(7,21,33,.08); }
+    .header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+    .header img { width:40px; height:40px; border-radius:10px; }
+    h1 { margin:0; font-size:1.05rem; color:var(--navy); }
+    .sub { margin:2px 0 0; font-size:.78rem; color:var(--muted); }
+    .badge { display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--brand); background:rgba(26,127,191,.12); border-radius:999px; padding:.2rem .55rem; margin-bottom:10px; }
+    h2 { margin:14px 0 8px; font-size:.82rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    @media (max-width:380px) { .grid { grid-template-columns:1fr; } }
+    button.tile {
+      display:flex; flex-direction:column; align-items:flex-start; gap:4px; text-align:left;
+      padding:12px; border-radius:14px; border:1.5px solid var(--line); background:var(--bg);
+      color:var(--ink); font:inherit; cursor:pointer; transition:border-color .15s, transform .15s, box-shadow .15s;
+      min-height:88px;
+    }
+    button.tile:hover, button.tile:focus-visible { border-color:var(--brand); outline:2px solid var(--brand); outline-offset:1px; box-shadow:0 4px 14px rgba(26,127,191,.15); }
+    button.tile:active { transform:scale(.98); }
+    .icon { font-size:1.35rem; line-height:1; }
+    .tl { font-weight:700; font-size:.9rem; color:var(--navy); }
+    .td { font-size:.75rem; color:var(--muted); line-height:1.35; }
+    .panel { margin-top:12px; padding:12px; border-radius:12px; border:1px solid var(--line); background:var(--bg); }
+    label { display:block; font-size:.72rem; font-weight:650; color:var(--muted); margin:8px 0 4px; text-transform:uppercase; letter-spacing:.03em; }
+    input, select { width:100%; padding:.65rem .75rem; border-radius:10px; border:1.5px solid var(--line); background:var(--card); color:var(--ink); font:inherit; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .btn { font:inherit; font-weight:650; border-radius:999px; padding:.7rem 1.1rem; border:1.5px solid transparent; cursor:pointer; }
+    .btn.primary { background:linear-gradient(135deg,var(--brand-bright),var(--brand)); color:#fff; }
+    .btn.secondary { background:transparent; border-color:var(--line); color:var(--navy); }
+    .status { font-size:.8rem; color:var(--muted); margin-top:10px; min-height:1.2em; }
+    .is-hidden { display:none !important; }
+    .note { font-size:.75rem; color:var(--muted); margin-top:10px; line-height:1.4; }
+  </style>
+</head>
+<body>
+  <div class="card" role="region" aria-label="Asshield insurance options">
+    <div class="header">
+      <img src="LOGO_SRC" alt="" width="40" height="40" />
+      <div>
+        <h1>Asshield Insurance</h1>
+        <p class="sub">Choose a line to start a quote request</p>
+      </div>
+    </div>
+    <span class="badge">Insurance options</span>
+    <div id="groups"></div>
+    <div id="start-panel" class="panel is-hidden" role="dialog" aria-label="Start quote details">
+      <p style="margin:0;font-weight:700" id="picked-label">Start quote</p>
+      <p class="sub" id="picked-desc"></p>
+      <label for="state">State (2-letter)</label>
+      <input id="state" maxlength="2" autocomplete="address-level1" placeholder="KY" aria-required="true" />
+      <label for="zip">ZIP</label>
+      <input id="zip" inputmode="numeric" maxlength="10" autocomplete="postal-code" placeholder="40505" aria-required="true" />
+      <div class="actions">
+        <button type="button" class="btn primary" id="btn-start">Start quote request</button>
+        <button type="button" class="btn secondary" id="btn-cancel">Cancel</button>
+        <button type="button" class="btn secondary" id="btn-explain">What does this cover?</button>
+      </div>
+    </div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+    <p class="note">Quote request only — Asshield does not bind coverage or show prices in chat. Licensed states only.</p>
+  </div>
+  <script>
+  (function () {
+    const LICENSED = ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"];
+    let picked = null;
+    let groups = [];
+
+    function $(id){ return document.getElementById(id); }
+    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark") document.documentElement.classList.add("theme-dark"); if(t==="light") document.documentElement.classList.add("theme-light"); }
+    function setStatus(m){ $("status").textContent = m || ""; }
+
+    const pending = new Map();
+    let seq = 1;
+    function callTool(name, args) {
+      if (window.openai?.callTool) return window.openai.callTool(name, args);
+      return new Promise((resolve, reject) => {
+        const id = seq++;
+        pending.set(id, { resolve, reject });
+        window.parent.postMessage({ jsonrpc:"2.0", id, method:"tools/call", params:{ name, arguments: args||{} } }, "*");
+        setTimeout(() => { if (pending.has(id)) { pending.delete(id); reject(new Error("timeout")); } }, 20000);
+      });
+    }
+
+    function renderGroups() {
+      const root = $("groups");
+      root.innerHTML = "";
+      for (const g of groups) {
+        const h = document.createElement("h2");
+        h.textContent = g.label;
+        root.appendChild(h);
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        grid.setAttribute("role", "list");
+        for (const line of g.lines) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "tile";
+          b.setAttribute("role", "listitem");
+          b.setAttribute("aria-label", line.label + ": " + line.one_liner);
+          b.innerHTML = `<span class="icon" aria-hidden="true">${line.icon||""}</span><span class="tl">${line.label}</span><span class="td">${line.one_liner}</span>`;
+          b.onclick = () => openStart(line);
+          grid.appendChild(b);
+        }
+        root.appendChild(grid);
+      }
+    }
+
+    function openStart(line) {
+      picked = line;
+      $("start-panel").classList.remove("is-hidden");
+      $("picked-label").textContent = "Start " + line.label + " quote";
+      $("picked-desc").textContent = line.one_liner;
+      setStatus("");
+      $("state").focus();
+    }
+
+    function ingest(payload) {
+      const sc = payload?.structuredContent || payload || {};
+      if (sc.groups) { groups = sc.groups; renderGroups(); }
+      if (Array.isArray(sc.lines) && !sc.groups) {
+        const map = { personal:[], commercial:[], recreational:[] };
+        for (const l of sc.lines) (map[l.group]||map.personal).push(l);
+        groups = [
+          { id:"personal", label:"Personal", lines:map.personal },
+          { id:"commercial", label:"Commercial", lines:map.commercial },
+          { id:"recreational", label:"Recreational", lines:map.recreational }
+        ].filter(g => g.lines.length);
+        renderGroups();
+      }
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) return;
+      const message = event.data;
+      if (!message || message.jsonrpc !== "2.0") return;
+      if (message.id != null && pending.has(message.id)) {
+        const p = pending.get(message.id); pending.delete(message.id);
+        if (message.error) p.reject(message.error); else p.resolve(message.result);
+        return;
+      }
+      if (message.method === "ui/notifications/tool-result") ingest(message.params||{});
+      const theme = message.params?.theme || message.params?.colorScheme;
+      if (theme) applyTheme(theme);
+    }, { passive:true });
+
+    function sync() {
+      try {
+        if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput });
+        if (window.openai?.theme) applyTheme(window.openai.theme);
+      } catch(_){}
+    }
+    setInterval(sync, 800); sync();
+
+    $("btn-cancel").onclick = () => { $("start-panel").classList.add("is-hidden"); picked=null; };
+    $("btn-start").onclick = async () => {
+      if (!picked) return;
+      const state = $("state").value.trim().toUpperCase();
+      const zip = $("zip").value.trim();
+      if (!/^[A-Z]{2}$/.test(state)) return setStatus("Enter a 2-letter state code.");
+      if (!/^\d{5}(-\d{4})?$/.test(zip)) return setStatus("Enter a valid 5-digit ZIP.");
+      if (!LICENSED.includes(state)) return setStatus("Asshield is not licensed in " + state + ". Licensed: " + LICENSED.join(", "));
+      setStatus("Starting " + picked.label + " quote…");
+      try {
+        await callTool("start_quote", { product: picked.id, state, zip });
+        setStatus("Quote started — continue in the quote card.");
+      } catch (e) {
+        setStatus("Could not start: " + (e?.message || e));
+      }
+    };
+    $("btn-explain").onclick = async () => {
+      if (!picked) return;
+      setStatus("Loading coverage overview…");
+      try {
+        await callTool("explain_coverage", { product: picked.id });
+        setStatus("Coverage overview requested.");
+      } catch (e) { setStatus("Could not load overview: " + (e?.message || e)); }
+    };
+
+    const mock = new URLSearchParams(location.search).get("mock");
+    if (mock) {
+      groups = [
+        { id:"personal", label:"Personal", lines:[
+          {id:"auto",label:"Auto",icon:"🚗",one_liner:"Protect your car and liability on the road.",group:"personal"},
+          {id:"home",label:"Home",icon:"🏠",one_liner:"Help protect your house and belongings.",group:"personal"},
+          {id:"auto_home",label:"Auto + Home",icon:"🏡",one_liner:"Bundle auto and home in one request.",group:"personal"},
+          {id:"renters",label:"Renters",icon:"🔑",one_liner:"Cover belongings and liability in a rental.",group:"personal"},
+          {id:"motorcycle",label:"Motorcycle",icon:"🏍️",one_liner:"Bike liability and physical damage options.",group:"personal"}
+        ]},
+        { id:"commercial", label:"Commercial", lines:[
+          {id:"commercial_auto",label:"Commercial Auto",icon:"🚚",one_liner:"Business vehicles and drivers.",group:"commercial"},
+          {id:"commercial_gl",label:"Commercial GL",icon:"🏢",one_liner:"General liability for your operations.",group:"commercial"},
+          {id:"workers_comp",label:"Workers' Comp",icon:"👷",one_liner:"Employee injury coverage where required.",group:"commercial"},
+          {id:"trucking",label:"Trucking",icon:"🚛",one_liner:"For-hire and fleet trucking intake.",group:"commercial"}
+        ]},
+        { id:"recreational", label:"Recreational", lines:[
+          {id:"boat",label:"Boat",icon:"⛵",one_liner:"Watercraft liability and hull options.",group:"recreational"},
+          {id:"golf_cart",label:"Golf Cart",icon:"⛳",one_liner:"Cart liability and physical damage.",group:"recreational"}
+        ]}
+      ];
+      renderGroups();
+      if (mock === "start") openStart(groups[0].lines[0]);
+    }
+  })();
+  </script>
+</body>
+</html>

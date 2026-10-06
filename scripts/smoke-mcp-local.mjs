@@ -34,8 +34,10 @@ try {
   });
   const tools = await rpc("tools/list", {}, 2);
   const names = tools.result.tools.map((t) => t.name);
-  if (names.length !== 11) throw new Error(`expected 11 tools, got ${names.length}: ${names}`);
+  if (names.length !== 13) throw new Error(`expected 13 tools, got ${names.length}: ${names}`);
   if (!names.includes("get_agent_contact")) throw new Error("missing get_agent_contact");
+  if (!names.includes("show_insurance_options")) throw new Error("missing show_insurance_options");
+  if (!names.includes("explain_coverage")) throw new Error("missing explain_coverage");
   const start = tools.result.tools.find((t) => t.name === "start_quote");
   if (!start._meta?.["openai/outputTemplate"]) throw new Error("start_quote missing outputTemplate");
   const res = await rpc("resources/list", {}, 3);

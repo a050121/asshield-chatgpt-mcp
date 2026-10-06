@@ -2,11 +2,11 @@
 
 Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
-MCP exposes **11 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
+MCP exposes **13 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Do not upload 1.1.1 for final review:** `review.demo_recording_url` is still a placeholder (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`). Replace it with a real demo URL, rebuild the ZIP, then upload.
+> **Do not upload 1.2.0 for final review:** `review.demo_recording_url` is still a placeholder (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`). Replace it with a real demo URL, rebuild the ZIP, then upload.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.1.1.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.2.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -17,7 +17,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.1.1 |
+| **Version** | 1.2.0 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -55,6 +55,8 @@ Limitations: this plugin collects quote information only. It does not provide ra
 - Record current policy details and explicit consent
 - Check quote completeness and send to a licensed agent
 - Show Asshield agent contact card (phone, email, office, licensed states)
+- Browse insurance line options and general coverage Q&A (not advice)
+- Guided multi-step quote card with what-to-have-ready checklists
 
 ### Starter prompts (defaultPrompt)
 
@@ -99,14 +101,14 @@ Limitations: this plugin collects quote information only. It does not provide ra
 | **Authentication** | None |
 | **Health check** | https://mcp.asshield.com/health |
 | **Domain verification** | Host portal token at `https://mcp.asshield.com/.well-known/openai-apps-challenge` (env `OPENAI_APPS_CHALLENGE_TOKEN` on Render). Parent domain `https://www.asshield.com/.well-known/openai-apps-challenge` is also eligible if needed. |
-| **CSP / UI** | Custom Apps SDK widgets (quote card + agent contact card). Resources use MIME `text/html;profile=mcp-app` with `_meta.ui.csp` (connectDomains empty; resourceDomains: asshield.com, content.naic.org). Tools set `_meta.ui.resourceUri` and ChatGPT-compatible `_meta["openai/outputTemplate"]`. |
+| **CSP / UI** | Custom Apps SDK widgets (options picker, coverage Q&A, guided multi-step quote card, agent contact). Resources use MIME `text/html;profile=mcp-app` with `_meta.ui.csp`. Tools set `_meta.ui.resourceUri` + `_meta["openai/outputTemplate"]`. |
 | **Server instructions** | Quote intake only; never claim coverage is bound; licensed states only; no SSN/DL/payment/password collection. |
 
 ---
 
-## 3. Tools (11) — annotations and justifications
+## 3. Tools (13) — annotations and justifications
 
-Live `tools/list` on `https://mcp.asshield.com/mcp` returns **11 tools**. Every tool sets explicit booleans for `readOnlyHint`, `destructiveHint`, and `openWorldHint`. OpenAI no longer requires annotation justifications in the package; one-sentence justifications below are for the review form / Scan Tools appeal notes. There is **no** standard `plugin.json` field for them (they are not embedded in the ZIP).
+Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every tool sets explicit booleans for `readOnlyHint`, `destructiveHint`, and `openWorldHint`. OpenAI no longer requires annotation justifications in the package; one-sentence justifications below are for the review form / Scan Tools appeal notes. There is **no** standard `plugin.json` field for them (they are not embedded in the ZIP).
 
 | Tool | readOnlyHint | destructiveHint | openWorldHint |
 |---|---|---|---|
@@ -121,6 +123,8 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **11 tools**. Every 
 | get_missing_quote_fields | true | false | false |
 | submit_quote | false | true | **true** |
 | get_agent_contact | true | false | false |
+| show_insurance_options | true | false | false |
+| explain_coverage | true | false | false |
 
 ### Per-hint justifications (one sentence each)
 
@@ -175,6 +179,17 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **11 tools**. Every 
 - **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
 
 
+
+#### show_insurance_options
+- **readOnlyHint true:** Displays curated product-line tiles only; creates no quote records.
+- **destructiveHint false:** Read-only catalog with no irreversible side effects.
+- **openWorldHint false:** Serves Asshield’s private product catalog only.
+
+#### explain_coverage
+- **readOnlyHint true:** Returns curated general coverage info from the in-repo knowledge base; does not write data.
+- **destructiveHint false:** Informational only; never binds coverage or submits leads.
+- **openWorldHint false:** Reads Asshield’s local curated JSON only — no live web lookups or invented statutes.
+
 #### get_agent_contact
 - **readOnlyHint true:** Returns static Asshield agent contact details; does not modify any data.
 - **destructiveHint false:** Read-only contact card with no irreversible side effects.
@@ -209,10 +224,10 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 - **Tools:** `start_quote`, `save_contact`, `save_business_details`
 - **Expected:** Saves business profile without FEIN/SSN; continues intake.
 
-### P4 — Boat
-- **Prompt:** I want a boat insurance quote in Kentucky, ZIP 40505. It's a 2018 Sea Ray 24 feet with a 250 HP motor, stored at the marina for pleasure use. I'm Alex Example, phone 859-555-0100.
-- **Tools:** `start_quote`, `save_contact`, `save_line_details`
-- **Expected:** Saves boat year/make/length/HP/storage; no bind.
+### P4 — Coverage overview (general info)
+- **Prompt:** What does commercial general liability usually cover, and what should I have ready for a quote?
+- **Tools:** `explain_coverage`
+- **Expected:** Returns curated GL overview + what-to-have-ready checklist; disclaimer that it is general information not advice; offers to start a quote; does not bind coverage.
 
 ### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
@@ -237,7 +252,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ## 6. Screenshots / demo video
 
-Screenshots: This plugin includes Apps SDK custom UI widgets (quote consent/progress/confirmation card and agent contact card). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/`). If the portal does not request screenshots, omit them.
+Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/v2/`). If the portal does not request screenshots, omit them.
 
 Optional internal walkthrough checklist (not required in the ZIP):
 
@@ -247,11 +262,11 @@ Optional internal walkthrough checklist (not required in the ZIP):
 4. Consent confirmation  
 5. Submit + “not covered / not bound” wording  
 
-**Demo recording URL (submission blocker for this package):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.1.1 still has a placeholder** — do not upload that ZIP for final review.
+**Demo recording URL (submission blocker for this package):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.2.0 still has a placeholder** — do not upload that ZIP for final review.
 ## 7. Release notes
 
 ```
-Adds Apps SDK custom UI (quote card + agent contact), get_agent_contact tool (11 tools total), commercial/specialty quote intake, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
+Adds advanced Apps SDK UX (options picker, coverage Q&A, guided multi-step quote card, confirmation timeline), 13 tools including show_insurance_options and explain_coverage, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
 ```
 
 ---
@@ -289,7 +304,7 @@ Adds Apps SDK custom UI (quote card + agent contact), get_agent_contact tool (11
 These must be done before a successful Submit for Review / publish path:
 
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write).
-2. **Real demo URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` with a real Loom/YouTube (or similar) walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP. **Do not upload 1.1.1 for final review while the placeholder remains.**
+2. **Real demo URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` with a real Loom/YouTube (or similar) walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP. **Do not upload 1.2.0 for final review while the placeholder remains.**
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
 4. **Successful final Scan Tools** — Upload the non-placeholder ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 

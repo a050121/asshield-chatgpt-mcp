@@ -22,10 +22,13 @@ import {
   registerWidgets,
   quoteCardMeta,
   agentCardMeta,
+  optionsCardMeta,
+  coverageCardMeta,
   agentContactPayload,
   withQuoteWidget,
   toolTextResult
 } from "./widgets.js";
+import { explainCoverage, listInsuranceOptions } from "./coverage-kb.js";
 
 const productEnum = z.enum(QUOTE_PRODUCTS);
 
@@ -33,11 +36,11 @@ function createMcpServer(): McpServer {
   const app = new McpServer(
     {
       name: "asshield-insurance",
-      version: "0.4.0"
+      version: "0.5.0"
     },
     {
       instructions:
-        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Use get_agent_contact when the user asks for agent phone/email/office or after submit. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords."
+        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Use show_insurance_options to present lines, explain_coverage for general coverage Q&A (not advice), and get_agent_contact for agent phone/email/office or after submit. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords."
     }
   );
 
@@ -49,7 +52,7 @@ function createMcpServer(): McpServer {
     {
       title: "Start an Asshield quote",
       description:
-        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage or return a price. Renders the Asshield quote card widget (consent → progress).",
+        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage or return a price. Renders the Asshield guided quote card (consent, multi-step form, review). Includes a what-to-have-ready checklist for the line.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
       _meta: quoteCardMeta(),
       inputSchema: {
@@ -281,6 +284,51 @@ function createMcpServer(): McpServer {
         enriched.agent_will_contact = true;
       }
       return toolTextResult(enriched);
+    }
+  );
+
+  registerAppTool(
+    app,
+    "show_insurance_options",
+    {
+      title: "Show insurance options",
+      description:
+        "Read-only branded line picker for Asshield's 11 personal, commercial, and recreational insurance lines. Use when the user is unsure which product to start. Does not create a quote or bind coverage.",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      _meta: optionsCardMeta(),
+      inputSchema: {}
+    },
+    async () => {
+      const options = listInsuranceOptions();
+      return toolTextResult({
+        ...options,
+        message:
+          "Asshield insurance options. Tap a line to start a quote request in a licensed state. Quote intake only — no coverage is bound."
+      });
+    }
+  );
+
+  registerAppTool(
+    app,
+    "explain_coverage",
+    {
+      title: "Explain coverage (general info)",
+      description:
+        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Offer to start a quote afterward. Does not invent specific state statutes.",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      _meta: coverageCardMeta(),
+      inputSchema: {
+        product: productEnum,
+        topic: z.string().max(500).optional()
+      }
+    },
+    async (input) => {
+      const explained = explainCoverage(input.product, input.topic);
+      return toolTextResult({
+        ...explained,
+        agent_will_confirm: true,
+        no_coverage_bound: true
+      });
     }
   );
 

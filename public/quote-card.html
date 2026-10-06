@@ -6,278 +6,465 @@
   <title>Asshield Quote</title>
   <style>
     :root {
-      --brand: #1A7FBF;
-      --brand-bright: #1A9FE0;
-      --navy: #0c2438;
-      --ink: #071521;
-      --muted: #5b6d7e;
-      --bg: #f5f8fb;
-      --card: #ffffff;
-      --line: rgba(12,36,56,.12);
-      --ok: #1a6b4a;
-      --danger: #9b2c2c;
-      --radius: 16px;
-      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      --brand:#1A7FBF; --brand-bright:#1A9FE0; --navy:#0c2438; --ink:#071521;
+      --muted:#5b6d7e; --bg:#f5f8fb; --card:#fff; --line:rgba(12,36,56,.12);
+      --ok:#1a6b4a; --danger:#9b2c2c; --radius:16px;
+      --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     }
     @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0b1520;
-        --card: #122233;
-        --ink: #f5f8fb;
-        --muted: #a8b6c4;
-        --line: rgba(255,255,255,.14);
-        --navy: #e8f3fa;
-      }
+      :root { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
     }
-    html.theme-dark {
-      --bg: #0b1520;
-      --card: #122233;
-      --ink: #f5f8fb;
-      --muted: #a8b6c4;
-      --line: rgba(255,255,255,.14);
-      --navy: #e8f3fa;
+    html.theme-dark { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
+    html.theme-light { --bg:#f5f8fb; --card:#fff; --ink:#071521; --muted:#5b6d7e; --line:rgba(12,36,56,.12); --navy:#0c2438; }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:var(--font); color:var(--ink); background:transparent; padding:8px; }
+    .card { max-width:480px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:0 8px 28px rgba(7,21,33,.08); }
+    .header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
+    .header img { width:40px; height:40px; border-radius:10px; }
+    h1 { margin:0; font-size:1.05rem; color:var(--navy); }
+    .sub { margin:2px 0 0; font-size:.78rem; color:var(--muted); }
+    .badge { display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--brand); background:rgba(26,127,191,.12); border-radius:999px; padding:.2rem .55rem; margin-bottom:8px; }
+    .stepper { display:flex; gap:4px; flex-wrap:wrap; margin:8px 0 14px; }
+    .step-pill { font-size:.65rem; font-weight:700; padding:.25rem .45rem; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:transparent; cursor:pointer; }
+    .step-pill.done { color:var(--ok); border-color:rgba(26,107,74,.35); background:rgba(26,107,74,.08); }
+    .step-pill.active { color:#fff; border-color:var(--brand); background:var(--brand); }
+    .step-pill:focus-visible { outline:2px solid var(--brand); outline-offset:1px; }
+    h2 { margin:0 0 8px; font-size:.98rem; }
+    p, li { font-size:.86rem; line-height:1.45; }
+    .muted { color:var(--muted); }
+    .callout { padding:10px 12px; border-radius:12px; background:rgba(26,127,191,.1); border:1px solid rgba(26,127,191,.25); font-size:.84rem; margin:8px 0 12px; }
+    .panel { animation: fade .22s ease; }
+    @keyframes fade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:none;} }
+    label { display:block; font-size:.72rem; font-weight:650; color:var(--muted); margin:8px 0 4px; text-transform:uppercase; letter-spacing:.03em; }
+    input, select, textarea { width:100%; padding:.65rem .75rem; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
+    input:invalid:not(:placeholder-shown) { border-color:var(--danger); }
+    input:focus, select:focus, textarea:focus { outline:2px solid var(--brand); outline-offset:1px; }
+    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    @media (max-width:380px){ .row2 { grid-template-columns:1fr; } }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+    button, .btn {
+      font:inherit; font-weight:650; border-radius:999px; padding:.7rem 1.1rem;
+      border:1.5px solid transparent; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
     }
-    html.theme-light {
-      --bg: #f5f8fb;
-      --card: #ffffff;
-      --ink: #071521;
-      --muted: #5b6d7e;
-      --line: rgba(12,36,56,.12);
-      --navy: #0c2438;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: var(--font);
-      background: transparent;
-      color: var(--ink);
-      padding: 8px;
-    }
-    .card {
-      max-width: 440px;
-      margin: 0 auto;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px 18px 16px;
-      box-shadow: 0 8px 28px rgba(7,21,33,.08);
-    }
-    .header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
-    .header img { width: 44px; height: 44px; border-radius: 12px; }
-    .header h1 { margin: 0; font-size: 1.05rem; color: var(--navy); line-height: 1.25; }
-    .header p { margin: 2px 0 0; font-size: .78rem; color: var(--muted); }
-    .badge {
-      display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
-      text-transform: uppercase; color: var(--brand); background: rgba(26,127,191,.12);
-      border-radius: 999px; padding: .2rem .55rem; margin-bottom: 10px;
-    }
-    h2 { margin: 0 0 8px; font-size: .98rem; }
-    p, li { font-size: .88rem; line-height: 1.45; color: var(--ink); }
-    .muted { color: var(--muted); }
-    ul { margin: 8px 0 12px; padding-left: 1.1rem; }
-    .field-list { list-style: none; padding: 0; margin: 0 0 12px; }
-    .field-list li {
-      display: flex; justify-content: space-between; gap: 10px;
-      padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .84rem;
-    }
-    .field-list .k { color: var(--muted); }
-    .field-list .v { font-weight: 600; text-align: right; word-break: break-word; }
-    .missing { color: var(--danger); font-weight: 600; }
-    label { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: .03em; }
-    input, select, textarea {
-      width: 100%; padding: .65rem .75rem; border-radius: 10px;
-      border: 1.5px solid var(--line); background: var(--bg); color: var(--ink);
-      font: inherit;
-    }
-    input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
-    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-    button {
-      font: inherit; font-weight: 650; border-radius: 999px; padding: .7rem 1.1rem;
-      border: 1.5px solid transparent; cursor: pointer;
-    }
-    button.primary { background: linear-gradient(135deg, var(--brand-bright), var(--brand)); color: #fff; }
-    button.secondary { background: transparent; border-color: var(--line); color: var(--navy); }
-    button:disabled { opacity: .55; cursor: not-allowed; }
-    .note { font-size: .78rem; color: var(--muted); margin-top: 12px; line-height: 1.4; }
-    .ok { color: var(--ok); font-weight: 700; }
-    .warn-box {
-      background: rgba(26,127,191,.08); border: 1px solid rgba(26,127,191,.25);
-      border-radius: 12px; padding: 10px 12px; margin: 10px 0; font-size: .84rem;
-    }
-    a { color: var(--brand); font-weight: 600; }
-    .hidden { display: none !important; }
-    .status { font-size: .8rem; color: var(--muted); min-height: 1.2em; margin-top: 8px; }
+    button.primary, .btn.primary { background:linear-gradient(135deg,var(--brand-bright),var(--brand)); color:#fff; }
+    button.secondary, .btn.secondary { background:transparent; border-color:var(--line); color:var(--navy); }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    .status { font-size:.8rem; color:var(--muted); margin-top:10px; min-height:1.2em; }
+    .err { color:var(--danger); font-size:.8rem; margin-top:4px; }
+    .review dt { font-size:.72rem; color:var(--muted); text-transform:uppercase; margin-top:8px; }
+    .review dd { margin:2px 0 0; font-weight:650; font-size:.88rem; }
+    .timeline { list-style:none; padding:0; margin:12px 0; }
+    .timeline li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--line); font-size:.86rem; }
+    .dot { width:12px; height:12px; border-radius:50%; margin-top:4px; background:var(--line); flex-shrink:0; }
+    .timeline li.done .dot { background:var(--ok); }
+    .timeline li.current .dot { background:var(--brand); box-shadow:0 0 0 3px rgba(26,127,191,.25); }
+    .checklist { list-style:none; padding:0; }
+    .checklist li { padding:6px 0; border-bottom:1px solid var(--line); font-size:.84rem; }
+    .checklist li::before { content:"☐ "; color:var(--brand); font-weight:700; }
+    .is-hidden { display:none !important; }
+    a { color:var(--brand); font-weight:650; }
   </style>
 </head>
 <body>
-  <div class="card" id="root" role="region" aria-label="Asshield insurance quote card">
+  <div class="card" role="region" aria-label="Asshield quote request">
     <div class="header">
-      <img src="LOGO_SRC" alt="Asshield Insurance" width="44" height="44" />
+      <img src="LOGO_SRC" alt="" width="40" height="40" />
       <div>
         <h1>Asshield Insurance</h1>
-        <p>Quote request · licensed agency</p>
+        <p class="sub" id="hdr-sub">Quote request · licensed agency</p>
       </div>
     </div>
-
-    <section id="view-consent" class="hidden">
-      <span class="badge">Consent</span>
-      <h2>Before we continue</h2>
-      <p>Asshield will use the details you share to prepare an insurance quote request for a licensed agent.</p>
-      <div class="warn-box">
-        <strong>What’s shared with Asshield:</strong> product, location, contact preferences, and the intake fields you provide.
-        See our <a href="https://www.asshield.com/privacy" target="_blank" rel="noopener noreferrer">Privacy notice</a>.
-      </div>
-      <p class="note">ChatGPT’s own answers and explanations are generated by ChatGPT and are <strong>not</strong> Asshield’s advice or a quote.</p>
-      <div class="actions">
-        <button type="button" class="primary" id="btn-consent">I understand — continue</button>
-      </div>
-    </section>
-
-    <section id="view-progress" class="hidden">
-      <span class="badge">In progress</span>
-      <h2 id="progress-title">Quote progress</h2>
-      <ul class="field-list" id="field-list"></ul>
-      <p id="missing-line" class="note"></p>
-      <details id="edit-panel">
-        <summary style="cursor:pointer;font-weight:650;color:var(--navy)">Edit / correct contact fields</summary>
-        <label for="first_name">First name</label>
-        <input id="first_name" autocomplete="given-name" />
-        <label for="last_name">Last name</label>
-        <input id="last_name" autocomplete="family-name" />
-        <label for="email">Email</label>
-        <input id="email" type="email" autocomplete="email" />
-        <label for="phone">Phone</label>
-        <input id="phone" type="tel" autocomplete="tel" />
-        <div class="actions">
-          <button type="button" class="primary" id="btn-save-contact">Save contact via Asshield</button>
-        </div>
-      </details>
-      <div class="actions">
-        <button type="button" class="secondary" id="btn-refresh">Refresh missing fields</button>
-        <button type="button" class="primary" id="btn-submit">Submit quote request</button>
-      </div>
-      <p class="note">Submitting sends a request to Asshield. It does <strong>not</strong> bind coverage.</p>
-    </section>
-
-    <section id="view-confirmation" class="hidden">
-      <span class="badge">Submitted</span>
-      <h2 class="ok">Request received</h2>
-      <p>Reference: <strong id="ref-id"></strong></p>
-      <p>An Asshield agent will contact you using your preferred method.</p>
-      <p class="warn-box"><strong>No coverage is bound.</strong> Coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy.</p>
-      <div id="agent-mini" class="note"></div>
-      <div class="actions">
-        <button type="button" class="secondary" id="btn-agent">Show agent contact card</button>
-      </div>
-    </section>
-
-    <section id="view-idle">
-      <span class="badge">Asshield</span>
-      <h2>Quote intake</h2>
-      <p class="muted">Waiting for quote tool results…</p>
-    </section>
-
-    <div class="status" id="status" aria-live="polite"></div>
+    <span class="badge" id="phase-badge">Quote</span>
+    <nav class="stepper" id="stepper" aria-label="Quote steps"></nav>
+    <div id="panels"></div>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
   </div>
-
   <script>
   (function () {
-    const pending = new Map();
-    let nextId = 1;
-    let state = { phase: "idle", quote_id: null, product: null, fields: {}, missing: [], message: "", agent: null, consent_ok: false };
+    const DRIVER_VEHICLE = new Set(["auto","auto_home","motorcycle","commercial_auto","trucking"]);
+    const COMMERCIAL = new Set(["commercial_auto","commercial_gl","workers_comp","trucking"]);
+    const LINE_DETAIL = new Set(["commercial_gl","workers_comp","boat","golf_cart"]);
+    const CROSS_DEFAULT = { auto:["home","auto_home"], home:["auto","auto_home"], renters:["auto"], motorcycle:["auto"], boat:["home","auto"], golf_cart:["home"], commercial_auto:["commercial_gl"], commercial_gl:["workers_comp"], workers_comp:["commercial_gl"], trucking:["commercial_gl"], auto_home:["renters"] };
 
-    function $(id) { return document.getElementById(id); }
-    function setStatus(msg) { $("status").textContent = msg || ""; }
+    let S = {
+      phase: "consent", // consent | form | review | confirmation | unsupported
+      step: 0,
+      quote_id: null,
+      product: null,
+      state: null,
+      zip: null,
+      fields: {},
+      missing: [],
+      checklist: [],
+      agent: null,
+      callback_sla: "An agent will reach out soon",
+      cross_sell: [],
+      privacy_url: "https://www.asshield.com/privacy",
+      supported: true,
+      message: ""
+    };
 
-    function applyTheme(theme) {
-      document.documentElement.classList.remove("theme-dark", "theme-light");
-      if (theme === "dark") document.documentElement.classList.add("theme-dark");
-      if (theme === "light") document.documentElement.classList.add("theme-light");
+    function $(id){ return document.getElementById(id); }
+    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark") document.documentElement.classList.add("theme-dark"); if(t==="light") document.documentElement.classList.add("theme-light"); }
+    function setStatus(m){ $("status").textContent = m || ""; }
+    function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function val(id){ const el=$(id); return el ? el.value.trim() : ""; }
+
+    const pending = new Map(); let seq = 1;
+    function callTool(name, args) {
+      if (window.openai?.callTool) return window.openai.callTool(name, args);
+      return new Promise((resolve, reject) => {
+        const id = seq++; pending.set(id,{resolve,reject});
+        window.parent.postMessage({ jsonrpc:"2.0", id, method:"tools/call", params:{ name, arguments: args||{} } }, "*");
+        setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 25000);
+      });
     }
 
-    function request(method, params) {
-      const id = nextId++;
-      window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
-      return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
-    }
-
-    async function callTool(name, args) {
-      if (window.openai && typeof window.openai.callTool === "function") {
-        return window.openai.callTool(name, args);
+    function stepsFor(product) {
+      const steps = [{ id:"contact", label:"Contact" }];
+      if (COMMERCIAL.has(product)) steps.push({ id:"business", label:"Business" });
+      if (DRIVER_VEHICLE.has(product)) {
+        steps.push({ id:"drivers", label:"Drivers" });
+        steps.push({ id:"vehicles", label:"Vehicles" });
       }
-      return request("tools/call", { name, arguments: args || {} });
+      if (LINE_DETAIL.has(product) || product === "home" || product === "renters") {
+        steps.push({ id:"details", label: product==="home"||product==="renters" ? "Property" : "Details" });
+      }
+      steps.push({ id:"policy", label:"Policy" });
+      steps.push({ id:"consent", label:"Consent" });
+      steps.push({ id:"review", label:"Review" });
+      return steps;
     }
 
-    function show(phase) {
-      ["consent", "progress", "confirmation", "idle"].forEach((p) => {
-        const el = $("view-" + p);
-        if (el) el.classList.toggle("hidden", p !== phase);
+    function renderStepper() {
+      const nav = $("stepper");
+      if (S.phase === "consent" || S.phase === "confirmation" || S.phase === "unsupported") {
+        nav.innerHTML = ""; nav.classList.add("is-hidden"); return;
+      }
+      nav.classList.remove("is-hidden");
+      const steps = stepsFor(S.product);
+      nav.innerHTML = steps.map((s,i) => {
+        const cls = i < S.step ? "done" : i === S.step ? "active" : "";
+        return `<button type="button" class="step-pill ${cls}" data-i="${i}" aria-current="${i===S.step?"step":"false"}">${escapeHtml(s.label)}</button>`;
+      }).join("");
+      nav.querySelectorAll(".step-pill").forEach(btn => {
+        btn.onclick = () => {
+          const i = Number(btn.dataset.i);
+          if (i <= S.step) { S.step = i; render(); }
+        };
       });
     }
 
     function render() {
-      const phase = state.phase || "idle";
-      show(phase === "consent" || phase === "progress" || phase === "confirmation" ? phase : "idle");
-      if (phase === "progress") {
-        $("progress-title").textContent = (state.product ? String(state.product).replace(/_/g, " ") : "Quote") + " progress";
-        const fields = state.fields || {};
-        const rows = [
-          ["Quote ID", state.quote_id || "—"],
-          ["Product", state.product || "—"],
-          ["State / ZIP", [fields.state || state.state, fields.zip || state.zip].filter(Boolean).join(" ") || "—"],
-          ["Name", [fields.first_name, fields.last_name].filter(Boolean).join(" ") || "—"],
-          ["Email", fields.email || "—"],
-          ["Phone", fields.phone || "—"]
-        ];
-        $("field-list").innerHTML = rows.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${escapeHtml(String(v))}</span></li>`).join("");
-        const missing = state.missing || [];
-        $("missing-line").innerHTML = missing.length
-          ? `<span class="missing">Still needed:</span> ${escapeHtml(missing.join(", "))}`
-          : `<span class="ok">Ready to submit</span> (confirm below).`;
-        $("btn-submit").disabled = missing.length > 0 && !missing.every((m) => m === "quote_authorization");
-        if (fields.first_name) $("first_name").value = fields.first_name;
-        if (fields.last_name) $("last_name").value = fields.last_name;
-        if (fields.email) $("email").value = fields.email;
-        if (fields.phone) $("phone").value = fields.phone;
+      renderStepper();
+      const root = $("panels");
+      const productLabel = (S.product||"quote").replace(/_/g," ");
+      $("hdr-sub").textContent = S.product ? (productLabel + " · " + (S.state||"") + " " + (S.zip||"")) : "Quote request · licensed agency";
+
+      if (S.phase === "unsupported") {
+        $("phase-badge").textContent = "Unavailable";
+        root.innerHTML = `<div class="panel"><h2>Outside licensed area</h2><p>${escapeHtml(S.message||"Asshield is not licensed in this state.")}</p>
+          <div class="actions"><button type="button" class="secondary" id="btn-options">See options</button></div></div>`;
+        bindCommon(); return;
       }
-      if (phase === "confirmation") {
-        $("ref-id").textContent = state.quote_id || "—";
-        const a = state.agent || {};
-        $("agent-mini").textContent = a.name
-          ? `${a.agency || "Asshield Insurance"} · ${a.name} · ${a.phone || ""} · ${a.email || ""}`
-          : "An Asshield agent will follow up.";
+
+      if (S.phase === "consent") {
+        $("phase-badge").textContent = "Consent";
+        root.innerHTML = `<div class="panel">
+          <h2>Before we continue</h2>
+          <p>Asshield will use the details you share to prepare an insurance quote request for a licensed agent.</p>
+          <div class="callout"><strong>What’s shared with Asshield:</strong> product, location, contact preferences, and the intake fields you provide. See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.</div>
+          <p class="muted">ChatGPT’s own answers and explanations are generated by ChatGPT and are <strong>not</strong> Asshield’s advice or a quote.</p>
+          ${S.checklist?.length ? `<h2>What to have ready</h2><ul class="checklist">${S.checklist.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>` : ""}
+          <div class="actions"><button type="button" class="primary" id="btn-begin">I understand — continue</button></div>
+        </div>`;
+        $("btn-begin").onclick = () => { S.phase = "form"; S.step = 0; render(); setStatus("Continue the guided form — saves as you go."); };
+        return;
       }
+
+      if (S.phase === "confirmation") {
+        $("phase-badge").textContent = "Submitted";
+        const ref = S.quote_id || "—";
+        const cross = (S.cross_sell||[]).slice(0,3);
+        root.innerHTML = `<div class="panel">
+          <h2>Request received</h2>
+          <p>Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you. <strong>No coverage is bound.</strong></p>
+          <ol class="timeline" aria-label="What happens next">
+            <li class="done"><span class="dot" aria-hidden="true"></span><div><strong>Received</strong><div class="muted">Your quote request is in Asshield’s queue.</div></div></li>
+            <li class="current"><span class="dot" aria-hidden="true"></span><div><strong>Agent review</strong><div class="muted">A licensed agent reviews your details.</div></div></li>
+            <li><span class="dot" aria-hidden="true"></span><div><strong>Callback</strong><div class="muted">${escapeHtml(S.callback_sla)}</div></div></li>
+            <li><span class="dot" aria-hidden="true"></span><div><strong>Quote options</strong><div class="muted">You’ll receive options to review — still not bound until you accept with an agent/carrier.</div></div></li>
+          </ol>
+          <div class="actions">
+            <button type="button" class="primary" id="btn-agent">Agent contact</button>
+            ${cross.map(c => `<button type="button" class="secondary cross" data-p="${escapeHtml(c.id||c)}">Add ${escapeHtml(c.label||c.id||c)}</button>`).join("")}
+            <button type="button" class="secondary" id="btn-options">Browse all lines</button>
+          </div>
+        </div>`;
+        bindCommon();
+        root.querySelectorAll(".cross").forEach(b => b.onclick = async () => {
+          const product = b.dataset.p;
+          setStatus("Starting another line…");
+          try {
+            const st = S.state; const zip = S.zip;
+            if (st && zip) await callTool("start_quote", { product, state: st, zip });
+            else await callTool("show_insurance_options", {});
+          } catch(e){ setStatus(String(e?.message||e)); }
+        });
+        return;
+      }
+
+      // form / review
+      $("phase-badge").textContent = "In progress";
+      const steps = stepsFor(S.product);
+      const cur = steps[S.step] || steps[0];
+      if (cur.id === "review") {
+        S.phase = "form";
+        root.innerHTML = renderReview();
+        bindReview(); return;
+      }
+      root.innerHTML = renderStep(cur);
+      bindStep(cur);
     }
 
-    function escapeHtml(s) {
-      return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    function renderStep(cur) {
+      const f = S.fields;
+      if (cur.id === "contact") return `<div class="panel"><h2>Contact</h2>
+        <div class="row2"><div><label for="first_name">First name</label><input id="first_name" required value="${escapeHtml(f.first_name||"")}" autocomplete="given-name" /></div>
+        <div><label for="last_name">Last name</label><input id="last_name" required value="${escapeHtml(f.last_name||"")}" autocomplete="family-name" /></div></div>
+        <label for="email">Email</label><input id="email" type="email" value="${escapeHtml(f.email||"")}" autocomplete="email" placeholder="name@example.com" />
+        <label for="phone">Phone</label><input id="phone" type="tel" value="${escapeHtml(f.phone||"")}" autocomplete="tel" placeholder="859-555-0100" />
+        <p class="err is-hidden" id="err"></p>
+        ${navButtons(true)}</div>`;
+      if (cur.id === "business") return `<div class="panel"><h2>Business</h2>
+        <label for="business_name">Business name</label><input id="business_name" required value="${escapeHtml(f.business_name||"")}" />
+        <label for="business_type_or_description">Type / description</label><input id="business_type_or_description" value="${escapeHtml(f.business_type_or_description||"")}" />
+        <div class="row2"><div><label for="business_address_state">Business state</label><input id="business_address_state" maxlength="2" value="${escapeHtml(f.business_address_state||S.state||"")}" /></div>
+        <div><label for="business_address_zip">Business ZIP</label><input id="business_address_zip" value="${escapeHtml(f.business_address_zip||S.zip||"")}" /></div></div>
+        <div class="row2"><div><label for="years_in_business">Years in business</label><input id="years_in_business" type="number" min="0" value="${escapeHtml(f.years_in_business??"")}" /></div>
+        <div><label for="number_of_employees">Employees</label><input id="number_of_employees" type="number" min="0" value="${escapeHtml(f.number_of_employees??"")}" /></div></div>
+        <label for="annual_revenue_range">Revenue range</label><input id="annual_revenue_range" value="${escapeHtml(f.annual_revenue_range||"")}" placeholder="e.g. $250k–$500k" />
+        ${S.product==="trucking"?`<label for="radius_of_operation">Radius</label><select id="radius_of_operation"><option value="">Select</option><option value="local">Local</option><option value="intermediate">Intermediate</option><option value="long_haul">Long haul</option></select>
+        <label for="cargo_type">Cargo type</label><input id="cargo_type" value="${escapeHtml(f.cargo_type||"")}" />
+        <div class="row2"><div><label for="power_unit_count">Power units</label><input id="power_unit_count" type="number" min="0" value="${escapeHtml(f.power_unit_count??"")}" /></div>
+        <div><label for="trailer_count">Trailers</label><input id="trailer_count" type="number" min="0" value="${escapeHtml(f.trailer_count??"")}" /></div></div>
+        <label for="dot_mc_number">DOT/MC (optional)</label><input id="dot_mc_number" value="${escapeHtml(f.dot_mc_number||"")}" />`:""}
+        ${S.product==="commercial_auto"?`<label for="commercial_vehicle_summary">Vehicle summary</label><textarea id="commercial_vehicle_summary" rows="2">${escapeHtml(f.commercial_vehicle_summary||"")}</textarea>`:""}
+        ${navButtons(true)}</div>`;
+      if (cur.id === "drivers") return `<div class="panel"><h2>Drivers / riders</h2>
+        <p class="muted">Do not enter driver’s license numbers.</p>
+        <div class="row2"><div><label for="d_first">First name</label><input id="d_first" required /></div><div><label for="d_last">Last name</label><input id="d_last" required /></div></div>
+        <label for="d_dob">Date of birth</label><input id="d_dob" type="date" />
+        <label for="d_rel">Relationship</label><input id="d_rel" placeholder="self / spouse / child" />
+        ${navButtons(true, "Save driver & continue")}</div>`;
+      if (cur.id === "vehicles") return `<div class="panel"><h2>Vehicles / units</h2>
+        <div class="row2"><div><label for="v_year">Year</label><input id="v_year" type="number" min="1900" max="2100" required /></div>
+        <div><label for="v_make">Make</label><input id="v_make" required /></div></div>
+        <label for="v_model">Model</label><input id="v_model" />
+        <label for="v_own">Ownership</label><select id="v_own"><option value="">Select</option><option>owned</option><option>financed</option><option>leased</option></select>
+        ${navButtons(true, "Save vehicle & continue")}</div>`;
+      if (cur.id === "details") {
+        if (S.product === "boat") return `<div class="panel"><h2>Boat details</h2>
+          <div class="row2"><div><label for="boat_year">Year</label><input id="boat_year" type="number" value="${escapeHtml(f.boat_year??"")}" /></div>
+          <div><label for="boat_make">Make</label><input id="boat_make" value="${escapeHtml(f.boat_make||"")}" /></div></div>
+          <div class="row2"><div><label for="boat_length_ft">Length (ft)</label><input id="boat_length_ft" type="number" value="${escapeHtml(f.boat_length_ft??"")}" /></div>
+          <div><label for="motor_hp">Motor HP</label><input id="motor_hp" type="number" value="${escapeHtml(f.motor_hp??"")}" /></div></div>
+          <label for="boat_storage_or_usage">Storage / usage</label><input id="boat_storage_or_usage" value="${escapeHtml(f.boat_storage_or_usage||"")}" />
+          ${navButtons(true)}</div>`;
+        if (S.product === "golf_cart") return `<div class="panel"><h2>Golf cart details</h2>
+          <div class="row2"><div><label for="cart_year">Year</label><input id="cart_year" type="number" value="${escapeHtml(f.cart_year??"")}" /></div>
+          <div><label for="cart_make">Make</label><input id="cart_make" value="${escapeHtml(f.cart_make||"")}" /></div></div>
+          <label for="street_legal">Street legal?</label><select id="street_legal"><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select>
+          <label for="cart_usage">Usage</label><input id="cart_usage" value="${escapeHtml(f.cart_usage||"")}" />
+          ${navButtons(true)}</div>`;
+        if (S.product === "commercial_gl") return `<div class="panel"><h2>GL details</h2>
+          <label for="operations_description">Operations description</label><textarea id="operations_description" rows="3">${escapeHtml(f.operations_description||"")}</textarea>
+          <label for="desired_limits">Desired limits</label><input id="desired_limits" value="${escapeHtml(f.desired_limits||"")}" />
+          ${navButtons(true)}</div>`;
+        if (S.product === "workers_comp") return `<div class="panel"><h2>Workers’ comp details</h2>
+          <label for="annual_payroll_estimate">Annual payroll estimate</label><input id="annual_payroll_estimate" value="${escapeHtml(f.annual_payroll_estimate||"")}" />
+          <label for="employees_by_job_type">Employees by job type</label><textarea id="employees_by_job_type" rows="3">${escapeHtml(f.employees_by_job_type||"")}</textarea>
+          ${navButtons(true)}</div>`;
+        // home / renters — checklist + optional notes into policy later
+        return `<div class="panel"><h2>${S.product==="renters"?"Rental":"Property"} notes</h2>
+          <p class="muted">Share what you can; an agent will confirm details. No SSN or payment info.</p>
+          <ul class="checklist">${(S.checklist||[]).map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>
+          <label for="property_notes">Notes for the agent (optional)</label><textarea id="property_notes" rows="3">${escapeHtml(f.property_notes||"")}</textarea>
+          ${navButtons(false)}</div>`;
+      }
+      if (cur.id === "policy") return `<div class="panel"><h2>Current policy</h2>
+        <label for="carrier">Current carrier</label><input id="carrier" value="${escapeHtml(f.carrier||"")}" placeholder="or type None" />
+        <label for="current_premium">Approx. premium</label><input id="current_premium" value="${escapeHtml(f.current_premium||"")}" />
+        <label for="premium_frequency">Frequency</label><select id="premium_frequency"><option value="">Select</option><option>monthly</option><option>semi_annual</option><option>annual</option></select>
+        <label for="bodily_injury_limit">BI limit preference</label><input id="bodily_injury_limit" value="${escapeHtml(f.bodily_injury_limit||"")}" />
+        ${navButtons(true)}</div>`;
+      if (cur.id === "consent") return `<div class="panel"><h2>Authorization</h2>
+        <p>I authorize Asshield Insurance to use these details to prepare a quote request and contact me about it.</p>
+        <label><input type="checkbox" id="auth_ok" ${f.auth_ok?"checked":""}/> I agree (required)</label>
+        <p class="muted" style="margin-top:8px">This does not bind coverage or create a policy.</p>
+        ${navButtons(true, "Save consent & review")}</div>`;
+      return `<div class="panel"><p>Unknown step</p></div>`;
+    }
+
+    function navButtons(requireSave, saveLabel) {
+      return `<div class="actions">
+        <button type="button" class="secondary" id="btn-back"${S.step===0?" disabled":""}>Back</button>
+        <button type="button" class="primary" id="btn-next">${escapeHtml(saveLabel||"Save & continue")}</button>
+        <button type="button" class="secondary" id="btn-refresh">Refresh status</button>
+      </div>`;
+    }
+
+    function renderReview() {
+      const f = S.fields;
+      const rows = [
+        ["Product", S.product], ["State/ZIP", `${S.state||""} ${S.zip||""}`],
+        ["Name", `${f.first_name||""} ${f.last_name||""}`], ["Email", f.email], ["Phone", f.phone],
+        ["Business", f.business_name], ["Missing", (S.missing||[]).join(", ")||"None"]
+      ].filter(r => r[1]);
+      return `<div class="panel"><h2>Review & submit</h2>
+        <p class="muted">Confirm everything looks right. Submitting sends a quote request only — <strong>no coverage is bound</strong>.</p>
+        <dl class="review">${rows.map(([k,v])=>`<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join("")}</dl>
+        ${S.checklist?.length?`<h2>Still helpful to have</h2><ul class="checklist">${S.checklist.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>`:""}
+        <div class="actions">
+          <button type="button" class="secondary" id="btn-back">Edit</button>
+          <button type="button" class="primary" id="btn-submit">Submit quote request</button>
+          <button type="button" class="secondary" id="btn-agent">Agent contact</button>
+        </div></div>`;
+    }
+
+    function showErr(msg){ const e=$("err"); if(e){ e.textContent=msg; e.classList.remove("is-hidden"); } else setStatus(msg); }
+
+    async function refreshMissing() {
+      if (!S.quote_id) return;
+      try {
+        const res = await callTool("get_missing_quote_fields", { quote_id: S.quote_id });
+        const sc = res?.structuredContent || res;
+        ingest({ structuredContent: sc });
+      } catch(e){ setStatus("Refresh failed: "+(e?.message||e)); }
+    }
+
+    function bindStep(cur) {
+      $("btn-back") && ($("btn-back").onclick = () => { if (S.step>0){ S.step--; render(); }});
+      $("btn-refresh") && ($("btn-refresh").onclick = () => refreshMissing());
+      $("btn-next").onclick = async () => {
+        if (!S.quote_id) return setStatus("No active quote.");
+        setStatus("Saving…");
+        try {
+          if (cur.id === "contact") {
+            const first_name=val("first_name"), last_name=val("last_name"), email=val("email"), phone=val("phone");
+            if (!first_name||!last_name) return showErr("First and last name are required.");
+            if (!email && !phone) return showErr("Provide at least an email or phone.");
+            await callTool("save_contact", { quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined, preferred_contact_method: email?"email":"call" });
+            Object.assign(S.fields,{first_name,last_name,email,phone});
+          } else if (cur.id === "business") {
+            const args = { quote_id:S.quote_id, business_name:val("business_name"), business_type_or_description:val("business_type_or_description")||undefined,
+              business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined };
+            if (!args.business_name) return setStatus("Business name is required.");
+            const y=val("years_in_business"); if(y) args.years_in_business=Number(y);
+            const n=val("number_of_employees"); if(n) args.number_of_employees=Number(n);
+            const rev=val("annual_revenue_range"); if(rev) args.annual_revenue_range=rev;
+            if (S.product==="trucking") {
+              const r=val("radius_of_operation"); if(r) args.radius_of_operation=r;
+              const c=val("cargo_type"); if(c) args.cargo_type=c;
+              const p=val("power_unit_count"); if(p!=="") args.power_unit_count=Number(p);
+              const t=val("trailer_count"); if(t!=="") args.trailer_count=Number(t);
+              const d=val("dot_mc_number"); if(d) args.dot_mc_number=d;
+            }
+            if (S.product==="commercial_auto") { const s=val("commercial_vehicle_summary"); if(s) args.commercial_vehicle_summary=s; }
+            await callTool("save_business_details", args);
+            Object.assign(S.fields, args);
+          } else if (cur.id === "drivers") {
+            const first_name=val("d_first"), last_name=val("d_last");
+            if (!first_name||!last_name) return setStatus("Driver name required.");
+            const args={ quote_id:S.quote_id, first_name, last_name };
+            const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
+            const rel=val("d_rel"); if(rel) args.relationship=rel;
+            await callTool("add_driver", args);
+            S.fields.driver_name = first_name+" "+last_name;
+          } else if (cur.id === "vehicles") {
+            const year=Number(val("v_year")), make=val("v_make");
+            if (!year||!make) return setStatus("Year and make required.");
+            const args={ quote_id:S.quote_id, year, make };
+            const model=val("v_model"); if(model) args.model=model;
+            const own=val("v_own"); if(own) args.ownership=own;
+            await callTool("add_vehicle", args);
+            S.fields.vehicle = year+" "+make;
+          } else if (cur.id === "details") {
+            if (S.product==="home"||S.product==="renters") {
+              S.fields.property_notes = val("property_notes");
+            } else {
+              const args={ quote_id:S.quote_id };
+              ["operations_description","desired_limits","annual_payroll_estimate","employees_by_job_type","boat_make","boat_storage_or_usage","cart_make","cart_usage"].forEach(k=>{ const v=val(k); if(v) args[k]=v; });
+              ["boat_year","boat_length_ft","motor_hp","cart_year"].forEach(k=>{ const v=val(k); if(v!=="") args[k]=Number(v); });
+              const sl=val("street_legal"); if(sl==="true") args.street_legal=true; if(sl==="false") args.street_legal=false;
+              await callTool("save_line_details", args);
+              Object.assign(S.fields, args);
+            }
+          } else if (cur.id === "policy") {
+            const carrier=val("carrier")||"None provided";
+            const args={ quote_id:S.quote_id, carrier };
+            const prem=val("current_premium"); if(prem) args.current_premium=prem;
+            const freq=val("premium_frequency"); if(freq) args.premium_frequency=freq;
+            const bi=val("bodily_injury_limit"); if(bi) args.bodily_injury_limit=bi;
+            await callTool("save_current_policy", args);
+            Object.assign(S.fields, args);
+          } else if (cur.id === "consent") {
+            if (!$("auth_ok")?.checked) return setStatus("Please check the authorization box.");
+            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
+            S.fields.auth_ok = true;
+          }
+          await refreshMissing();
+          const steps = stepsFor(S.product);
+          if (S.step < steps.length-1) S.step++;
+          render();
+          setStatus("Saved.");
+        } catch(e){ setStatus("Save failed: "+(e?.message||e)); }
+      };
+    }
+
+    function bindReview() {
+      $("btn-back").onclick = () => { S.step = Math.max(0, stepsFor(S.product).length-2); render(); };
+      $("btn-submit").onclick = async () => {
+        if (!S.quote_id) return;
+        setStatus("Submitting…");
+        try {
+          if ((S.missing||[]).includes("quote_authorization")) {
+            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
+          }
+          const res = await callTool("submit_quote", { quote_id:S.quote_id, notes: S.fields.property_notes || "Submitted from Asshield guided quote card" });
+          ingest({ structuredContent: res?.structuredContent || res });
+          S.phase = "confirmation"; render(); setStatus("Submitted. No coverage is bound.");
+        } catch(e){ setStatus("Submit failed: "+(e?.message||e)); }
+      };
+      bindCommon();
+    }
+
+    function bindCommon() {
+      const a=$("btn-agent"); if(a) a.onclick = async () => { try { await callTool("get_agent_contact",{}); } catch(e){ setStatus(String(e?.message||e)); } };
+      const o=$("btn-options"); if(o) o.onclick = async () => { try { await callTool("show_insurance_options",{}); } catch(e){ setStatus(String(e?.message||e)); } };
     }
 
     function ingest(payload) {
-      if (!payload || typeof payload !== "object") return;
-      const sc = payload.structuredContent || payload;
-      const w = sc.widget || sc;
-      if (w.phase) state.phase = w.phase;
-      if (w.quote_id || sc.quote?.id || sc.quote_id) state.quote_id = w.quote_id || sc.quote?.id || sc.quote_id;
-      if (w.product || sc.product || sc.quote?.product) state.product = w.product || sc.product || sc.quote?.product;
-      if (w.fields) state.fields = { ...state.fields, ...w.fields };
-      if (Array.isArray(w.missing) || Array.isArray(sc.missing)) state.missing = w.missing || sc.missing;
-      if (w.agent) state.agent = w.agent;
-      if (w.state) state.state = w.state;
-      if (w.zip) state.zip = w.zip;
-      if (sc.state) state.state = sc.state;
-      if (sc.zip) state.zip = sc.zip;
-      if (sc.supported === false) {
-        state.phase = "idle";
-        setStatus(sc.message || "This state is outside Asshield’s licensed area.");
+      const sc = payload?.structuredContent || payload || {};
+      const w = sc.widget || {};
+      if (sc.supported === false) { S.phase="unsupported"; S.message=sc.message||""; S.supported=false; render(); return; }
+      if (w.quote_id || sc.quote_id || sc.quote?.id) S.quote_id = w.quote_id || sc.quote_id || sc.quote.id;
+      if (w.product || sc.product || sc.quote?.product) S.product = w.product || sc.product || sc.quote.product;
+      if (w.state || sc.state || sc.quote?.state) S.state = w.state || sc.state || sc.quote.state;
+      if (w.zip || sc.zip || sc.quote?.zip) S.zip = w.zip || sc.zip || sc.quote.zip;
+      if (Array.isArray(w.missing) || Array.isArray(sc.missing)) S.missing = w.missing || sc.missing;
+      if (Array.isArray(w.checklist) || Array.isArray(sc.what_to_have_ready)) S.checklist = w.checklist || sc.what_to_have_ready;
+      if (w.fields) S.fields = { ...S.fields, ...w.fields };
+      if (w.agent || sc.agent) S.agent = w.agent || sc.agent;
+      if (w.callback_sla || sc.callback_sla) S.callback_sla = w.callback_sla || sc.callback_sla;
+      if (w.cross_sell || sc.cross_sell) S.cross_sell = w.cross_sell || sc.cross_sell;
+      if (w.privacy_url) S.privacy_url = w.privacy_url;
+      if (sc.submitted || w.phase === "confirmation") { S.phase = "confirmation"; }
+      else if (w.phase === "consent") S.phase = "consent";
+      else if (w.phase === "progress" || sc.ready_to_submit != null) { if (S.phase==="consent") {/* keep until user continues */} else S.phase="form"; }
+      if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product]) {
+        S.cross_sell = CROSS_DEFAULT[S.product].map(id => ({ id, label: id.replace(/_/g," ") }));
       }
-      // Default phase after start
-      if (!w.phase && sc.supported && sc.quote) {
-        state.phase = state.consent_ok ? "progress" : "consent";
-        state.fields = { ...state.fields, state: sc.quote.state, zip: sc.quote.zip };
-      }
-      if (!w.phase && sc.ready_to_submit != null) state.phase = "progress";
-      if (!w.phase && sc.submitted) state.phase = "confirmation";
       render();
     }
 
@@ -286,140 +473,33 @@
       const message = event.data;
       if (!message || message.jsonrpc !== "2.0") return;
       if (message.id != null && pending.has(message.id)) {
-        const p = pending.get(message.id);
-        pending.delete(message.id);
-        if (message.error) p.reject(message.error);
-        else p.resolve(message.result);
-        return;
+        const p = pending.get(message.id); pending.delete(message.id);
+        if (message.error) p.reject(message.error); else p.resolve(message.result); return;
       }
-      if (message.method === "ui/notifications/tool-result") {
-        ingest(message.params || {});
-      }
-      if (message.method === "ui/notifications/tool-input") {
-        /* ignore */
-      }
-      if (message.method === "ui/notifications/host-context-changed" || message.method === "ui/hostContextChanged") {
-        const theme = message.params?.theme || message.params?.colorScheme;
-        if (theme) applyTheme(theme);
-      }
-    }, { passive: true });
+      if (message.method === "ui/notifications/tool-result") ingest(message.params||{});
+      const theme = message.params?.theme || message.params?.colorScheme;
+      if (theme) applyTheme(theme);
+    }, { passive:true });
 
-    // ChatGPT compatibility: poll toolOutput if present
-    function syncOpenAi() {
-      try {
-        if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput });
-        const theme = window.openai?.theme;
-        if (theme) applyTheme(theme);
-      } catch (_) {}
-    }
-    setInterval(syncOpenAi, 800);
-    syncOpenAi();
+    function sync(){ try { if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput }); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
+    setInterval(sync, 800); sync();
 
-    $("btn-consent").onclick = () => {
-      state.consent_ok = true;
-      state.phase = "progress";
-      try { window.openai?.setWidgetState?.({ consent_ok: true, quote_id: state.quote_id }); } catch (_) {}
-      render();
-      setStatus("Consent acknowledged. Continue providing quote details in chat or edit fields here.");
-    };
-
-    $("btn-save-contact").onclick = async () => {
-      if (!state.quote_id) return setStatus("No active quote yet.");
-      setStatus("Saving contact…");
-      try {
-        const args = {
-          quote_id: state.quote_id,
-          first_name: $("first_name").value.trim(),
-          last_name: $("last_name").value.trim(),
-          email: $("email").value.trim() || undefined,
-          phone: $("phone").value.trim() || undefined,
-          preferred_contact_method: $("email").value.trim() ? "email" : "call"
-        };
-        const res = await callTool("save_contact", args);
-        const sc = res?.structuredContent || res;
-        state.fields = {
-          ...state.fields,
-          first_name: args.first_name,
-          last_name: args.last_name,
-          email: args.email,
-          phone: args.phone
-        };
-        ingest({ structuredContent: sc });
-        setStatus("Contact saved.");
-        const miss = await callTool("get_missing_quote_fields", { quote_id: state.quote_id });
-        ingest({ structuredContent: miss?.structuredContent || miss });
-      } catch (err) {
-        setStatus("Could not save contact: " + (err?.message || String(err)));
-      }
-    };
-
-    $("btn-refresh").onclick = async () => {
-      if (!state.quote_id) return;
-      setStatus("Checking completeness…");
-      try {
-        const miss = await callTool("get_missing_quote_fields", { quote_id: state.quote_id });
-        ingest({ structuredContent: miss?.structuredContent || miss });
-        setStatus("Updated.");
-      } catch (err) {
-        setStatus("Refresh failed: " + (err?.message || String(err)));
-      }
-    };
-
-    $("btn-submit").onclick = async () => {
-      if (!state.quote_id) return;
-      setStatus("Submitting quote request…");
-      try {
-        // Ensure quote authorization consent recorded if missing
-        if ((state.missing || []).includes("quote_authorization")) {
-          await callTool("save_consent", {
-            quote_id: state.quote_id,
-            consent_type: "quote_authorization",
-            accepted: true
-          });
-        }
-        const res = await callTool("submit_quote", { quote_id: state.quote_id, notes: "Submitted from Asshield quote card UI" });
-        ingest({ structuredContent: res?.structuredContent || res });
-        state.phase = "confirmation";
-        render();
-        setStatus("Submitted. No coverage is bound.");
-      } catch (err) {
-        setStatus("Submit failed: " + (err?.message || String(err)));
-      }
-    };
-
-    $("btn-agent").onclick = async () => {
-      setStatus("Loading agent contact…");
-      try {
-        await callTool("get_agent_contact", {});
-        setStatus("Agent contact requested.");
-      } catch (err) {
-        setStatus("Could not load agent card: " + (err?.message || String(err)));
-      }
-    };
-
-    // Support headless screenshot mocks via query ?mock=consent|progress|confirmation
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
-      state = {
-        phase: mock,
-        quote_id: "9936e32f-demo-quote",
-        product: "auto",
-        state: "KY",
-        zip: "40505",
-        fields: { first_name: "Jordan", last_name: "Test", email: "jordan.test@example.com", state: "KY", zip: "40505" },
-        missing: mock === "progress" ? ["quote_authorization"] : [],
-        agent: {
-          agency: "Asshield Insurance",
-          name: "Joshua Williams",
-          phone: "859-368-0162",
-          email: "joshuawilliams@asshield.com"
-        },
-        consent_ok: mock !== "consent"
-      };
+      S.quote_id = "9936e32f-demo-quote"; S.product="auto"; S.state="KY"; S.zip="40505";
+      S.checklist = ["State and ZIP","Driver names and DOB","Year/make/model","Current carrier if any"];
+      S.fields = { first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", carrier:"Example Mutual", auth_ok:true };
+      S.callback_sla = "An agent will reach out soon";
+      S.cross_sell = [{id:"home",label:"Home"},{id:"auto_home",label:"Auto + Home"}];
+      if (mock==="consent") { S.phase="consent"; }
+      else if (mock==="contact") { S.phase="form"; S.step=0; }
+      else if (mock==="drivers") { S.phase="form"; S.step=1; }
+      else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; S.missing=[]; }
+      else if (mock==="confirmation") { S.phase="confirmation"; }
+      else if (mock==="progress") { S.phase="form"; S.step=0; S.missing=["quote_authorization"]; }
+      else { S.phase="consent"; }
       render();
-    } else {
-      render();
-    }
+    } else render();
   })();
   </script>
 </body>
