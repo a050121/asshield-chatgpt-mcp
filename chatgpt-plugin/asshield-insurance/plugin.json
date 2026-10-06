@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal, commercial, and specialty lines using 13 tools with Apps SDK widgets (options picker, coverage Q&A, guided quote card, agent contact). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
@@ -84,7 +84,7 @@
               "description": "Check completeness, confirm, submit; not covered",
               "prompt": "That's everything. Please send my quote request. Am I covered now?",
               "tools_triggered": "get_missing_quote_fields, submit_quote, get_agent_contact",
-              "expected_behavior": "Checks missing fields (including address/residence for personal lines when required); submits only if complete; shows confirmation that no coverage is bound; can surface the Asshield agent contact card."
+              "expected_behavior": "Call get_missing_quote_fields then submit_quote only if complete. Confirmation shows You're all set. with business-hours response timing, Independent means more options (Progressive \u2022 Travelers \u2022 GEICO \u2022 Liberty Mutual and other insurance carriers), and Asshield professional coverage proposal + estimate with disclaimer that estimates are not quotes. Clearly state no coverage is bound. May show agent contact."
             }
           ],
           "negative": [
@@ -98,13 +98,14 @@
             },
             {
               "description": "Request for an instant price.",
-              "prompt": "Exactly how much will my commercial auto insurance cost with Asshield right now?"
+              "prompt": "Exactly how much will my commercial auto insurance cost with Asshield right now?",
+              "expected_behavior": "Do not invent a firm premium. Clarify that Asshield estimated starting prices (when shown after submit) are illustrations only \u2014 not quotes or offers \u2014 and a licensed agent confirms real carrier pricing after review."
             }
           ]
         },
         "commerce": false,
         "commerce_description": "This plugin does not sell products, process payments, or bind insurance. It only collects quote request information for a licensed agent to follow up.",
-        "demo_recording_url": "https://youtu.be/6BFu7ziuLKc"
+        "demo_recording_url": "https://youtu.be/FjTaBkdc-4U"
       },
       "publication": {
         "countries": [

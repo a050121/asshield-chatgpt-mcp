@@ -4,9 +4,9 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.4.0):** `review.demo_recording_url` is the v3 Unlisted YouTube demo `https://youtu.be/6BFu7ziuLKc`. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.5.0):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.4.0.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.5.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -17,7 +17,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.4.0 |
+| **Version** | 1.5.0 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -233,7 +233,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 ### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
 - **Tools:** `get_missing_quote_fields`, `submit_quote`, `get_agent_contact`
-- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; confirmation shows Asshield **professional coverage proposal + estimate** (per-vehicle auto lines, homeowners block when applicable, disclosure panel); clearly says **no coverage is bound**; may show agent contact. ChatGPT should treat estimates as not quotes.
+- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; confirmation shows **You're all set.** banner, **Independent means more options** (Progressive • Travelers • GEICO • Liberty Mutual), and Asshield **professional coverage proposal + estimate** (per-vehicle auto lines, homeowners block when applicable, disclosure panel); clearly says **no coverage is bound**; may show agent contact. ChatGPT should treat estimates as not quotes.
 
 ## 5. Negative test cases (exactly 3)
 
@@ -263,11 +263,11 @@ Optional internal walkthrough checklist (not required in the ZIP):
 4. Out-of-state CA polite decline  
 5. Consent + submit + “not covered / not bound” wording + agent contact  
 
-**Demo recording URL (done):** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` — set in `plugin.json` `review.demo_recording_url` for **1.4.0**.
+**Demo recording URL (done):** Unlisted YouTube v7 `https://youtu.be/FjTaBkdc-4U` — set in `plugin.json` `review.demo_recording_url` for **1.5.0**.
 ## 7. Release notes
 
 ```
-1.4.0 — Demo recording URL updated to v3 Unlisted YouTube (https://youtu.be/6BFu7ziuLKc); server-side restricted_data_refused guard (SSN/FEIN/DL numbers/payment/passwords). Builds on 1.3.0 intake UX (address, residence, SMS opt-in, VIN, agency card, bundling).
+1.5.0 — Demo recording URL set to v7 Unlisted YouTube (https://youtu.be/FjTaBkdc-4U). Adds Asshield professional coverage proposal + estimate (estimate-only disclaimer), You're all set. confirmation banner (business-hours aware), Independent means more options with Progressive • Travelers • GEICO • Liberty Mutual and other insurance carriers, and provenance footer. Builds on 1.4.0 restricted-data guard.
 ```
 
 ---
@@ -280,7 +280,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 - [ ] No restricted data collection (SSN, DL numbers, PCI, PHI, credentials)
 - [ ] Tool annotations accurate on production `tools/list`
 - [ ] Domain verification challenge configured
-- [x] Demo video URL provided (`https://youtu.be/6BFu7ziuLKc`)
+- [x] Demo video URL provided (`https://youtu.be/FjTaBkdc-4U`)
 - [ ] No comparative / pricing / “MCP” / “Plugin” suffix in the display name
 
 ---
@@ -295,7 +295,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 1. Confirm licensed-state list with counsel (already encoded from published terms).
 2. Confirm 7-year retention + limitation-of-liability language (draft banners removed from live pages; substance still needs counsel sign-off).
 3. Approve icons in `assets/`.
-4. [x] Record demo video URL (`https://youtu.be/6BFu7ziuLKc`).
+4. [x] Record demo video URL (`https://youtu.be/FjTaBkdc-4U`).
 5. Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render when the portal shows the token.
 6. Keep Supabase + lead email/webhook configured so reviewer submits reach ops (mark any live test **TEST**).
 
@@ -305,9 +305,9 @@ Optional internal walkthrough checklist (not required in the ZIP):
 These must be done before a successful Submit for Review / publish path:
 
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
-2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` is set on `review.demo_recording_url` in plugin **1.4.0**; ZIP rebuilt without placeholder.
+2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v7 `https://youtu.be/FjTaBkdc-4U` is set on `review.demo_recording_url` in plugin **1.5.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the **1.4.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.5.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 
