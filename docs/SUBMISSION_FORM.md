@@ -2,11 +2,11 @@
 
 Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
-MCP exposes **13 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
+MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Do not upload 1.2.0 for final review:** `review.demo_recording_url` is still a placeholder (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`). Replace it with a real demo URL, rebuild the ZIP, then upload.
+> **Ready for ZIP upload (1.3.0):** `review.demo_recording_url` is set to the Unlisted YouTube demo `https://youtu.be/MujQJvlc9DE`. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.2.0.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.3.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -17,7 +17,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.2.0 |
+| **Version** | 1.3.0 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -32,9 +32,9 @@ Asshield Insurance is an independent insurance agency. The Asshield Insurance pl
 
 What it does:
 - Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)
-- Saves your name and how you prefer to be contacted
+- Saves your name, how you prefer to be contacted, garaging/property address, optional residence (own/rent), and optional SMS texting opt-in
 - For commercial lines, records business profile details (never FEIN/SSN)
-- Adds drivers/riders and vehicles/bikes/units where needed
+- Adds drivers/riders and vehicles/bikes/units where needed (optional VIN)
 - Records boat, golf cart, GL, and workers' comp specialty details
 - Records your current carrier and coverages so an agent can compare options
 - Records your explicit consent before anything is sent
@@ -212,7 +212,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 ### P1 — Start quote in a licensed state
 - **Prompt:** Start an auto insurance quote for me in Kentucky, ZIP 40505.
 - **Tools:** `start_quote`
-- **Expected:** `supported: true` for KY 40505; ask for contact; no price; not bound.
+- **Expected:** `supported: true` for KY 40505; ask for contact next (name, reachability, garaging address, own/rent residence, optional SMS opt-in); no price; not bound.
 
 ### P2 — Out-of-state declined
 - **Prompt:** Start an auto insurance quote for me in California, ZIP 90210.
@@ -220,9 +220,9 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 - **Expected:** `supported: false`; list licensed states; no submit.
 
 ### P3 — Commercial auto
-- **Prompt:** Start a commercial auto quote in Florida, ZIP 32548 for Acme Delivery LLC, a courier business with 4 employees, about $400k revenue, 3 cargo vans. My name is Jordan Test, email jordan.test@example.com.
+- **Prompt:** Start a commercial auto quote in Florida, ZIP 32548 for Acme Delivery LLC, a courier business with 4 employees, about $400k revenue, 3 cargo vans. My name is Jordan Test, email jordan.test@example.com, phone 850-555-0100. Address 139 Beal Pkwy SE Suite 203, Fort Walton Beach, FL 32548.
 - **Tools:** `start_quote`, `save_contact`, `save_business_details`
-- **Expected:** Saves business profile without FEIN/SSN; continues intake.
+- **Expected:** Saves contact with address (residence optional for commercial); saves business profile without FEIN/SSN; continues intake (optional VIN on vehicles later).
 
 ### P4 — Coverage overview (general info)
 - **Prompt:** What does commercial general liability usually cover, and what should I have ready for a quote?
@@ -231,8 +231,8 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
-- **Tools:** `get_missing_quote_fields`, `submit_quote`
-- **Expected:** Submits only if complete; clearly says **no coverage is bound**.
+- **Tools:** `get_missing_quote_fields`, `submit_quote`, `get_agent_contact`
+- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; clearly says **no coverage is bound**; may show agent contact.
 
 ## 5. Negative test cases (exactly 3)
 
@@ -252,21 +252,21 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ## 6. Screenshots / demo video
 
-Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/v4/`). If the portal does not request screenshots, omit them.
+Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide the latest **v6** widget shots in `/workspace/asshield-submission/screens/` (and `screens/v6/`), including options (bundle selection), contact (address + SMS + residence), vehicles (VIN), agent card v4, and confirmation. The plugin ZIP itself does **not** embed screenshots. If the portal does not request screenshots, omit them.
 
 Optional internal walkthrough checklist (not required in the ZIP):
 
-1. Starter prompt → `start_quote` KY success  
-2. Out-of-state CA polite decline  
-3. Driver + vehicle capture (no DL number)  
-4. Consent confirmation  
-5. Submit + “not covered / not bound” wording  
+1. Starter prompt → options → auto+home bundle → `start_quote` KY success  
+2. Contact with address + Own/Rent + optional SMS opt-in  
+3. Driver + vehicle capture (optional VIN; no DL number)  
+4. Out-of-state CA polite decline  
+5. Consent + submit + “not covered / not bound” wording + agent contact  
 
-**Demo recording URL (submission blocker for this package):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.2.0 still has a placeholder** — do not upload that ZIP for final review.
+**Demo recording URL (done):** Unlisted YouTube `https://youtu.be/MujQJvlc9DE` — set in `plugin.json` `review.demo_recording_url` for **1.3.0**.
 ## 7. Release notes
 
 ```
-Adds advanced Apps SDK UX (options picker, coverage Q&A, guided multi-step quote card, confirmation timeline), 13 tools including show_insurance_options and explain_coverage, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
+1.3.0 — Demo recording URL (YouTube unlisted), contact address + residence (own/rent) + optional SMS TCPA opt-in, optional vehicle VIN, agency-centric agent card (multi-office), options auto+home bundling, brand hero refresh. Quote intake only — does not bind coverage.
 ```
 
 ---
@@ -279,7 +279,7 @@ Adds advanced Apps SDK UX (options picker, coverage Q&A, guided multi-step quote
 - [ ] No restricted data collection (SSN, DL numbers, PCI, PHI, credentials)
 - [ ] Tool annotations accurate on production `tools/list`
 - [ ] Domain verification challenge configured
-- [ ] Demo video URL provided
+- [x] Demo video URL provided (`https://youtu.be/MujQJvlc9DE`)
 - [ ] No comparative / pricing / “MCP” / “Plugin” suffix in the display name
 
 ---
@@ -294,7 +294,7 @@ Adds advanced Apps SDK UX (options picker, coverage Q&A, guided multi-step quote
 1. Confirm licensed-state list with counsel (already encoded from published terms).
 2. Confirm 7-year retention + limitation-of-liability language (draft banners removed from live pages; substance still needs counsel sign-off).
 3. Approve icons in `assets/`.
-4. Record demo video URL.
+4. [x] Record demo video URL (`https://youtu.be/MujQJvlc9DE`).
 5. Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render when the portal shows the token.
 6. Keep Supabase + lead email/webhook configured so reviewer submits reach ops (mark any live test **TEST**).
 
@@ -303,10 +303,10 @@ Adds advanced Apps SDK UX (options picker, coverage Q&A, guided multi-step quote
 ### Pre-submission blockers
 These must be done before a successful Submit for Review / publish path:
 
-1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write).
-2. **Real demo URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` with a real Loom/YouTube (or similar) walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP. **Do not upload 1.2.0 for final review while the placeholder remains.**
+1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
+2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube `https://youtu.be/MujQJvlc9DE` is set on `review.demo_recording_url` in plugin **1.3.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the non-placeholder ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.3.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 
