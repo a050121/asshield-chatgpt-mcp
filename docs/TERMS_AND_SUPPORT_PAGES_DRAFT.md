@@ -28,7 +28,7 @@
 
 **Limitation of liability / governing law.** [Counsel to provide.]
 
-**Contact.** joshuawilliams@asshield.com · FL (850) 684-0164 · KY (859) 368-0162
+**Contact.** quote@asshield.com · FL (850) 684-0164 · KY (859) 368-0162
 
 Last updated: [date]
 
@@ -38,6 +38,6 @@ Last updated: [date]
 
 - **What it does:** starts quote requests for auto, home, auto + home, and renters insurance. A licensed agent follows up.
 - **What it doesn't do:** bind coverage, give prices in chat, handle claims, billing, or policy changes. For those, call or text us.
-- **Contact:** joshuawilliams@asshield.com · FL (850) 684-0164 · KY (859) 368-0162 · Hours: [hours, ET/CT].
+- **Contact:** quote@asshield.com · FL (850) 684-0164 · KY (859) 368-0162 · Hours: [hours, ET/CT].
 - **Update or delete a quote request:** email or call us with the name and contact information used.
 - **Report a problem with the app:** email [support address] with what you asked and roughly when.

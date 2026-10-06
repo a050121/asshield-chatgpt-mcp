@@ -41,7 +41,7 @@ To prepare and follow up on your insurance quote, compare options from the carri
 
 ### Your choices
 - You can stop at any time; nothing is sent to an agent until you confirm submission.
-- Ask us to access, correct, or delete your quote request: email [privacy@asshield.com or joshuawilliams@asshield.com] or call FL (850) 684-0164 / KY (859) 368-0162.
+- Ask us to access, correct, or delete your quote request: email [privacy@asshield.com or quote@asshield.com] or call FL (850) 684-0164 / KY (859) 368-0162.
 - Reply STOP to opt out of texts; use the unsubscribe link or reply to opt out of email.
 - You can disconnect or remove the Asshield Insurance app in your ChatGPT settings.
 
