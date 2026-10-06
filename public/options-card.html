@@ -61,6 +61,33 @@
     function $(id){ return document.getElementById(id); }
     function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark"||t==="light") document.documentElement.classList.add("theme-"+t); }
     function setStatus(m){ $("status").textContent = m || ""; }
+    /** Mutual exclusion: auto_home vs auto/home; both auto+home → single auto_home. */
+    function toggleLine(id) {
+      if (selected.has(id)) {
+        selected.delete(id);
+        return;
+      }
+      selected.add(id);
+      if (id === "auto_home") {
+        selected.delete("auto");
+        selected.delete("home");
+      } else if (id === "auto" || id === "home") {
+        selected.delete("auto_home");
+        if (selected.has("auto") && selected.has("home")) {
+          selected.delete("auto");
+          selected.delete("home");
+          selected.add("auto_home");
+        }
+      }
+    }
+    function primaryProduct() {
+      const lines = [...selected];
+      if (lines.includes("auto_home")) return "auto_home";
+      if (lines.includes("auto") && lines.includes("home")) return "auto_home";
+      if (lines.includes("auto")) return "auto";
+      if (lines.includes("home")) return "home";
+      return lines[0] || null;
+    }
     function updateCta() {
       const n = selected.size;
       const btn = $("btn-start");
@@ -119,11 +146,7 @@
           b.setAttribute("aria-label", line.label);
           b.innerHTML = `<span class="tile-icon">${window.asshieldIcon(line.id)}</span><span class="tl">${line.label}</span>`;
           b.onclick = () => {
-            if (selected.has(line.id)) selected.delete(line.id); else selected.add(line.id);
-            // Bundle helper: auto+home shortcut
-            if (selected.has("auto") && selected.has("home")) {
-              selected.add("auto_home");
-            }
+            toggleLine(line.id);
             renderGroups(); updateCta();
             try { window.openai?.setWidgetState?.({ selected_lines: [...selected], zip: $("zip").value, state: detectedState }); } catch(_){}
           };
@@ -165,15 +188,13 @@
       if (!selected.size || !detectedState) return;
       const zip = $("zip").value.trim();
       const lines = [...selected];
-      // Prefer auto_home if both auto and home (or auto_home) selected
-      let primary = lines[0];
-      if (lines.includes("auto_home") || (lines.includes("auto") && lines.includes("home"))) primary = "auto_home";
-      else if (lines.includes("auto")) primary = "auto";
+      const primary = primaryProduct();
+      if (!primary) return;
       setStatus("Starting quote request…");
       try {
         await callTool("start_quote", { product: primary, state: detectedState, zip });
         try { window.openai?.setWidgetState?.({ selected_lines: lines, bundle_lines: lines, zip, state: detectedState, product: primary }); } catch(_){}
-        setStatus("Quote started for " + primary.replace(/_/g," ") + (lines.length>1 ? ` (+${lines.length-1} more in bundle)` : "") + ".");
+        setStatus("Quote started for " + primary.replace(/_/g," ") + (lines.length>1 ? ` (+${lines.length-1} more)` : "") + ".");
       } catch (e) { setStatus("Could not start: " + (e?.message || e)); }
     };
     $("btn-explain").onclick = async () => {
@@ -202,7 +223,7 @@
       ];
       renderGroups();
       if (mock === "start" || mock === "selected") {
-        selected.add("auto"); selected.add("home"); selected.add("auto_home");
+        selected.add("auto_home");
         $("zip").value = "40505"; checkZip(); renderGroups(); updateCta();
       }
     }
