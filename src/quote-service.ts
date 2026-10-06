@@ -19,6 +19,7 @@ import {
 } from "./licensed-states.js";
 import { assertNoRestrictedData } from "./restricted-data.js";
 import { buildAsshieldEstimate } from "./asshield-estimates.js";
+import { buildConfirmationMessaging } from "./confirmation-copy.js";
 
 function requireDb() {
   if (!db) throw new Error("Supabase client is not configured");
@@ -1118,6 +1119,8 @@ export async function submitQuote(input: {
     deductible_preference: deductiblePref
   });
 
+  const confirmation = buildConfirmationMessaging(new Date());
+
   return {
     submitted: true,
     quote: {
@@ -1128,7 +1131,12 @@ export async function submitQuote(input: {
     product: product || undefined,
     asshield_estimate,
     estimates_are_not_quotes: true,
+    confirmation,
+    confirmation_banner: confirmation.banner,
+    independent_section: confirmation.independent,
+    no_coverage_bound: true,
     message:
-      "Quote request submitted to Asshield. Asshield shows estimated starting prices for illustration only — they are not quotes or offers of insurance, and no coverage is bound. A licensed Asshield agent will follow up using your preferred contact method."
+      confirmation.summary_text +
+      " Asshield estimated starting prices are illustrations only — not quotes or offers of insurance."
   };
 }

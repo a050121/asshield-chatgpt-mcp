@@ -74,6 +74,8 @@
       fields: { drivers: [], vehicles: [], coverage_preference: "medium", deductible_preference: "medium" },
       missing: [], checklist: [], callback_sla: "An agent will reach out soon",
       asshield_estimate: null,
+      confirmation_banner: null,
+      independent_section: null,
       cross_sell: [], privacy_url: "https://www.asshield.com/privacy"
     };
 
@@ -304,15 +306,45 @@
             </div>`;
         }
         const estimateHtml = est ? `<div class="estimate-box" id="estimate-box">${proposalInner}</div>` : "";
+        const banner = S.confirmation_banner || {
+          heading: "You're all set.",
+          body: "Your quote request is complete and ready for an Asshield agent to review. During business hours, we typically respond within 1 hour. Requests received after hours will be reviewed the next business day.",
+          bound_line: "No coverage is bound until confirmed by a licensed agent.",
+          after_hours: false,
+          office_hours_label: "Mon–Fri 9am–7pm · Sat 9am–5pm ET"
+        };
+        const indep = S.independent_section || {
+          title: "Independent means more options",
+          body: "Your Asshield agent can review your request across multiple available insurance markets to help find an appropriate combination of coverage and price.",
+          fine_print: "Carrier availability varies by state, product, eligibility, and underwriting. Your agent will determine which markets are appropriate for your request.",
+          carrier_line: null
+        };
+        const carrierHtml = indep.carrier_line
+          ? `<p class="carrier-network">${escapeHtml(indep.carrier_line)}</p>`
+          : "";
+        const afterCls = banner.after_hours ? " is-after-hours" : "";
         root.innerHTML = `<div class="panel">
-          <div class="success-hero">
-            <div class="success-ring"><svg viewBox="0 0 48 48" fill="none" width="40" height="40">
-              <circle cx="24" cy="24" r="20" stroke="#1a6b4a" stroke-width="2.5" opacity=".35"/>
-              <path class="check-draw" d="M14 24.5 21 31.5 34 17" stroke="#1a6b4a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg></div>
-            <h2>Request received</h2>
+          <div class="confirm-banner${afterCls}" id="confirm-banner">
+            <div class="confirm-banner-top">
+              <div class="success-ring"><svg viewBox="0 0 48 48" fill="none" width="36" height="36">
+                <circle cx="24" cy="24" r="20" stroke="#1a6b4a" stroke-width="2.5" opacity=".35"/>
+                <path class="check-draw" d="M14 24.5 21 31.5 34 17" stroke="#1a6b4a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg></div>
+              <div>
+                <h2 class="confirm-heading">${escapeHtml(banner.heading)}</h2>
+                <p class="confirm-ref">Reference <strong>${escapeHtml(ref)}</strong></p>
+              </div>
+            </div>
+            <p class="confirm-body">${escapeHtml(banner.body)}</p>
+            <p class="confirm-hours">${escapeHtml(banner.office_hours_label || "Mon–Fri 9am–7pm · Sat 9am–5pm ET")}${banner.after_hours ? " · After hours" : " · Business hours"}</p>
+            <p class="confirm-bound">${escapeHtml(banner.bound_line)}</p>
           </div>
-          <p style="text-align:center">Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you.<br/><strong>No coverage is bound.</strong></p>
+          <div class="independent-box" id="independent-box">
+            <h3 class="independent-title">${escapeHtml(indep.title)}</h3>
+            <p class="independent-body">${escapeHtml(indep.body)}</p>
+            <p class="independent-fine">${escapeHtml(indep.fine_print)}</p>
+            ${carrierHtml}
+          </div>
           <p class="agency-line">One request, and a licensed agent shops multiple carriers for you.</p>
           ${estimateHtml}
           <ol class="timeline">
@@ -761,6 +793,10 @@
       if (w.callback_sla || sc.callback_sla) S.callback_sla = w.callback_sla || sc.callback_sla;
       if (w.cross_sell || sc.cross_sell) S.cross_sell = w.cross_sell || sc.cross_sell;
       if (w.asshield_estimate || sc.asshield_estimate) S.asshield_estimate = w.asshield_estimate || sc.asshield_estimate;
+      if (w.confirmation_banner || sc.confirmation_banner || sc.confirmation?.banner)
+        S.confirmation_banner = w.confirmation_banner || sc.confirmation_banner || sc.confirmation.banner;
+      if (w.independent_section || sc.independent_section || sc.confirmation?.independent)
+        S.independent_section = w.independent_section || sc.independent_section || sc.confirmation.independent;
       if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
       else if (w.phase === "consent") S.phase = "consent";
       if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product])
@@ -815,6 +851,20 @@
       else if (mock==="confirmation") {
         S.phase="confirmation";
         S.product="auto"; S.state="KY";
+        S.confirmation_banner = {
+          heading: "You're all set.",
+          body: "Your quote request is complete and ready for an Asshield agent to review. During business hours, we typically respond within 1 hour. Requests received after hours will be reviewed the next business day.",
+          bound_line: "No coverage is bound until confirmed by a licensed agent.",
+          after_hours: false,
+          office_hours_label: "Mon–Fri 9am–7pm · Sat 9am–5pm ET"
+        };
+        S.independent_section = {
+          title: "Independent means more options",
+          body: "Your Asshield agent can review your request across multiple available insurance markets to help find an appropriate combination of coverage and price.",
+          fine_print: "Carrier availability varies by state, product, eligibility, and underwriting. Your agent will determine which markets are appropriate for your request.",
+          carrier_line: null,
+          carriers: []
+        };
         S.asshield_estimate = {
           brand: "Asshield Insurance",
           title: "Professional coverage proposal + estimate",

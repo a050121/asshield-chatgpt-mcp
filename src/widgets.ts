@@ -268,7 +268,18 @@ export function withQuoteWidget(
     disclaimer: getDisclaimer(),
     agent: phase === "confirmation" ? agentContactPayload() : undefined,
     asshield_estimate: phase === "confirmation" ? (result.asshield_estimate || null) : undefined,
-    estimates_are_not_quotes: phase === "confirmation" ? true : undefined
+    estimates_are_not_quotes: phase === "confirmation" ? true : undefined,
+    confirmation: phase === "confirmation" ? (result.confirmation || null) : undefined,
+    confirmation_banner: phase === "confirmation"
+      ? (result.confirmation_banner ||
+          (result.confirmation as { banner?: unknown } | undefined)?.banner ||
+          null)
+      : undefined,
+    independent_section: phase === "confirmation"
+      ? (result.independent_section ||
+          (result.confirmation as { independent?: unknown } | undefined)?.independent ||
+          null)
+      : undefined
   };
 
   return {
@@ -277,10 +288,22 @@ export function withQuoteWidget(
     what_to_have_ready: checklist,
     callback_sla: config.callbackSlaText,
     cross_sell: cross,
-    ...(phase === "confirmation" && result.asshield_estimate
+    ...(phase === "confirmation"
       ? {
-          asshield_estimate: result.asshield_estimate,
-          estimates_are_not_quotes: true
+          ...(result.asshield_estimate
+            ? { asshield_estimate: result.asshield_estimate, estimates_are_not_quotes: true }
+            : {}),
+          ...(result.confirmation
+            ? {
+                confirmation: result.confirmation,
+                confirmation_banner:
+                  result.confirmation_banner ||
+                  (result.confirmation as { banner?: unknown }).banner,
+                independent_section:
+                  result.independent_section ||
+                  (result.confirmation as { independent?: unknown }).independent
+              }
+            : {})
         }
       : {}),
     widget

@@ -526,3 +526,49 @@ a { color: var(--accent); font-weight: 700; }
   margin: 4px 0; font-size: 1.02rem; font-weight: 850; color: #0d74a8;
 }
 .estimate-box .estimate-price { margin: 6px 0 0; font-size: 1rem; }
+
+/* Premium confirmation banner */
+.confirm-banner {
+  margin: 0 0 14px; padding: 16px 16px 14px;
+  background: linear-gradient(165deg, #e8f7ef 0%, #f4fbf7 55%, #ffffff 100%);
+  border: 1.5px solid rgba(26,107,74,.28);
+  border-radius: 16px;
+  box-shadow: 0 8px 22px rgba(12,36,56,.06);
+}
+.confirm-banner.is-after-hours {
+  background: linear-gradient(165deg, #eef4fb 0%, #f7fafc 55%, #ffffff 100%);
+  border-color: rgba(26,159,224,.35);
+}
+.confirm-banner-top {
+  display: flex; gap: 12px; align-items: center; margin-bottom: 10px;
+}
+.confirm-heading {
+  margin: 0; font-size: 1.35rem; font-weight: 900; color: #0c2438; letter-spacing: -0.01em;
+}
+.confirm-ref { margin: 2px 0 0; font-size: .82rem; color: #5a6b7c; font-weight: 650; }
+.confirm-body {
+  margin: 0 0 8px; font-size: .95rem; line-height: 1.45; font-weight: 650; color: #0c2438;
+}
+.confirm-hours {
+  margin: 0 0 6px; font-size: .75rem; font-weight: 700; color: #0d74a8;
+}
+.confirm-bound {
+  margin: 0; font-size: .78rem; font-weight: 750; color: #1a6b4a;
+}
+.independent-box {
+  margin: 0 0 12px; padding: 14px 14px 12px;
+  background: #f7fbfe; border: 1.5px solid rgba(26,159,224,.32);
+  border-radius: 14px;
+}
+.independent-title {
+  margin: 0 0 6px; font-size: 1rem; font-weight: 850; color: #0c2438;
+}
+.independent-body {
+  margin: 0 0 8px; font-size: .9rem; line-height: 1.45; font-weight: 650; color: #0c2438;
+}
+.independent-fine {
+  margin: 0; font-size: .72rem; line-height: 1.4; font-weight: 600; color: #5a6b7c;
+}
+.carrier-network {
+  margin: 8px 0 0; font-size: .78rem; font-weight: 700; color: #0d74a8; line-height: 1.4;
+}
