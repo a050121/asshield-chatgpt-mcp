@@ -4,7 +4,7 @@
  */
 
 /** Text carrier names only (no logos). Empty until Josh confirms his markets. */
-export const CARRIER_NETWORK: string[] = [];
+export const CARRIER_NETWORK: string[] = ["Progressive", "Travelers", "GEICO", "Liberty Mutual"];
 
 export type ConfirmationBanner = {
   heading: string;
@@ -57,7 +57,7 @@ export function isWithinOfficeHours(when: Date = new Date()): boolean {
 
 function carrierLine(carriers: string[]): string | null {
   if (!carriers.length) return null;
-  return `We work with multiple insurance carriers, including: ${carriers.join(" • ")} and others.`;
+  return `We work with multiple insurance carriers, including ${carriers.join(" • ")} and other insurance carriers.`;
 }
 
 export function buildConfirmationMessaging(when: Date = new Date()): ConfirmationMessaging {
