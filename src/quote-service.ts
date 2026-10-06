@@ -17,6 +17,7 @@ import {
   licensedStatesMessage,
   LICENSED_STATES
 } from "./licensed-states.js";
+import { assertNoRestrictedData } from "./restricted-data.js";
 
 function requireDb() {
   if (!db) throw new Error("Supabase client is not configured");
@@ -318,6 +319,10 @@ export async function saveContact(input: {
   residence_other?: string;
   sms_consent?: boolean;
 }) {
+  assertNoRestrictedData(input as Record<string, unknown>, [
+    "first_name", "last_name", "phone", "email", "intake_notes",
+    "street", "unit", "city", "residence_other"
+  ]);
   const customerPayload = {
     first_name: input.first_name,
     last_name: input.last_name,
@@ -452,6 +457,8 @@ export async function saveBusinessDetails(input: {
   // Commercial auto summary
   commercial_vehicle_summary?: string;
 }) {
+  assertNoRestrictedData(input as Record<string, unknown>, ["business_name","business_type_or_description","commercial_vehicle_summary","cargo_type"]);
+
   const patch: LineDetails = {
     business_name: input.business_name,
     business_type_or_description: input.business_type_or_description,
@@ -527,6 +534,8 @@ export async function saveLineDetails(input: {
   // Commercial auto summary (optional here too)
   commercial_vehicle_summary?: string;
 }) {
+  assertNoRestrictedData(input as Record<string, unknown>, ["operations_description","employees_by_job_type","boat_make","cart_make"]);
+
   const patch: LineDetails = {
     operations_description: input.operations_description,
     desired_limits: input.desired_limits,
@@ -1017,6 +1026,8 @@ export async function submitQuote(input: {
   quote_id: string;
   notes?: string;
 }) {
+  assertNoRestrictedData(input as Record<string, unknown>, ["notes"]);
+
   const readiness = await getMissingFields(input.quote_id);
   if (!readiness.ready_to_submit) {
     return {

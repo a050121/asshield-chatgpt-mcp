@@ -29,8 +29,19 @@ import {
   toolTextResult
 } from "./widgets.js";
 import { explainCoverage, listInsuranceOptions } from "./coverage-kb.js";
+import { RestrictedDataError, restrictedDataRefusal } from "./restricted-data.js";
 
 const productEnum = z.enum(QUOTE_PRODUCTS);
+
+
+function restrictedToolError(err: RestrictedDataError) {
+  const payload = restrictedDataRefusal(err.matched);
+  return {
+    isError: true as const,
+    content: [{ type: "text" as const, text: JSON.stringify(payload) }],
+    structuredContent: payload
+  };
+}
 
 function createMcpServer(): McpServer {
   const app = new McpServer(
@@ -96,8 +107,13 @@ function createMcpServer(): McpServer {
       }
     },
     async (input) => {
-      const result = await saveContact(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      try {
+        const result = await saveContact(input);
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      } catch (err) {
+        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        throw err;
+      }
     }
   );
 
@@ -126,8 +142,13 @@ function createMcpServer(): McpServer {
       }
     },
     async (input) => {
-      const result = await saveBusinessDetails(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      try {
+        const result = await saveBusinessDetails(input);
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      } catch (err) {
+        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        throw err;
+      }
     }
   );
 
@@ -157,8 +178,13 @@ function createMcpServer(): McpServer {
       }
     },
     async (input) => {
-      const result = await saveLineDetails(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      try {
+        const result = await saveLineDetails(input);
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      } catch (err) {
+        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        throw err;
+      }
     }
   );
 
@@ -285,15 +311,20 @@ function createMcpServer(): McpServer {
       }
     },
     async (input) => {
-      const result = await submitQuote(input) as Record<string, unknown>;
-      const phase = result.submitted ? "confirmation" : "progress";
-      const enriched = withQuoteWidget(result, phase);
-      if (result.submitted) {
-        enriched.agent = agentContactPayload();
-        enriched.no_coverage_bound = true;
-        enriched.agent_will_contact = true;
+      try {
+        const result = await submitQuote(input) as Record<string, unknown>;
+        const phase = result.submitted ? "confirmation" : "progress";
+        const enriched = withQuoteWidget(result, phase);
+        if (result.submitted) {
+          enriched.agent = agentContactPayload();
+          enriched.no_coverage_bound = true;
+          enriched.agent_will_contact = true;
+        }
+        return toolTextResult(enriched);
+      } catch (err) {
+        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        throw err;
       }
-      return toolTextResult(enriched);
     }
   );
 
