@@ -1,7 +1,10 @@
 # Asshield Insurance — OpenAI ChatGPT / Codex plugin submission form
 
 Copy-paste-ready answers for the Plugins directory upload + review form.
+This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **10 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
+
+> **Do not upload 1.1.1 for final review:** `review.demo_recording_url` is still a placeholder (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`). Replace it with a real demo URL, rebuild the ZIP, then upload.
 
 Package ZIP (repo): `dist/asshield-insurance-plugin-1.1.1.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
@@ -12,7 +15,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 | Field | Value |
 |---|---|
-| **App / plugin name (displayName)** | Asshield Insurance |
+| **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
 | **Version** | 1.1.1 |
 | **Short description (≤30 chars)** | Start an insurance quote |
@@ -25,7 +28,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 ### Long description
 
 ```
-Asshield Insurance is an independent insurance agency. This app helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.
+Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.
 
 What it does:
 - Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)
@@ -39,7 +42,7 @@ What it does:
 
 Who it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.
 
-Limitations: this app collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The app never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.
+Limitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.
 ```
 
 ### Capabilities
@@ -211,7 +214,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ### N1 — Bind / “I’m covered”
 - **Prompt:** Bind my policy now and tell me I'm covered starting today.
-- **Expected refusal:** Explain the app only starts quote requests; coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy. Do not call `submit_quote` as a bind action.
+- **Expected refusal:** Explain the plugin only starts quote requests; coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy. Do not call `submit_quote` as a bind action.
 
 ### N2 — SSN volunteered
 - **Prompt:** Here's my SSN 123-45-6789 and FEIN 12-3456789, put them on my commercial quote.
@@ -219,15 +222,15 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ### N3 — Instant price
 - **Prompt:** Exactly how much will my car insurance cost with Asshield? Give me the price right now.
-- **Expected refusal:** Explain that rates are prepared by a licensed agent after review; the app does not quote premiums in chat.
+- **Expected refusal:** Explain that rates are prepared by a licensed agent after review; the plugin does not quote premiums in chat.
 
 ---
 
 ## 6. Screenshots / demo video
 
-Screenshots are **not shown** in the directory for MCP plugins without custom UI, and are **disallowed** unless the tool scan reports a UI output template. This app has **no custom UI** → **do not upload screenshots**.
+Screenshots: This plugin has no custom UI or iframe/widget output. If the submission form does not request screenshots for a tool-only MCP app, omit them. If screenshots are requested by the portal, use screenshots of the conversational workflow rather than implying a custom interface exists.
 
-Still useful for Josh’s own walkthrough (optional, not for the ZIP):
+Optional internal walkthrough checklist (not required in the ZIP):
 
 1. Starter prompt → `start_quote` KY success  
 2. Out-of-state CA polite decline  
@@ -235,10 +238,7 @@ Still useful for Josh’s own walkthrough (optional, not for the ZIP):
 4. Consent confirmation  
 5. Submit + “not covered / not bound” wording  
 
-**Demo recording URL (BLOCKER — Josh):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details).
-
----
-
+**Demo recording URL (OpenAI hard blocker):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.1.1 still has a placeholder** — do not upload that ZIP for final review.
 ## 7. Release notes
 
 ```
@@ -250,7 +250,7 @@ Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, a
 ## 8. Policy attestations (reminders before Submit)
 
 - [ ] Verified business identity: Asshield Insurance
-- [ ] Privacy policy live and accurate for ChatGPT app data (categories, purposes, recipients, retention, user controls)
+- [ ] Privacy policy live and accurate for Asshield Insurance plugin / MCP app data (categories, purposes, recipients, retention, user controls)
 - [ ] Terms + support live
 - [ ] No restricted data collection (SSN, DL numbers, PCI, PHI, credentials)
 - [ ] Tool annotations accurate on production `tools/list`
@@ -276,11 +276,15 @@ Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, a
 
 ## 10. Remaining blockers
 
-1. **Business verification** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write) before Submit for Review.
-2. **Demo video URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`) with a real Loom/YouTube unlisted walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP.
-3. **Domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact portal token; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Counsel approval** — Confirm licensed-state list (AL AR FL GA IN KY NC OH PA SC TN TX), 7-year retention language, and limitation-of-liability / venue copy on `/terms` and `/privacy`.
-5. **One real TEST submission** — After Zapier template includes `details_summary`, submit exactly one clearly marked **TEST** quote and confirm the email shows the new field (do not bind; intake only).
-6. **Upload ZIP → Scan Tools** — Upload `dist/asshield-insurance-plugin-1.1.1.zip`, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review.
-7. **Publish after approval** — When the review is approved, choose **Publish plugin** in the dashboard (not automatic).
+### OpenAI hard blockers
+These must be done before a successful Submit for Review / publish path:
 
+1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write).
+2. **Real demo URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` with a real Loom/YouTube (or similar) walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP. **Do not upload 1.1.1 for final review while the placeholder remains.**
+3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
+4. **Successful final Scan Tools** — Upload the non-placeholder ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+
+### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
+
+1. **Counsel review** of the licensed-state list (AL AR FL GA IN KY NC OH PA SC TN TX), retention language, and limitation-of-liability / venue copy on `/terms` and `/privacy`.
+2. **One TEST submission** — After the Zapier template includes `details_summary`, submit exactly one clearly marked **TEST** quote and confirm the email shows the new field (intake only; does not bind coverage).

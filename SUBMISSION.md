@@ -1,6 +1,8 @@
 # Asshield Insurance — ChatGPT directory submission checklist
 
-Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links at the bottom).
+Status as of **Oct 5, 2026**.
+
+**Do not upload 1.1.1 for final review:** `review.demo_recording_url` is still a placeholder. The listing is **the Asshield Insurance plugin** (it contains an MCP app). Researched against OpenAI's official docs (links at the bottom).
 
 ## What changed at OpenAI (read this first)
 
@@ -17,7 +19,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 | MCP config → Render URL | `chatgpt-plugin/asshield-insurance/mcp.json` | Updated to custom domain (`https://mcp.asshield.com/mcp`); DNS must verify before go-live |
 | Onboarding skill | `chatgpt-plugin/asshield-insurance/skills/asshield-quote-intake/SKILL.md` | Done |
 | Icons/logos (light + dark, square PNG) | `chatgpt-plugin/asshield-insurance/assets/` | Generated from the asshield.com mark. **Josh to approve** |
-| ZIP builder | `scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.0.0.zip` | Done |
+| ZIP builder | `scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.1.1.zip` | Done |
 | Tool annotations (`readOnlyHint` / `destructiveHint` / `openWorldHint`) | `src/server.ts` | Done. Required by the guidelines |
 | Domain verification endpoint | `GET /.well-known/openai-apps-challenge` (env `OPENAI_APPS_CHALLENGE_TOKEN`) | Code done. Token gets set at submission time |
 | Privacy addendum draft | `docs/PRIVACY_CHATGPT_APP_ADDENDUM_DRAFT.md` | Draft. Needs publishing |
@@ -56,13 +58,13 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 - [ ] Approve the icons in `assets/` (512px logo + 128px composer icon, light and dark). Swap in official files if preferred: square, at least 48px, no larger than 5 MiB.
 - [ ] Display name "Asshield Insurance". Subtitle "Start an insurance quote" (30 character limit). Category "Finance". Confirm the category exists in the dashboard picker.
 - [ ] **Review risk: the brand name.** Plugins must suit general audiences, including ages 13–17. A reviewer may question the name. Be ready to explain that it's a trademarked, state-licensed agency name (FL #L120146, KY #867084).
-- [ ] Screenshots: not shown in the directory anymore. Starter prompts replace them and are already set. Screenshots are optional in the manifest.
+- [ ] Screenshots: This plugin has no custom UI or iframe/widget output. If the submission form does not request screenshots for a tool-only MCP app, omit them. If screenshots are requested by the portal, use screenshots of the conversational workflow rather than implying a custom interface exists.
 - [ ] No pricing, discounts, or comparative claims in the listing (already compliant). No Lexington emphasis (compliant).
 
 ### 6. Review materials
 - [x] 5 positive and 3 negative test cases in `plugin.json` (imported automatically from the ZIP).
 - [ ] **Run all 5 positive + 3 negative test cases** against the production server before submitting. Correct `expected_behavior` if the results differ.
-- [ ] **Demo video URL (BLOCKER).** Record a walkthrough of the test cases and host it unlisted (YouTube/Loom). Add it as `review.demo_recording_url` in `plugin.json` or enter it in Review details.
+- [ ] **Demo video URL (OpenAI hard blocker).** Record a walkthrough of the test cases and host it unlisted (YouTube/Loom). Add it as `review.demo_recording_url` in `plugin.json` or enter it in Review details. Until then, do not upload 1.1.1 for final review.
 - [ ] Release notes: done (`publication.release_notes`).
 - [ ] Countries: `["US"]`.
 
@@ -75,7 +77,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 - No ads, no upsells, no checkout (`commerce: false`).
 
 ### 8. Submit
-1. `./scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.0.0.zip`
+1. `./scripts/build-plugin-zip.sh` → `dist/asshield-insurance-plugin-1.1.1.zip`
 2. Platform Dashboard → **Plugins** → *Upload new or existing plugin* → pick the verified identity → upload the ZIP.
 3. **Metadata & Skills**: fix any findings, then re-upload a corrected ZIP if needed.
 4. **MCPs** → Connect → URL, Authentication: none → domain challenge (step 2 above) → wait for the tool scan → fix issues → Rescan.
@@ -85,7 +87,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 
 ## Docs used
 - Submit / upload plugin and manifest field reference: https://developers.openai.com/apps-sdk/deploy/submission (now https://developers.openai.com/plugins/deploy/submission)
-- Plugin (app) submission guidelines: https://developers.openai.com/apps-sdk/app-submission-guidelines
+- Plugin submission guidelines: https://developers.openai.com/apps-sdk/app-submission-guidelines
 - Package your plugin: https://developers.openai.com/plugins/build/plugins
 - Authentication: https://developers.openai.com/apps-sdk/build/auth
 - Connect and test: https://developers.openai.com/apps-sdk/deploy/connect-chatgpt
