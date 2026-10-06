@@ -210,8 +210,10 @@ Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, a
 
 ## 9. Ops checklist still on Josh
 
-0. Apply `db/migrations/002_expand_products_and_line_details.sql` in the Supabase SQL Editor for project `fezrvbugwvxiyebefcth` (expands product check + adds `quotes.line_details`). Until applied, the app maps new products onto legacy DB values and stores canonical `product_line` + details in JSON (`line_details` column or `activities` fallback).
-0b. Update Zapier email template to include field **`details_summary`**.
+- [x] Migration 002 applied in Supabase (2026-10-05); `quotes.line_details` verified.
+- [x] Zapier email (Zap 382498270 v2) includes **Quote details** (`lead.details_summary`); confirm it fills on the next real quote.
+- [x] Custom domain `https://mcp.asshield.com/mcp` live; Render Starter plan (always on).
+- [x] Business verification submitted on platform.openai.com (2026-10-05, pending review).
 
 1. Confirm licensed-state list with counsel (already encoded from published terms).
 2. Confirm 7-year retention + limitation-of-liability language (draft banners removed from live pages; substance still needs counsel sign-off).
