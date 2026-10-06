@@ -24,14 +24,23 @@ export const OPTIONS_CARD_URI = "ui://widget/asshield-options-card/v1.html";
 export const COVERAGE_CARD_URI = "ui://widget/asshield-coverage-card/v1.html";
 
 function logoDataUri(): string {
-  try {
-    const png = readFileSync(
-      join(__dirname, "..", "chatgpt-plugin/asshield-insurance/assets/logo.png")
-    );
-    return `data:image/png;base64,${png.toString("base64")}`;
-  } catch {
-    return "";
+  // Transparent brand mark (mascot + shield) from asshield.com — sits on navy without a plate.
+  // Wordmark + motto are CSS (white Fraunces + brand-bright) for navy readability.
+  const candidates = [
+    join(publicDir, "brand/asshield-mark-widget.png"),
+    join(publicDir, "brand/asshield-mark.png"),
+    join(publicDir, "brand/asshield-logo-widget.png"),
+    join(__dirname, "..", "chatgpt-plugin/asshield-insurance/assets/logo.png")
+  ];
+  for (const file of candidates) {
+    try {
+      const png = readFileSync(file);
+      return `data:image/png;base64,${png.toString("base64")}`;
+    } catch {
+      /* try next */
+    }
   }
+  return "";
 }
 
 function loadHtml(name: string): string {

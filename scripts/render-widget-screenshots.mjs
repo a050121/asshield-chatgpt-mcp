@@ -6,10 +6,18 @@ import { createServer } from "node:http";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
-const outDir = "/workspace/asshield-submission/screens/v5";
+const outDir = "/workspace/asshield-submission/screens/v6";
 mkdirSync(outDir, { recursive: true });
 
-const logo = readFileSync(join(root, "chatgpt-plugin/asshield-insurance/assets/logo.png"));
+const logoCandidates = [
+  join(root, "public/brand/asshield-mark-widget.png"),
+  join(root, "public/brand/asshield-mark.png"),
+  join(root, "chatgpt-plugin/asshield-insurance/assets/logo.png")
+];
+let logo;
+for (const c of logoCandidates) {
+  try { logo = readFileSync(c); break; } catch { /* next */ }
+}
 const logoUri = `data:image/png;base64,${logo.toString("base64")}`;
 const theme = readFileSync(join(root, "public", "asshield-widget-theme.css"), "utf8");
 const icons = readFileSync(join(root, "public", "asshield-line-icons.js"), "utf8");
@@ -77,5 +85,5 @@ for (const s of shots) {
 }
 await browser.close();
 server.close();
-writeFileSync(join(outDir, "README.md"), `# Asshield widget screenshots v4\n\nNational-carrier aesthetic + interactive CX.\n`);
+writeFileSync(join(outDir, "README.md"), `# Asshield widget screenshots v6\n\nBlended navy hero (no white plate), brand palette, motto.\n`);
 console.log("done");
