@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node ./node_modules/tsx/dist/cli.mjs src/server.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "smoke": "node scripts/smoke-mcp-local.mjs",
+    "screenshots": "node scripts/render-widget-screenshots.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.0.1",
@@ -20,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^24.5.2",
     "@types/nodemailer": "^8.0.2",
+    "playwright": "^1.63.0",
     "typescript": "^5.9.2"
   }
 }

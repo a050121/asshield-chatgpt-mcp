@@ -2,7 +2,7 @@
 
 Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
-MCP exposes **10 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
+MCP exposes **11 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
 > **Do not upload 1.1.1 for final review:** `review.demo_recording_url` is still a placeholder (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`). Replace it with a real demo URL, rebuild the ZIP, then upload.
 
@@ -39,6 +39,7 @@ What it does:
 - Records your current carrier and coverages so an agent can compare options
 - Records your explicit consent before anything is sent
 - Checks what is still missing, then sends the completed request to an Asshield licensed agent
+- Shows Asshield agent contact details (and a branded quote card with privacy consent in ChatGPT)
 
 Who it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.
 
@@ -53,6 +54,7 @@ Limitations: this plugin collects quote information only. It does not provide ra
 - Record boat, golf cart, GL, and workers' comp details
 - Record current policy details and explicit consent
 - Check quote completeness and send to a licensed agent
+- Show Asshield agent contact card (phone, email, office, licensed states)
 
 ### Starter prompts (defaultPrompt)
 
@@ -97,14 +99,14 @@ Limitations: this plugin collects quote information only. It does not provide ra
 | **Authentication** | None |
 | **Health check** | https://mcp.asshield.com/health |
 | **Domain verification** | Host portal token at `https://mcp.asshield.com/.well-known/openai-apps-challenge` (env `OPENAI_APPS_CHALLENGE_TOKEN` on Render). Parent domain `https://www.asshield.com/.well-known/openai-apps-challenge` is also eligible if needed. |
-| **CSP / UI** | No custom UI / iframes / widgets. No `_meta.ui.csp` required. |
+| **CSP / UI** | Custom Apps SDK widgets (quote card + agent contact card). Resources use MIME `text/html;profile=mcp-app` with `_meta.ui.csp` (connectDomains empty; resourceDomains: asshield.com, content.naic.org). Tools set `_meta.ui.resourceUri` and ChatGPT-compatible `_meta["openai/outputTemplate"]`. |
 | **Server instructions** | Quote intake only; never claim coverage is bound; licensed states only; no SSN/DL/payment/password collection. |
 
 ---
 
-## 3. Tools (10) — annotations and justifications
+## 3. Tools (11) — annotations and justifications
 
-Live `tools/list` on `https://mcp.asshield.com/mcp` returns **10 tools**. Every tool sets explicit booleans for `readOnlyHint`, `destructiveHint`, and `openWorldHint`. OpenAI no longer requires annotation justifications in the package; one-sentence justifications below are for the review form / Scan Tools appeal notes. There is **no** standard `plugin.json` field for them (they are not embedded in the ZIP).
+Live `tools/list` on `https://mcp.asshield.com/mcp` returns **11 tools**. Every tool sets explicit booleans for `readOnlyHint`, `destructiveHint`, and `openWorldHint`. OpenAI no longer requires annotation justifications in the package; one-sentence justifications below are for the review form / Scan Tools appeal notes. There is **no** standard `plugin.json` field for them (they are not embedded in the ZIP).
 
 | Tool | readOnlyHint | destructiveHint | openWorldHint |
 |---|---|---|---|
@@ -118,6 +120,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **10 tools**. Every 
 | save_consent | false | false | false |
 | get_missing_quote_fields | true | false | false |
 | submit_quote | false | true | **true** |
+| get_agent_contact | true | false | false |
 
 ### Per-hint justifications (one sentence each)
 
@@ -170,6 +173,12 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **10 tools**. Every 
 - **readOnlyHint false:** Changes quote status to submitted and triggers outbound lead notification.
 - **destructiveHint true:** Irreversible one-time lead send (cannot un-send the webhook/email); ChatGPT should confirm first. Does **not** bind coverage.
 - **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
+
+
+#### get_agent_contact
+- **readOnlyHint true:** Returns static Asshield agent contact details; does not modify any data.
+- **destructiveHint false:** Read-only contact card with no irreversible side effects.
+- **openWorldHint false:** Serves Asshield-configured contact fields only (optional license/booking env vars); does not call open web APIs.
 
 ### Zapier / webhook field to add
 
@@ -228,7 +237,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ## 6. Screenshots / demo video
 
-Screenshots: This plugin has no custom UI or iframe/widget output. If the submission form does not request screenshots for a tool-only MCP app, omit them. If screenshots are requested by the portal, use screenshots of the conversational workflow rather than implying a custom interface exists.
+Screenshots: This plugin includes Apps SDK custom UI widgets (quote consent/progress/confirmation card and agent contact card). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/`). If the portal does not request screenshots, omit them.
 
 Optional internal walkthrough checklist (not required in the ZIP):
 
@@ -238,11 +247,11 @@ Optional internal walkthrough checklist (not required in the ZIP):
 4. Consent confirmation  
 5. Submit + “not covered / not bound” wording  
 
-**Demo recording URL (OpenAI hard blocker):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.1.1 still has a placeholder** — do not upload that ZIP for final review.
+**Demo recording URL (submission blocker for this package):** record a Loom/YouTube unlisted walkthrough of P1–P5 and N1, then set `review.demo_recording_url` in `plugin.json` (or paste into Review details). Version **1.1.1 still has a placeholder** — do not upload that ZIP for final review.
 ## 7. Release notes
 
 ```
-Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, and motorcycle quote intake with business/line detail tools, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
+Adds Apps SDK custom UI (quote card + agent contact), get_agent_contact tool (11 tools total), commercial/specialty quote intake, licensed-state checks, and details_summary on lead alerts. Quote intake only — does not bind coverage.
 ```
 
 ---
@@ -276,7 +285,7 @@ Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, a
 
 ## 10. Remaining blockers
 
-### OpenAI hard blockers
+### Pre-submission blockers
 These must be done before a successful Submit for Review / publish path:
 
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write).

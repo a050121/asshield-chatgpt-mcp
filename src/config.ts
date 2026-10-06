@@ -26,5 +26,19 @@ export const config = {
   smtpHost: process.env.SMTP_HOST ?? "",
   smtpPort: Number(process.env.SMTP_PORT ?? 587),
   smtpUser: process.env.SMTP_USER ?? "",
-  smtpPass: process.env.SMTP_PASS ?? ""
+  smtpPass: process.env.SMTP_PASS ?? "",
+  /** Optional agent license number shown on the contact card only when set. */
+  agentLicenseNumber: process.env.AGENT_LICENSE_NUMBER ?? "",
+  /** Optional booking URL; shown only when set. */
+  bookingUrl: process.env.BOOKING_URL ?? "",
+  agentName: process.env.AGENT_NAME ?? "Joshua Williams",
+  agentEmail: process.env.AGENT_EMAIL ?? "joshuawilliams@asshield.com",
+  agentPhone: process.env.AGENT_PHONE ?? "859-368-0162",
+  agentPhoneTel: process.env.AGENT_PHONE_TEL ?? "+18593680162",
+  agentAddress:
+    process.env.AGENT_ADDRESS ?? "2240 Executive Dr Ste 103, Lexington, KY 40505",
+  agencyWebsite: process.env.AGENCY_WEBSITE ?? "https://www.asshield.com",
+  privacyUrl: process.env.PRIVACY_URL ?? "https://www.asshield.com/privacy",
+  naicLookupUrl:
+    process.env.NAIC_LOOKUP_URL ?? "https://content.naic.org/state-insurance-departments"
 };

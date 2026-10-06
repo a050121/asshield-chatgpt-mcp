@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Asshield Quote</title>
+  <style>
+    :root {
+      --brand: #1A7FBF;
+      --brand-bright: #1A9FE0;
+      --navy: #0c2438;
+      --ink: #071521;
+      --muted: #5b6d7e;
+      --bg: #f5f8fb;
+      --card: #ffffff;
+      --line: rgba(12,36,56,.12);
+      --ok: #1a6b4a;
+      --danger: #9b2c2c;
+      --radius: 16px;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0b1520;
+        --card: #122233;
+        --ink: #f5f8fb;
+        --muted: #a8b6c4;
+        --line: rgba(255,255,255,.14);
+        --navy: #e8f3fa;
+      }
+    }
+    html.theme-dark {
+      --bg: #0b1520;
+      --card: #122233;
+      --ink: #f5f8fb;
+      --muted: #a8b6c4;
+      --line: rgba(255,255,255,.14);
+      --navy: #e8f3fa;
+    }
+    html.theme-light {
+      --bg: #f5f8fb;
+      --card: #ffffff;
+      --ink: #071521;
+      --muted: #5b6d7e;
+      --line: rgba(12,36,56,.12);
+      --navy: #0c2438;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      background: transparent;
+      color: var(--ink);
+      padding: 8px;
+    }
+    .card {
+      max-width: 440px;
+      margin: 0 auto;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px 18px 16px;
+      box-shadow: 0 8px 28px rgba(7,21,33,.08);
+    }
+    .header { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+    .header img { width: 44px; height: 44px; border-radius: 12px; }
+    .header h1 { margin: 0; font-size: 1.05rem; color: var(--navy); line-height: 1.25; }
+    .header p { margin: 2px 0 0; font-size: .78rem; color: var(--muted); }
+    .badge {
+      display: inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .04em;
+      text-transform: uppercase; color: var(--brand); background: rgba(26,127,191,.12);
+      border-radius: 999px; padding: .2rem .55rem; margin-bottom: 10px;
+    }
+    h2 { margin: 0 0 8px; font-size: .98rem; }
+    p, li { font-size: .88rem; line-height: 1.45; color: var(--ink); }
+    .muted { color: var(--muted); }
+    ul { margin: 8px 0 12px; padding-left: 1.1rem; }
+    .field-list { list-style: none; padding: 0; margin: 0 0 12px; }
+    .field-list li {
+      display: flex; justify-content: space-between; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid var(--line); font-size: .84rem;
+    }
+    .field-list .k { color: var(--muted); }
+    .field-list .v { font-weight: 600; text-align: right; word-break: break-word; }
+    .missing { color: var(--danger); font-weight: 600; }
+    label { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: .03em; }
+    input, select, textarea {
+      width: 100%; padding: .65rem .75rem; border-radius: 10px;
+      border: 1.5px solid var(--line); background: var(--bg); color: var(--ink);
+      font: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    button {
+      font: inherit; font-weight: 650; border-radius: 999px; padding: .7rem 1.1rem;
+      border: 1.5px solid transparent; cursor: pointer;
+    }
+    button.primary { background: linear-gradient(135deg, var(--brand-bright), var(--brand)); color: #fff; }
+    button.secondary { background: transparent; border-color: var(--line); color: var(--navy); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .note { font-size: .78rem; color: var(--muted); margin-top: 12px; line-height: 1.4; }
+    .ok { color: var(--ok); font-weight: 700; }
+    .warn-box {
+      background: rgba(26,127,191,.08); border: 1px solid rgba(26,127,191,.25);
+      border-radius: 12px; padding: 10px 12px; margin: 10px 0; font-size: .84rem;
+    }
+    a { color: var(--brand); font-weight: 600; }
+    .hidden { display: none !important; }
+    .status { font-size: .8rem; color: var(--muted); min-height: 1.2em; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="card" id="root" role="region" aria-label="Asshield insurance quote card">
+    <div class="header">
+      <img src="LOGO_SRC" alt="Asshield Insurance" width="44" height="44" />
+      <div>
+        <h1>Asshield Insurance</h1>
+        <p>Quote request · licensed agency</p>
+      </div>
+    </div>
+
+    <section id="view-consent" class="hidden">
+      <span class="badge">Consent</span>
+      <h2>Before we continue</h2>
+      <p>Asshield will use the details you share to prepare an insurance quote request for a licensed agent.</p>
+      <div class="warn-box">
+        <strong>What’s shared with Asshield:</strong> product, location, contact preferences, and the intake fields you provide.
+        See our <a href="https://www.asshield.com/privacy" target="_blank" rel="noopener noreferrer">Privacy notice</a>.
+      </div>
+      <p class="note">ChatGPT’s own answers and explanations are generated by ChatGPT and are <strong>not</strong> Asshield’s advice or a quote.</p>
+      <div class="actions">
+        <button type="button" class="primary" id="btn-consent">I understand — continue</button>
+      </div>
+    </section>
+
+    <section id="view-progress" class="hidden">
+      <span class="badge">In progress</span>
+      <h2 id="progress-title">Quote progress</h2>
+      <ul class="field-list" id="field-list"></ul>
+      <p id="missing-line" class="note"></p>
+      <details id="edit-panel">
+        <summary style="cursor:pointer;font-weight:650;color:var(--navy)">Edit / correct contact fields</summary>
+        <label for="first_name">First name</label>
+        <input id="first_name" autocomplete="given-name" />
+        <label for="last_name">Last name</label>
+        <input id="last_name" autocomplete="family-name" />
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" />
+        <label for="phone">Phone</label>
+        <input id="phone" type="tel" autocomplete="tel" />
+        <div class="actions">
+          <button type="button" class="primary" id="btn-save-contact">Save contact via Asshield</button>
+        </div>
+      </details>
+      <div class="actions">
+        <button type="button" class="secondary" id="btn-refresh">Refresh missing fields</button>
+        <button type="button" class="primary" id="btn-submit">Submit quote request</button>
+      </div>
+      <p class="note">Submitting sends a request to Asshield. It does <strong>not</strong> bind coverage.</p>
+    </section>
+
+    <section id="view-confirmation" class="hidden">
+      <span class="badge">Submitted</span>
+      <h2 class="ok">Request received</h2>
+      <p>Reference: <strong id="ref-id"></strong></p>
+      <p>An Asshield agent will contact you using your preferred method.</p>
+      <p class="warn-box"><strong>No coverage is bound.</strong> Coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy.</p>
+      <div id="agent-mini" class="note"></div>
+      <div class="actions">
+        <button type="button" class="secondary" id="btn-agent">Show agent contact card</button>
+      </div>
+    </section>
+
+    <section id="view-idle">
+      <span class="badge">Asshield</span>
+      <h2>Quote intake</h2>
+      <p class="muted">Waiting for quote tool results…</p>
+    </section>
+
+    <div class="status" id="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+  (function () {
+    const pending = new Map();
+    let nextId = 1;
+    let state = { phase: "idle", quote_id: null, product: null, fields: {}, missing: [], message: "", agent: null, consent_ok: false };
+
+    function $(id) { return document.getElementById(id); }
+    function setStatus(msg) { $("status").textContent = msg || ""; }
+
+    function applyTheme(theme) {
+      document.documentElement.classList.remove("theme-dark", "theme-light");
+      if (theme === "dark") document.documentElement.classList.add("theme-dark");
+      if (theme === "light") document.documentElement.classList.add("theme-light");
+    }
+
+    function request(method, params) {
+      const id = nextId++;
+      window.parent.postMessage({ jsonrpc: "2.0", id, method, params }, "*");
+      return new Promise((resolve, reject) => pending.set(id, { resolve, reject }));
+    }
+
+    async function callTool(name, args) {
+      if (window.openai && typeof window.openai.callTool === "function") {
+        return window.openai.callTool(name, args);
+      }
+      return request("tools/call", { name, arguments: args || {} });
+    }
+
+    function show(phase) {
+      ["consent", "progress", "confirmation", "idle"].forEach((p) => {
+        const el = $("view-" + p);
+        if (el) el.classList.toggle("hidden", p !== phase);
+      });
+    }
+
+    function render() {
+      const phase = state.phase || "idle";
+      show(phase === "consent" || phase === "progress" || phase === "confirmation" ? phase : "idle");
+      if (phase === "progress") {
+        $("progress-title").textContent = (state.product ? String(state.product).replace(/_/g, " ") : "Quote") + " progress";
+        const fields = state.fields || {};
+        const rows = [
+          ["Quote ID", state.quote_id || "—"],
+          ["Product", state.product || "—"],
+          ["State / ZIP", [fields.state || state.state, fields.zip || state.zip].filter(Boolean).join(" ") || "—"],
+          ["Name", [fields.first_name, fields.last_name].filter(Boolean).join(" ") || "—"],
+          ["Email", fields.email || "—"],
+          ["Phone", fields.phone || "—"]
+        ];
+        $("field-list").innerHTML = rows.map(([k, v]) => `<li><span class="k">${k}</span><span class="v">${escapeHtml(String(v))}</span></li>`).join("");
+        const missing = state.missing || [];
+        $("missing-line").innerHTML = missing.length
+          ? `<span class="missing">Still needed:</span> ${escapeHtml(missing.join(", "))}`
+          : `<span class="ok">Ready to submit</span> (confirm below).`;
+        $("btn-submit").disabled = missing.length > 0 && !missing.every((m) => m === "quote_authorization");
+        if (fields.first_name) $("first_name").value = fields.first_name;
+        if (fields.last_name) $("last_name").value = fields.last_name;
+        if (fields.email) $("email").value = fields.email;
+        if (fields.phone) $("phone").value = fields.phone;
+      }
+      if (phase === "confirmation") {
+        $("ref-id").textContent = state.quote_id || "—";
+        const a = state.agent || {};
+        $("agent-mini").textContent = a.name
+          ? `${a.agency || "Asshield Insurance"} · ${a.name} · ${a.phone || ""} · ${a.email || ""}`
+          : "An Asshield agent will follow up.";
+      }
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    function ingest(payload) {
+      if (!payload || typeof payload !== "object") return;
+      const sc = payload.structuredContent || payload;
+      const w = sc.widget || sc;
+      if (w.phase) state.phase = w.phase;
+      if (w.quote_id || sc.quote?.id || sc.quote_id) state.quote_id = w.quote_id || sc.quote?.id || sc.quote_id;
+      if (w.product || sc.product || sc.quote?.product) state.product = w.product || sc.product || sc.quote?.product;
+      if (w.fields) state.fields = { ...state.fields, ...w.fields };
+      if (Array.isArray(w.missing) || Array.isArray(sc.missing)) state.missing = w.missing || sc.missing;
+      if (w.agent) state.agent = w.agent;
+      if (w.state) state.state = w.state;
+      if (w.zip) state.zip = w.zip;
+      if (sc.state) state.state = sc.state;
+      if (sc.zip) state.zip = sc.zip;
+      if (sc.supported === false) {
+        state.phase = "idle";
+        setStatus(sc.message || "This state is outside Asshield’s licensed area.");
+      }
+      // Default phase after start
+      if (!w.phase && sc.supported && sc.quote) {
+        state.phase = state.consent_ok ? "progress" : "consent";
+        state.fields = { ...state.fields, state: sc.quote.state, zip: sc.quote.zip };
+      }
+      if (!w.phase && sc.ready_to_submit != null) state.phase = "progress";
+      if (!w.phase && sc.submitted) state.phase = "confirmation";
+      render();
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.source !== window.parent) return;
+      const message = event.data;
+      if (!message || message.jsonrpc !== "2.0") return;
+      if (message.id != null && pending.has(message.id)) {
+        const p = pending.get(message.id);
+        pending.delete(message.id);
+        if (message.error) p.reject(message.error);
+        else p.resolve(message.result);
+        return;
+      }
+      if (message.method === "ui/notifications/tool-result") {
+        ingest(message.params || {});
+      }
+      if (message.method === "ui/notifications/tool-input") {
+        /* ignore */
+      }
+      if (message.method === "ui/notifications/host-context-changed" || message.method === "ui/hostContextChanged") {
+        const theme = message.params?.theme || message.params?.colorScheme;
+        if (theme) applyTheme(theme);
+      }
+    }, { passive: true });
+
+    // ChatGPT compatibility: poll toolOutput if present
+    function syncOpenAi() {
+      try {
+        if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput });
+        const theme = window.openai?.theme;
+        if (theme) applyTheme(theme);
+      } catch (_) {}
+    }
+    setInterval(syncOpenAi, 800);
+    syncOpenAi();
+
+    $("btn-consent").onclick = () => {
+      state.consent_ok = true;
+      state.phase = "progress";
+      try { window.openai?.setWidgetState?.({ consent_ok: true, quote_id: state.quote_id }); } catch (_) {}
+      render();
+      setStatus("Consent acknowledged. Continue providing quote details in chat or edit fields here.");
+    };
+
+    $("btn-save-contact").onclick = async () => {
+      if (!state.quote_id) return setStatus("No active quote yet.");
+      setStatus("Saving contact…");
+      try {
+        const args = {
+          quote_id: state.quote_id,
+          first_name: $("first_name").value.trim(),
+          last_name: $("last_name").value.trim(),
+          email: $("email").value.trim() || undefined,
+          phone: $("phone").value.trim() || undefined,
+          preferred_contact_method: $("email").value.trim() ? "email" : "call"
+        };
+        const res = await callTool("save_contact", args);
+        const sc = res?.structuredContent || res;
+        state.fields = {
+          ...state.fields,
+          first_name: args.first_name,
+          last_name: args.last_name,
+          email: args.email,
+          phone: args.phone
+        };
+        ingest({ structuredContent: sc });
+        setStatus("Contact saved.");
+        const miss = await callTool("get_missing_quote_fields", { quote_id: state.quote_id });
+        ingest({ structuredContent: miss?.structuredContent || miss });
+      } catch (err) {
+        setStatus("Could not save contact: " + (err?.message || String(err)));
+      }
+    };
+
+    $("btn-refresh").onclick = async () => {
+      if (!state.quote_id) return;
+      setStatus("Checking completeness…");
+      try {
+        const miss = await callTool("get_missing_quote_fields", { quote_id: state.quote_id });
+        ingest({ structuredContent: miss?.structuredContent || miss });
+        setStatus("Updated.");
+      } catch (err) {
+        setStatus("Refresh failed: " + (err?.message || String(err)));
+      }
+    };
+
+    $("btn-submit").onclick = async () => {
+      if (!state.quote_id) return;
+      setStatus("Submitting quote request…");
+      try {
+        // Ensure quote authorization consent recorded if missing
+        if ((state.missing || []).includes("quote_authorization")) {
+          await callTool("save_consent", {
+            quote_id: state.quote_id,
+            consent_type: "quote_authorization",
+            accepted: true
+          });
+        }
+        const res = await callTool("submit_quote", { quote_id: state.quote_id, notes: "Submitted from Asshield quote card UI" });
+        ingest({ structuredContent: res?.structuredContent || res });
+        state.phase = "confirmation";
+        render();
+        setStatus("Submitted. No coverage is bound.");
+      } catch (err) {
+        setStatus("Submit failed: " + (err?.message || String(err)));
+      }
+    };
+
+    $("btn-agent").onclick = async () => {
+      setStatus("Loading agent contact…");
+      try {
+        await callTool("get_agent_contact", {});
+        setStatus("Agent contact requested.");
+      } catch (err) {
+        setStatus("Could not load agent card: " + (err?.message || String(err)));
+      }
+    };
+
+    // Support headless screenshot mocks via query ?mock=consent|progress|confirmation
+    const mock = new URLSearchParams(location.search).get("mock");
+    if (mock) {
+      state = {
+        phase: mock,
+        quote_id: "9936e32f-demo-quote",
+        product: "auto",
+        state: "KY",
+        zip: "40505",
+        fields: { first_name: "Jordan", last_name: "Test", email: "jordan.test@example.com", state: "KY", zip: "40505" },
+        missing: mock === "progress" ? ["quote_authorization"] : [],
+        agent: {
+          agency: "Asshield Insurance",
+          name: "Joshua Williams",
+          phone: "859-368-0162",
+          email: "joshuawilliams@asshield.com"
+        },
+        consent_ok: mock !== "consent"
+      };
+      render();
+    } else {
+      render();
+    }
+  })();
+  </script>
+</body>
+</html>

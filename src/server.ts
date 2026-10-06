@@ -1,4 +1,5 @@
 import { createServer } from "node:http";
+import { registerAppTool } from "@modelcontextprotocol/ext-apps/server";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { z } from "zod";
@@ -17,6 +18,14 @@ import {
 } from "./quote-service.js";
 import { notificationConfigured } from "./notify.js";
 import { QUOTE_PRODUCTS } from "./types.js";
+import {
+  registerWidgets,
+  quoteCardMeta,
+  agentCardMeta,
+  agentContactPayload,
+  withQuoteWidget,
+  toolTextResult
+} from "./widgets.js";
 
 const productEnum = z.enum(QUOTE_PRODUCTS);
 
@@ -24,21 +33,25 @@ function createMcpServer(): McpServer {
   const app = new McpServer(
     {
       name: "asshield-insurance",
-      version: "0.3.0"
+      version: "0.4.0"
     },
     {
       instructions:
-        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords."
+        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Use get_agent_contact when the user asks for agent phone/email/office or after submit. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords."
     }
   );
 
-  app.registerTool(
+  registerWidgets(app);
+
+  registerAppTool(
+    app,
     "start_quote",
     {
       title: "Start an Asshield quote",
       description:
-        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage or return a price.",
+        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage or return a price. Renders the Asshield quote card widget (consent → progress).",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+      _meta: quoteCardMeta(),
       inputSchema: {
         product: productEnum,
         state: z.string().length(2),
@@ -46,8 +59,10 @@ function createMcpServer(): McpServer {
       }
     },
     async (input) => {
-      const result = await startQuote(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      const result = await startQuote(input) as Record<string, unknown>;
+      const phase = result.supported === false ? "consent" : "consent";
+      const enriched = withQuoteWidget(result, phase);
+      return toolTextResult(enriched);
     }
   );
 
@@ -224,36 +239,70 @@ function createMcpServer(): McpServer {
     }
   );
 
-  app.registerTool(
+  registerAppTool(
+    app,
     "get_missing_quote_fields",
     {
       title: "Check quote completeness",
       description:
-        "Read-only check of what information is still needed before a quote intake can be submitted for the active product line. Does not change any data.",
+        "Read-only check of what information is still needed before a quote intake can be submitted for the active product line. Does not change any data. Renders the Asshield quote card progress view.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      _meta: quoteCardMeta(),
       inputSchema: { quote_id: z.string().uuid() }
     },
     async ({ quote_id }) => {
-      const result = await getMissingFields(quote_id);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      const result = await getMissingFields(quote_id) as Record<string, unknown>;
+      const enriched = withQuoteWidget(result, "progress");
+      return toolTextResult(enriched);
     }
   );
 
-  app.registerTool(
+  registerAppTool(
+    app,
     "submit_quote",
     {
       title: "Submit quote request",
       description:
-        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price.",
+        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price. Renders the Asshield quote confirmation card (reference number, agent will contact, no coverage bound) and agent contact details.",
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
+      _meta: quoteCardMeta(),
       inputSchema: {
         quote_id: z.string().uuid(),
         notes: z.string().max(2000).optional()
       }
     },
     async (input) => {
-      const result = await submitQuote(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      const result = await submitQuote(input) as Record<string, unknown>;
+      const phase = result.submitted ? "confirmation" : "progress";
+      const enriched = withQuoteWidget(result, phase);
+      if (result.submitted) {
+        enriched.agent = agentContactPayload();
+        enriched.no_coverage_bound = true;
+        enriched.agent_will_contact = true;
+      }
+      return toolTextResult(enriched);
+    }
+  );
+
+  registerAppTool(
+    app,
+    "get_agent_contact",
+    {
+      title: "Get Asshield agent contact",
+      description:
+        "Read-only Asshield Insurance agent contact card: agency name, agent Joshua Williams, office phone, email, address, website, licensed states, and NAIC license verification link. Optional license number and booking URL appear only when configured. Does not book appointments or bind coverage.",
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      _meta: agentCardMeta(),
+      inputSchema: {}
+    },
+    async () => {
+      const agent = agentContactPayload();
+      const structured = {
+        agent,
+        message:
+          "Asshield Insurance agent contact. An agent can help with your quote request. No coverage is bound by viewing this card."
+      };
+      return toolTextResult(structured);
     }
   );
 

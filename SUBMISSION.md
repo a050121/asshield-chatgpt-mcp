@@ -41,7 +41,7 @@ Status as of **Oct 5, 2026**.
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.
 - [x] **Licensed states only.** `start_quote` accepts AL/AR/FL/GA/IN/KY/NC/OH/PA/SC/TN/TX; other states get `supported: false` and no quote record. See `src/licensed-states.ts`.
 - [x] **Response minimization.** Trimmed consent `created_at`/`id`, customer `id`, submit `notify`/`submitted_at`, and narrowed `current_policy` select. Keep `quote_id`.
-- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all **10 tools**.
+- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all **11 tools** (including `get_agent_contact` + widget `_meta`).
 - [ ] **Domain verification at submission.** Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the exact portal token, redeploy, and check that `https://<mcp-host>/.well-known/openai-apps-challenge` returns only the token.
 
 ### 3. Auth / OAuth
@@ -58,7 +58,7 @@ Status as of **Oct 5, 2026**.
 - [ ] Approve the icons in `assets/` (512px logo + 128px composer icon, light and dark). Swap in official files if preferred: square, at least 48px, no larger than 5 MiB.
 - [ ] Display name "Asshield Insurance". Subtitle "Start an insurance quote" (30 character limit). Category "Finance". Confirm the category exists in the dashboard picker.
 - [ ] **Review risk: the brand name.** Plugins must suit general audiences, including ages 13–17. A reviewer may question the name. Be ready to explain that it's a trademarked, state-licensed agency name (FL #L120146, KY #867084).
-- [ ] Screenshots: This plugin has no custom UI or iframe/widget output. If the submission form does not request screenshots for a tool-only MCP app, omit them. If screenshots are requested by the portal, use screenshots of the conversational workflow rather than implying a custom interface exists.
+- [ ] Screenshots: Custom Apps SDK widgets are present. If the portal requests screenshots, provide widget screenshots from `/workspace/asshield-submission/screens/` (consent, progress, confirmation, agent card; light/dark).
 - [ ] No pricing, discounts, or comparative claims in the listing (already compliant). No Lexington emphasis (compliant).
 
 ### 6. Review materials

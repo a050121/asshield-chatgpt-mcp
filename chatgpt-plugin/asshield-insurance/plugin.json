@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
   "version": "1.1.1",
-  "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines using 10 quote-intake tools. Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
+  "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines using 11 tools (quote intake + agent contact, with Apps SDK widgets). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
     "email": "joshuawilliams@asshield.com",
@@ -22,7 +22,7 @@
       "interface": {
         "displayName": "Asshield Insurance",
         "shortDescription": "Start an insurance quote",
-        "longDescription": "Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
+        "longDescription": "Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n- Shows Asshield agent contact details (and a branded quote card with privacy consent in ChatGPT)\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
         "developerName": "Asshield Insurance",
         "category": "Finance",
         "capabilities": [
@@ -31,7 +31,8 @@
           "Add drivers, riders, and vehicles",
           "Record boat, golf cart, GL, and workers' comp details",
           "Record current policy details and explicit consent",
-          "Check quote completeness and send to a licensed agent"
+          "Check quote completeness and send to a licensed agent",
+          "Show Asshield agent contact card (phone, email, office, licensed states)"
         ],
         "websiteURL": "https://www.asshield.com",
         "supportURL": "https://www.asshield.com/support",
@@ -80,8 +81,8 @@
             {
               "description": "Check completeness, confirm, submit; not covered",
               "prompt": "That's everything. Please send my quote request. Am I covered now?",
-              "tools_triggered": "get_missing_quote_fields, submit_quote",
-              "expected_behavior": "Checks missing fields, submits only if complete, and clearly states no coverage is bound yet."
+              "tools_triggered": "get_missing_quote_fields, submit_quote, get_agent_contact",
+              "expected_behavior": "Checks missing fields, submits only if complete, shows confirmation that no coverage is bound, and can surface the Asshield agent contact card."
             }
           ],
           "negative": [
@@ -107,7 +108,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "10 MCP tools for personal, commercial, and specialty quote intake (including motorcycle and trucking), with accurate tool annotations (submit_quote openWorldHint true for Zapier/email lead send), licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
+        "release_notes": "11 MCP tools including get_agent_contact and Apps SDK custom UI (quote consent/progress/confirmation card + agent contact card), personal/commercial/specialty quote intake (motorcycle and trucking), accurate annotations (submit_quote openWorldHint true for Zapier/email), licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
       }
     }
   }
