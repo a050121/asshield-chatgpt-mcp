@@ -9,42 +9,88 @@
 <body>
   <div class="card" role="region" aria-label="Asshield insurance options">
     <header class="hero">
-      <div class="hero-row">
-        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
-        <div>
-          <h1>Asshield Insurance</h1>
-          <p class="sub">Choose a line to start a quote request</p>
+      <div class="hero-motif" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-top">
+          <img class="hero-logo" src="LOGO_SRC" alt="" width="40" height="40" />
+          <span class="hero-brand">Asshield Insurance</span>
+        </div>
+        <h1 class="hero-title">What would you like to <span class="accent">protect</span>?</h1>
+        <p class="hero-sub">Select one or more lines. We’ll build a quote request for a licensed Asshield agent — no coverage is bound in chat.</p>
+        <div class="zip-cta" style="margin-top:18px">
+          <div class="zip-box">
+            <label for="zip">ZIP code</label>
+            <input id="zip" inputmode="numeric" maxlength="10" autocomplete="postal-code" placeholder="40505" aria-describedby="zip-status" />
+            <div class="zip-status neutral" id="zip-status" role="status" aria-live="polite"></div>
+          </div>
         </div>
       </div>
-      <span class="hero-badge">Insurance options</span>
     </header>
+    <div class="trust"><strong>Licensed in 12 states</strong> · AL AR FL GA IN KY NC OH PA SC TN TX</div>
     <div class="body">
       <div id="groups"></div>
-      <div id="start-panel" class="callout is-hidden" role="dialog" aria-label="Start quote details">
-        <p style="margin:0;font-weight:750" id="picked-label">Start quote</p>
-        <p class="muted" id="picked-desc" style="margin:4px 0 0"></p>
-        <label for="state">State (2-letter)</label>
-        <input id="state" maxlength="2" autocomplete="address-level1" placeholder="KY" aria-required="true" />
-        <label for="zip">ZIP</label>
-        <input id="zip" inputmode="numeric" maxlength="10" autocomplete="postal-code" placeholder="40505" aria-required="true" />
-        <div class="actions">
-          <button type="button" class="primary" id="btn-start">Start quote request</button>
-          <button type="button" class="secondary" id="btn-cancel">Cancel</button>
-          <button type="button" class="secondary" id="btn-explain">What does this cover?</button>
-        </div>
+      <div class="actions">
+        <button type="button" class="cta" id="btn-start" disabled>Start my quote</button>
+        <button type="button" class="secondary" id="btn-explain">Explore coverage</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
-      <p class="note">Quote request only — Asshield does not bind coverage or show prices in chat. Licensed states only.</p>
+      <p class="note">Quote request only. Asshield does not show prices or bind coverage in ChatGPT.</p>
     </div>
+    <footer class="foot">
+      <div>
+        <p class="foot-title">Talk to an agent</p>
+        <p class="muted" style="margin:0">Joshua Williams · Asshield Insurance</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">
+        <a href="tel:+18593680162">859-368-0162</a>
+        <button type="button" class="ghost" id="btn-agent">Agent card</button>
+      </div>
+    </footer>
   </div>
   <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
   (function () {
-    const LICENSED = ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"];
-    let picked = null, groups = [];
+    const selected = new Set();
+    let groups = [];
+    let detectedState = null;
     function $(id){ return document.getElementById(id); }
     function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark"||t==="light") document.documentElement.classList.add("theme-"+t); }
     function setStatus(m){ $("status").textContent = m || ""; }
+    function updateCta() {
+      const n = selected.size;
+      const btn = $("btn-start");
+      btn.disabled = n === 0 || !detectedState || !window.ASSHIELD_LICENSED.includes(detectedState);
+      btn.textContent = n ? `Start my quote (${n})` : "Start my quote";
+    }
+    function checkZip() {
+      const zip = $("zip").value.trim();
+      const el = $("zip-status");
+      detectedState = null;
+      if (zip.length < 5) {
+        el.className = "zip-status neutral";
+        el.textContent = zip.length ? "Enter a 5-digit ZIP" : "";
+        updateCta(); return;
+      }
+      if (!/^\d{5}(-\d{4})?$/.test(zip)) {
+        el.className = "zip-status bad"; el.textContent = "That ZIP doesn’t look valid.";
+        updateCta(); return;
+      }
+      const st = window.ASSHIELD_ZIP_LOOKUP(zip);
+      if (!st) {
+        el.className = "zip-status bad";
+        el.textContent = "We couldn’t map that ZIP. Try a ZIP in a licensed state.";
+        updateCta(); return;
+      }
+      if (!window.ASSHIELD_LICENSED.includes(st)) {
+        el.className = "zip-status bad";
+        el.textContent = `We don’t currently write in ${st}. Asshield is licensed in 12 states.`;
+        updateCta(); return;
+      }
+      detectedState = st;
+      el.className = "zip-status ok";
+      el.textContent = `We cover ${st}`;
+      updateCta();
+    }
     const pending = new Map(); let seq = 1;
     function callTool(name, args) {
       if (window.openai?.callTool) return window.openai.callTool(name, args);
@@ -57,25 +103,28 @@
     function renderGroups() {
       const root = $("groups"); root.innerHTML = "";
       for (const g of groups) {
-        const h = document.createElement("h3"); h.textContent = g.label; root.appendChild(h);
+        const h = document.createElement("div"); h.className = "section-label"; h.textContent = g.label; root.appendChild(h);
         const grid = document.createElement("div"); grid.className = "grid"; grid.setAttribute("role","list");
         for (const line of g.lines) {
           const b = document.createElement("button");
-          b.type = "button"; b.className = "tile"; b.setAttribute("role","listitem");
-          b.setAttribute("aria-label", line.label + ": " + line.one_liner);
-          b.innerHTML = `<span class="tile-icon">${window.asshieldIcon(line.id)}</span><span class="tl">${line.label}</span><span class="td">${line.one_liner}</span>`;
-          b.onclick = () => openStart(line);
+          b.type = "button"; b.className = "tile" + (selected.has(line.id) ? " selected" : "");
+          b.setAttribute("role","listitem");
+          b.setAttribute("aria-pressed", selected.has(line.id) ? "true" : "false");
+          b.setAttribute("aria-label", line.label);
+          b.innerHTML = `<span class="tile-icon">${window.asshieldIcon(line.id)}</span><span class="tl">${line.label}</span>`;
+          b.onclick = () => {
+            if (selected.has(line.id)) selected.delete(line.id); else selected.add(line.id);
+            // Bundle helper: auto+home shortcut
+            if (selected.has("auto") && selected.has("home")) {
+              selected.add("auto_home");
+            }
+            renderGroups(); updateCta();
+            try { window.openai?.setWidgetState?.({ selected_lines: [...selected], zip: $("zip").value, state: detectedState }); } catch(_){}
+          };
           grid.appendChild(b);
         }
         root.appendChild(grid);
       }
-    }
-    function openStart(line) {
-      picked = line;
-      $("start-panel").classList.remove("is-hidden");
-      $("picked-label").textContent = "Start " + line.label + " quote";
-      $("picked-desc").textContent = line.one_liner;
-      setStatus(""); $("state").focus();
     }
     function ingest(payload) {
       const sc = payload?.structuredContent || payload || {};
@@ -105,47 +154,51 @@
     }, { passive:true });
     function sync(){ try { if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput }); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
     setInterval(sync, 800); sync();
-    $("btn-cancel").onclick = () => { $("start-panel").classList.add("is-hidden"); picked=null; };
+    $("zip").addEventListener("input", checkZip);
     $("btn-start").onclick = async () => {
-      if (!picked) return;
-      const state = $("state").value.trim().toUpperCase();
+      if (!selected.size || !detectedState) return;
       const zip = $("zip").value.trim();
-      if (!/^[A-Z]{2}$/.test(state)) return setStatus("Enter a 2-letter state code.");
-      if (!/^\d{5}(-\d{4})?$/.test(zip)) return setStatus("Enter a valid 5-digit ZIP.");
-      if (!LICENSED.includes(state)) return setStatus("Asshield is not licensed in " + state + ". Licensed: " + LICENSED.join(", "));
-      setStatus("Starting " + picked.label + " quote…");
-      try { await callTool("start_quote", { product: picked.id, state, zip }); setStatus("Quote started — continue in the quote card."); }
-      catch (e) { setStatus("Could not start: " + (e?.message || e)); }
+      const lines = [...selected];
+      // Prefer auto_home if both auto and home (or auto_home) selected
+      let primary = lines[0];
+      if (lines.includes("auto_home") || (lines.includes("auto") && lines.includes("home"))) primary = "auto_home";
+      else if (lines.includes("auto")) primary = "auto";
+      setStatus("Starting quote request…");
+      try {
+        await callTool("start_quote", { product: primary, state: detectedState, zip });
+        try { window.openai?.setWidgetState?.({ selected_lines: lines, bundle_lines: lines, zip, state: detectedState, product: primary }); } catch(_){}
+        setStatus("Quote started for " + primary.replace(/_/g," ") + (lines.length>1 ? ` (+${lines.length-1} more in bundle)` : "") + ".");
+      } catch (e) { setStatus("Could not start: " + (e?.message || e)); }
     };
     $("btn-explain").onclick = async () => {
-      if (!picked) return;
-      setStatus("Loading coverage overview…");
-      try { await callTool("explain_coverage", { product: picked.id }); setStatus("Coverage overview requested."); }
-      catch (e) { setStatus("Could not load overview: " + (e?.message || e)); }
+      const id = [...selected][0] || "auto";
+      try { await callTool("explain_coverage", { product: id }); setStatus("Opening coverage explorer…"); }
+      catch(e){ setStatus(String(e?.message||e)); }
+    };
+    $("btn-agent").onclick = async () => {
+      try { await callTool("get_agent_contact", {}); } catch(e){ setStatus(String(e?.message||e)); }
     };
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       groups = [
         { id:"personal", label:"Personal", lines:[
-          {id:"auto",label:"Auto",one_liner:"Protect your car and liability on the road.",group:"personal"},
-          {id:"home",label:"Home",one_liner:"Help protect your house and belongings.",group:"personal"},
-          {id:"auto_home",label:"Auto + Home",one_liner:"Bundle auto and home in one request.",group:"personal"},
-          {id:"renters",label:"Renters",one_liner:"Cover belongings and liability in a rental.",group:"personal"},
-          {id:"motorcycle",label:"Motorcycle",one_liner:"Bike liability and physical damage options.",group:"personal"}
+          {id:"auto",label:"Auto",group:"personal"},{id:"home",label:"Home",group:"personal"},
+          {id:"auto_home",label:"Auto + Home",group:"personal"},{id:"renters",label:"Renters",group:"personal"},
+          {id:"motorcycle",label:"Motorcycle",group:"personal"}
         ]},
         { id:"commercial", label:"Commercial", lines:[
-          {id:"commercial_auto",label:"Commercial Auto",one_liner:"Business vehicles and drivers.",group:"commercial"},
-          {id:"commercial_gl",label:"Commercial GL",one_liner:"General liability for your operations.",group:"commercial"},
-          {id:"workers_comp",label:"Workers' Comp",one_liner:"Employee injury coverage where required.",group:"commercial"},
-          {id:"trucking",label:"Trucking",one_liner:"For-hire and fleet trucking intake.",group:"commercial"}
+          {id:"commercial_auto",label:"Commercial Auto",group:"commercial"},{id:"commercial_gl",label:"Commercial GL",group:"commercial"},
+          {id:"workers_comp",label:"Workers' Comp",group:"commercial"},{id:"trucking",label:"Trucking",group:"commercial"}
         ]},
         { id:"recreational", label:"Recreational", lines:[
-          {id:"boat",label:"Boat",one_liner:"Watercraft liability and hull options.",group:"recreational"},
-          {id:"golf_cart",label:"Golf Cart",one_liner:"Cart liability and physical damage.",group:"recreational"}
+          {id:"boat",label:"Boat",group:"recreational"},{id:"golf_cart",label:"Golf Cart",group:"recreational"}
         ]}
       ];
       renderGroups();
-      if (mock === "start") openStart(groups[0].lines[0]);
+      if (mock === "start" || mock === "selected") {
+        selected.add("auto"); selected.add("home"); selected.add("auto_home");
+        $("zip").value = "40505"; checkZip(); renderGroups(); updateCta();
+      }
     }
   })();
   </script>

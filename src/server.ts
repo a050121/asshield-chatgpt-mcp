@@ -82,7 +82,9 @@ function createMcpServer(): McpServer {
         last_name: z.string().min(1),
         phone: z.string().min(7).optional(),
         email: z.string().email().optional(),
-        preferred_contact_method: z.enum(["call", "text", "email"]).optional()
+        preferred_contact_method: z.enum(["call", "text", "email"]).optional(),
+        callback_preference: z.enum(["morning", "afternoon", "evening"]).optional(),
+        intake_notes: z.string().max(500).optional()
       }
     },
     async (input) => {

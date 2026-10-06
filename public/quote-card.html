@@ -9,138 +9,86 @@
 <body>
   <div class="card" role="region" aria-label="Asshield quote request">
     <header class="hero">
-      <div class="hero-row">
-        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
-        <div>
-          <h1>Asshield Insurance</h1>
-          <p class="sub" id="hdr-sub">Quote request · licensed agency</p>
+      <div class="hero-motif" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-top">
+          <img class="hero-logo" src="LOGO_SRC" alt="" width="40" height="40" />
+          <span class="hero-brand">Asshield Insurance</span>
         </div>
-      </div>
-      <span class="hero-badge" id="phase-badge">Quote</span>
-    </header>
-    <div class="body">
-      <div class="progress-wrap is-hidden" id="progress-wrap">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span class="muted" style="font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase" id="progress-label">Step</span>
-        </div>
-        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="progress-label">
+        <h1 class="hero-title" id="hero-title">Get covered <span class="accent">your way</span>.</h1>
+        <p class="hero-sub" id="hdr-sub">Quote request · licensed agency</p>
+        <span class="hero-badge" id="phase-badge">Quote</span>
+        <div class="progress-track is-hidden" id="progress-wrap" aria-hidden="true">
           <div class="progress-fill" id="progress-fill" style="width:0%"></div>
         </div>
+      </div>
+    </header>
+    <div class="trust" id="trust-strip"><strong>Licensed in 12 states</strong> · No coverage is bound in chat</div>
+    <div class="body">
+      <div class="ring-wrap is-hidden" id="ring-wrap">
+        <div class="ring" id="ring" style="--p:0" aria-hidden="true"></div>
+        <div class="ring-meta"><strong id="ring-pct">0% complete</strong><span class="muted" id="ring-hint">Save as you go</span></div>
       </div>
       <nav class="stepper is-hidden" id="stepper" aria-label="Quote steps"></nav>
       <div id="panels"></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
     </div>
+    <footer class="foot">
+      <div>
+        <p class="foot-title">Talk to an agent</p>
+        <p class="muted" style="margin:0">Joshua Williams</p>
+      </div>
+      <a href="tel:+18593680162">859-368-0162</a>
+    </footer>
   </div>
   <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
-(function () {
+  (function () {
     const DRIVER_VEHICLE = new Set(["auto","auto_home","motorcycle","commercial_auto","trucking"]);
     const COMMERCIAL = new Set(["commercial_auto","commercial_gl","workers_comp","trucking"]);
     const LINE_DETAIL = new Set(["commercial_gl","workers_comp","boat","golf_cart"]);
-    const CROSS_DEFAULT = { auto:["home","auto_home"], home:["auto","auto_home"], renters:["auto"], motorcycle:["auto"], boat:["home","auto"], golf_cart:["home"], commercial_auto:["commercial_gl"], commercial_gl:["workers_comp"], workers_comp:["commercial_gl"], trucking:["commercial_gl"], auto_home:["renters"] };
     const PRODUCT_LABELS = {
       auto:"Auto", home:"Home", auto_home:"Auto + Home", renters:"Renters",
       commercial_auto:"Commercial Auto", commercial_gl:"Commercial GL", workers_comp:"Workers' Comp",
       boat:"Boat", golf_cart:"Golf Cart", motorcycle:"Motorcycle", trucking:"Trucking"
     };
-    function productLabel(id) {
-      if (!id) return "Quote";
-      return PRODUCT_LABELS[id] || String(id).replace(/_/g, " ");
-    }
-    function missingHas(key) {
-      return (S.missing || []).includes(key);
-    }
-    /** Heuristic: is a checklist tip already satisfied by collected quote state? */
+    const CROSS_DEFAULT = { auto:["home","auto_home"], home:["auto","auto_home"], renters:["auto"], motorcycle:["auto"], boat:["home","auto"], golf_cart:["home"], commercial_auto:["commercial_gl"], commercial_gl:["workers_comp"], workers_comp:["commercial_gl"], trucking:["commercial_gl"], auto_home:["renters"] };
+    const YEAR_OPTS = Array.from({length: 30}, (_,i) => 2026 - i);
+    function productLabel(id){ return PRODUCT_LABELS[id] || String(id||"Quote").replace(/_/g," "); }
+    function $(id){ return document.getElementById(id); }
+    function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function val(id){ const el=$(id); return el ? el.value.trim() : ""; }
+    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark"||t==="light") document.documentElement.classList.add("theme-"+t); }
+    function setStatus(m){ $("status").textContent = m || ""; }
+
+    let S = {
+      phase: "consent", step: 0, quote_id: null, product: null, state: null, zip: null,
+      fields: { drivers: [], vehicles: [], coverage_preference: "medium", deductible_preference: "medium" },
+      missing: [], checklist: [], callback_sla: "An agent will reach out soon",
+      cross_sell: [], privacy_url: "https://www.asshield.com/privacy"
+    };
+
+    function missingHas(key){ return (S.missing||[]).includes(key); }
     function checklistItemDone(text) {
-      const t = String(text || "").toLowerCase();
-      const f = S.fields || {};
-      if (/state and zip|garaged|property state|rental state|business address state/.test(t)) {
-        return Boolean(S.state && S.zip);
-      }
-      if (/names? and dates? of birth|\bdrivers?\b|\briders?\b/.test(t)) {
-        if ((f.drivers && f.drivers.length) || f.driver_name) return true;
-        return !missingHas("at_least_one_driver");
-      }
-      if (/year, make, and model|year\/make\/model|vehicle|motorcycle|power unit|unit counts|boat|golf cart|cart/.test(t) && !/driver/.test(t)) {
-        if ((f.vehicles && f.vehicles.length) || f.vehicle) return true;
-        if (f.boat_year || f.boat_make || f.cart_year || f.cart_make) return true;
-        if (f.commercial_vehicle_summary) return true;
-        return !missingHas("at_least_one_vehicle") && !missingHas("commercial_vehicles") &&
-          !missingHas("boat_year_make") && !missingHas("cart_year_make");
-      }
-      if (/current carrier|current home carrier|current renters|current boat|current commercial|premium/.test(t)) {
-        return Boolean(f.carrier) || !missingHas("current_policy_or_coverage_preferences");
-      }
-      if (/preferred contact|contact phone|contact info|email/.test(t) && !/carrier/.test(t)) {
-        return Boolean(f.first_name && (f.email || f.phone)) || !missingHas("customer_contact");
-      }
-      if (/business name|type of operations|type of work/.test(t)) {
-        return Boolean(f.business_name) || !missingHas("business_name");
-      }
-      if (/payroll|employees by job/.test(t)) {
-        return Boolean(f.annual_payroll_estimate || f.employees_by_job_type) ||
-          (!missingHas("annual_payroll_estimate") && !missingHas("employees_by_job_type"));
-      }
-      if (/operations description|desired liability/.test(t)) {
-        return Boolean(f.operations_description) || !missingHas("operations_description");
-      }
-      if (/radius|cargo type/.test(t)) {
-        return Boolean(f.radius_of_operation && f.cargo_type) ||
-          (!missingHas("radius_of_operation") && !missingHas("cargo_type"));
-      }
-      if (/dot\/mc|dot\/mc number/.test(t)) {
-        return true; // optional
-      }
-      if (/year built|construction|contents value|property location/.test(t)) {
-        return Boolean(f.property_notes);
-      }
-      if (/revenue|employee count/.test(t)) {
-        return f.number_of_employees != null || Boolean(f.annual_revenue_range);
-      }
+      const t = String(text||"").toLowerCase(); const f = S.fields||{};
+      if (/state and zip|garaged|property state|rental state|business address state/.test(t)) return Boolean(S.state && S.zip);
+      if (/names? and dates? of birth|\bdrivers?\b|\briders?\b/.test(t)) return (f.drivers&&f.drivers.length) || f.driver_name || !missingHas("at_least_one_driver");
+      if (/year, make|year\/make|vehicle|motorcycle|power unit|boat|golf cart|cart/.test(t) && !/driver/.test(t))
+        return (f.vehicles&&f.vehicles.length) || f.vehicle || f.boat_year || f.cart_year || f.commercial_vehicle_summary || (!missingHas("at_least_one_vehicle") && !missingHas("boat_year_make"));
+      if (/current carrier|premium/.test(t)) return Boolean(f.carrier) || !missingHas("current_policy_or_coverage_preferences");
+      if (/preferred contact|contact phone|contact info|email/.test(t)) return Boolean(f.first_name && (f.email||f.phone)) || !missingHas("customer_contact");
+      if (/business name|type of operations|type of work/.test(t)) return Boolean(f.business_name) || !missingHas("business_name");
       return false;
     }
     function renderChecklist(items, opts) {
       opts = opts || {};
-      const onlyRemaining = !!opts.onlyRemaining;
-      const list = (items || []).map((c) => {
-        const text = typeof c === "string" ? c : (c.text || c.label || "");
-        const done = checklistItemDone(text);
-        return { text, done };
-      }).filter((c) => c.text && (!onlyRemaining || !c.done));
-      if (!list.length) {
-        return onlyRemaining
-          ? `<p class="muted">You have the basics covered for this request.</p>`
-          : "";
-      }
-      return `<ul class="checklist">${list.map((c) =>
-        `<li class="${c.done ? "done" : ""}"><span class="mark" aria-hidden="true">${c.done ? "✓" : ""}</span><span class="txt">${escapeHtml(c.text)}</span></li>`
-      ).join("")}</ul>`;
+      const list = (items||[]).map(c => {
+        const text = typeof c === "string" ? c : (c.text||"");
+        return { text, done: checklistItemDone(text) };
+      }).filter(c => c.text && (!opts.onlyRemaining || !c.done));
+      if (!list.length) return opts.onlyRemaining ? `<p class="muted">You have the basics covered for this request.</p>` : "";
+      return `<ul class="checklist">${list.map(c => `<li class="${c.done?"done":""}"><span class="mark">${c.done?"✓":""}</span><span class="txt">${escapeHtml(c.text)}</span></li>`).join("")}</ul>`;
     }
-
-    let S = {
-      phase: "consent", // consent | form | review | confirmation | unsupported
-      step: 0,
-      quote_id: null,
-      product: null,
-      state: null,
-      zip: null,
-      fields: {},
-      missing: [],
-      checklist: [],
-      agent: null,
-      callback_sla: "An agent will reach out soon",
-      cross_sell: [],
-      privacy_url: "https://www.asshield.com/privacy",
-      supported: true,
-      message: ""
-    };
-
-    function $(id){ return document.getElementById(id); }
-    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark") document.documentElement.classList.add("theme-dark"); if(t==="light") document.documentElement.classList.add("theme-light"); }
-    function setStatus(m){ $("status").textContent = m || ""; }
-    function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function val(id){ const el=$(id); return el ? el.value.trim() : ""; }
 
     const pending = new Map(); let seq = 1;
     function callTool(name, args) {
@@ -151,391 +99,429 @@
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 25000);
       });
     }
+    function persistWidget() {
+      try {
+        window.openai?.setWidgetState?.({
+          quote_id: S.quote_id, product: S.product, state: S.state, zip: S.zip,
+          first_name: S.fields.first_name, last_name: S.fields.last_name,
+          email: S.fields.email, phone: S.fields.phone,
+          coverage_preference: S.fields.coverage_preference,
+          deductible_preference: S.fields.deductible_preference,
+          drivers: S.fields.drivers, vehicles: S.fields.vehicles
+        });
+      } catch(_){}
+    }
 
     function stepsFor(product) {
-      const steps = [{ id:"contact", label:"Contact" }];
-      if (COMMERCIAL.has(product)) steps.push({ id:"business", label:"Business" });
+      const steps = [{ id:"contact", label:"Contact", title: "Who should we reach?" }];
+      if (COMMERCIAL.has(product)) steps.push({ id:"business", label:"Business", title: "Tell us about the business" });
       if (DRIVER_VEHICLE.has(product)) {
-        steps.push({ id:"drivers", label:"Drivers" });
-        steps.push({ id:"vehicles", label:"Vehicles" });
+        steps.push({ id:"drivers", label:"Drivers", title: "Primary driver" });
+        steps.push({ id:"vehicles", label:"Vehicles", title: "Your vehicle" });
       }
-      if (LINE_DETAIL.has(product) || product === "home" || product === "renters") {
-        steps.push({ id:"details", label: product==="home"||product==="renters" ? "Property" : "Details" });
-      }
-      steps.push({ id:"policy", label:"Policy" });
-      steps.push({ id:"consent", label:"Consent" });
-      steps.push({ id:"review", label:"Review" });
+      if (LINE_DETAIL.has(product) || product==="home" || product==="renters")
+        steps.push({ id:"details", label: product==="home"||product==="renters"?"Property":"Details", title: "A few more details" });
+      steps.push({ id:"policy", label:"Policy", title: "Current coverage" });
+      steps.push({ id:"prefs", label:"Prefs", title: "Coverage preferences" });
+      steps.push({ id:"consent", label:"Consent", title: "Almost done" });
+      steps.push({ id:"review", label:"Review", title: "Review & submit" });
       return steps;
+    }
+    function completenessPct() {
+      const steps = stepsFor(S.product);
+      if (!steps.length) return 0;
+      if (S.phase === "confirmation") return 100;
+      if (S.phase === "consent") return 5;
+      const base = Math.round(((S.step + 1) / steps.length) * 90);
+      const missPenalty = Math.min(30, (S.missing||[]).length * 6);
+      return Math.max(5, Math.min(99, base - missPenalty + (S.fields.auth_ok ? 5 : 0)));
+    }
+    function updateRing() {
+      const pct = completenessPct();
+      const wrap = $("ring-wrap"); const ring = $("ring");
+      if (S.phase === "consent" || S.phase === "confirmation" || S.phase === "unsupported") {
+        wrap.classList.add("is-hidden"); return;
+      }
+      wrap.classList.remove("is-hidden");
+      ring.style.setProperty("--p", String(pct));
+      $("ring-pct").textContent = pct + "% complete";
+      $("ring-hint").textContent = (S.missing||[]).length ? `${S.missing.length} items left` : "Looking good";
     }
 
     function renderStepper() {
-      const nav = $("stepper");
-      const wrap = $("progress-wrap");
+      const nav = $("stepper"); const wrap = $("progress-wrap");
       if (S.phase === "consent" || S.phase === "confirmation" || S.phase === "unsupported") {
-        nav.innerHTML = ""; nav.classList.add("is-hidden");
-        if (wrap) wrap.classList.add("is-hidden");
-        return;
+        nav.innerHTML = ""; nav.classList.add("is-hidden"); wrap.classList.add("is-hidden"); return;
       }
-      nav.classList.remove("is-hidden");
-      if (wrap) wrap.classList.remove("is-hidden");
+      nav.classList.remove("is-hidden"); wrap.classList.remove("is-hidden");
       const steps = stepsFor(S.product);
-      const pct = Math.round(((S.step + 1) / steps.length) * 100);
-      if ($("progress-fill")) $("progress-fill").style.width = pct + "%";
-      if ($("progress-label")) $("progress-label").textContent = `Step ${S.step + 1} of ${steps.length}`;
+      const pct = Math.round(((S.step+1)/steps.length)*100);
+      $("progress-fill").style.width = pct + "%";
       nav.innerHTML = steps.map((s,i) => {
         const cls = i < S.step ? "done" : i === S.step ? "active" : "";
-        return `<button type="button" class="step-pill ${cls}" data-i="${i}" aria-current="${i===S.step?"step":"false"}">${escapeHtml(s.label)}</button>`;
+        return `<button type="button" class="step-pill ${cls}" data-i="${i}">${escapeHtml(s.label)}</button>`;
       }).join("");
       nav.querySelectorAll(".step-pill").forEach(btn => {
-        btn.onclick = () => {
-          const i = Number(btn.dataset.i);
-          if (i <= S.step) { S.step = i; render(); }
+        btn.onclick = () => { const i = Number(btn.dataset.i); if (i <= S.step) { S.step = i; render(); } };
+      });
+    }
+
+    function heroForStep(cur) {
+      const titles = {
+        consent: ['Before we <span class="accent">continue</span>.', "Privacy first — then a guided quote request."],
+        contact: ['Who should we <span class="accent">reach</span>?', "Name and how you prefer to be contacted."],
+        drivers: ['Primary <span class="accent">driver</span>.', "No driver’s license numbers needed here."],
+        vehicles: ['Your <span class="accent">vehicle</span>.', "Year, make, and how you use it."],
+        business: ['About the <span class="accent">business</span>.', "Never FEIN, SSN, or payment info."],
+        details: ['A few more <span class="accent">details</span>.', "Only what helps an agent prepare options."],
+        policy: ['Current <span class="accent">coverage</span>.', "Carrier and rough premium if you have one."],
+        prefs: ['Coverage <span class="accent">preferences</span>.', "No prices — just how you’d like to approach limits."],
+        consent_auth: ['Almost <span class="accent">done</span>.', "Authorize Asshield to prepare a quote request."],
+        review: ['Review & <span class="accent">submit</span>.', "Tap any field to edit. No coverage is bound."],
+        confirmation: ['Request <span class="accent">received</span>.', "An Asshield agent will contact you."]
+      };
+      return titles[cur] || titles.contact;
+    }
+
+    function seg(id, options, current) {
+      return `<div class="seg" id="${id}" role="group">${options.map(([v,l]) =>
+        `<button type="button" data-v="${v}" class="${current===v?"on":""}">${l}</button>`).join("")}</div>`;
+    }
+    function bindSeg(id, onPick) {
+      $(id)?.querySelectorAll("button").forEach(b => {
+        b.onclick = () => {
+          $(id).querySelectorAll("button").forEach(x => x.classList.toggle("on", x===b));
+          onPick(b.dataset.v);
         };
       });
     }
 
     function render() {
-      renderStepper();
+      renderStepper(); updateRing(); persistWidget();
       const root = $("panels");
       const loc = [S.state, S.zip].filter(Boolean).join(" ");
-      $("hdr-sub").textContent = S.product
-        ? (productLabel(S.product) + (loc ? " · " + loc : ""))
-        : "Quote request · licensed agency";
-      const badge = $("phase-badge");
-      if (badge) badge.className = "hero-badge";
+      $("hdr-sub").textContent = S.product ? (productLabel(S.product) + (loc ? " · " + loc : "")) : "Quote request · licensed agency";
 
       if (S.phase === "unsupported") {
         $("phase-badge").textContent = "Unavailable";
-        root.innerHTML = `<div class="panel"><h2>Outside licensed area</h2><p>${escapeHtml(S.message||"Asshield is not licensed in this state.")}</p>
+        const [t,s] = heroForStep("consent");
+        $("hero-title").innerHTML = t; 
+        root.innerHTML = `<div class="panel"><h2>Outside licensed area</h2><p>${escapeHtml(S.message||"")}</p>
           <div class="actions"><button type="button" class="secondary" id="btn-options">See options</button></div></div>`;
         bindCommon(); return;
       }
 
       if (S.phase === "consent") {
         $("phase-badge").textContent = "Consent";
+        const [t] = heroForStep("consent"); $("hero-title").innerHTML = t;
         root.innerHTML = `<div class="panel">
-          <h2>Before we continue</h2>
+          <div class="stripe"></div>
           <p>Asshield will use the details you share to prepare an insurance quote request for a licensed agent.</p>
-          <div class="callout"><strong>What’s shared with Asshield:</strong> product, location, contact preferences, and the intake fields you provide. See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.</div>
-          <p class="muted">ChatGPT’s own answers and explanations are generated by ChatGPT and are <strong>not</strong> Asshield’s advice or a quote.</p>
-          ${S.checklist?.length ? `<h2>What to have ready</h2>${renderChecklist(S.checklist)}` : ""}
-          <div class="actions"><button type="button" class="primary" id="btn-begin">I understand — continue</button></div>
+          <div class="callout" style="background:rgba(26,159,224,.1);border:1px solid rgba(26,159,224,.25);border-radius:14px;padding:12px 14px;font-size:.88rem">
+            <strong>What’s shared:</strong> product, location, contact preferences, and intake fields you provide.
+            See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.
+          </div>
+          <p class="muted">ChatGPT’s own answers are <strong>not</strong> Asshield’s advice or a quote.</p>
+          ${S.checklist?.length ? `<h3>What to have ready</h3>${renderChecklist(S.checklist)}` : ""}
+          <div class="actions"><button type="button" class="cta" id="btn-begin">I understand — continue</button></div>
         </div>`;
-        $("btn-begin").onclick = () => { S.phase = "form"; S.step = 0; render(); setStatus("Continue the guided form — saves as you go."); };
+        $("btn-begin").onclick = () => { S.phase = "form"; S.step = 0; render(); };
         return;
       }
 
       if (S.phase === "confirmation") {
         $("phase-badge").textContent = "Submitted";
-        $("phase-badge").className = "hero-badge";
+        const [t] = heroForStep("confirmation"); $("hero-title").innerHTML = t;
         const ref = S.quote_id || "—";
         const cross = (S.cross_sell||[]).slice(0,3);
         root.innerHTML = `<div class="panel">
           <div class="success-hero">
-            <div class="success-ring" aria-hidden="true">
-              <svg viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="20" stroke="#1a6b4a" stroke-width="2.5" opacity=".35"/>
-                <path class="check-draw" d="M14 24.5 21 31.5 34 17" stroke="#1a6b4a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
+            <div class="success-ring"><svg viewBox="0 0 48 48" fill="none" width="40" height="40">
+              <circle cx="24" cy="24" r="20" stroke="#1a6b4a" stroke-width="2.5" opacity=".35"/>
+              <path class="check-draw" d="M14 24.5 21 31.5 34 17" stroke="#1a6b4a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg></div>
             <h2>Request received</h2>
           </div>
           <p style="text-align:center">Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you.<br/><strong>No coverage is bound.</strong></p>
-          <ol class="timeline" aria-label="What happens next">
-            <li class="done"><span class="dot" aria-hidden="true"></span><div><strong>Received</strong><div class="muted">Your quote request is in Asshield’s queue.</div></div></li>
-            <li class="current"><span class="dot" aria-hidden="true"></span><div><strong>Agent review</strong><div class="muted">A licensed agent reviews your details.</div></div></li>
-            <li><span class="dot" aria-hidden="true"></span><div><strong>Callback</strong><div class="muted">${escapeHtml(S.callback_sla)}</div></div></li>
-            <li><span class="dot" aria-hidden="true"></span><div><strong>Quote options</strong><div class="muted">You’ll receive options to review — still not bound until you accept with an agent/carrier.</div></div></li>
+          <ol class="timeline">
+            <li class="done"><span class="dot"></span><div><strong>Received</strong><div class="muted">In Asshield’s queue.</div></div></li>
+            <li class="current"><span class="dot"></span><div><strong>Agent review</strong><div class="muted">A licensed agent reviews your details.</div></div></li>
+            <li><span class="dot"></span><div><strong>Callback</strong><div class="muted">${escapeHtml(S.callback_sla)}</div></div></li>
+            <li><span class="dot"></span><div><strong>Quote options</strong><div class="muted">Still not bound until you accept with an agent/carrier.</div></div></li>
           </ol>
           <div class="actions">
-            <button type="button" class="primary" id="btn-agent">Agent contact</button>
-            ${cross.map(c => `<button type="button" class="secondary cross" data-p="${escapeHtml(c.id||c)}">Add ${escapeHtml(c.label||c.id||c)}</button>`).join("")}
+            <button type="button" class="cta" id="btn-agent">Agent contact</button>
+            ${cross.map(c => `<button type="button" class="secondary cross" data-p="${escapeHtml(c.id||c)}">Add ${escapeHtml(c.label||productLabel(c.id||c))}</button>`).join("")}
             <button type="button" class="secondary" id="btn-options">Browse all lines</button>
           </div>
         </div>`;
         bindCommon();
         root.querySelectorAll(".cross").forEach(b => b.onclick = async () => {
-          const product = b.dataset.p;
-          setStatus("Starting another line…");
           try {
-            const st = S.state; const zip = S.zip;
-            if (st && zip) await callTool("start_quote", { product, state: st, zip });
+            if (S.state && S.zip) await callTool("start_quote", { product: b.dataset.p, state: S.state, zip: S.zip });
             else await callTool("show_insurance_options", {});
           } catch(e){ setStatus(String(e?.message||e)); }
         });
         return;
       }
 
-      // form / review
+      // form
       $("phase-badge").textContent = "In progress";
       const steps = stepsFor(S.product);
       const cur = steps[S.step] || steps[0];
-      if (cur.id === "review") {
-        S.phase = "form";
-        root.innerHTML = renderReview();
-        bindReview(); return;
-      }
+      const [ht] = heroForStep(cur.id === "consent" ? "consent_auth" : cur.id);
+      $("hero-title").innerHTML = ht;
+      if (cur.id === "review") { root.innerHTML = renderReview(); bindReview(); return; }
       root.innerHTML = renderStep(cur);
       bindStep(cur);
     }
 
-    function renderStep(cur) {
-      const f = S.fields;
-      if (cur.id === "contact") return `<div class="panel"><h2>Contact</h2>
-        <div class="row2"><div><label for="first_name">First name</label><input id="first_name" required value="${escapeHtml(f.first_name||"")}" autocomplete="given-name" /></div>
-        <div><label for="last_name">Last name</label><input id="last_name" required value="${escapeHtml(f.last_name||"")}" autocomplete="family-name" /></div></div>
-        <label for="email">Email</label><input id="email" type="email" value="${escapeHtml(f.email||"")}" autocomplete="email" placeholder="name@example.com" />
-        <label for="phone">Phone</label><input id="phone" type="tel" value="${escapeHtml(f.phone||"")}" autocomplete="tel" placeholder="859-555-0100" />
-        <p class="err is-hidden" id="err"></p>
-        ${navButtons(true)}</div>`;
-      if (cur.id === "business") return `<div class="panel"><h2>Business</h2>
-        <label for="business_name">Business name</label><input id="business_name" required value="${escapeHtml(f.business_name||"")}" />
-        <label for="business_type_or_description">Type / description</label><input id="business_type_or_description" value="${escapeHtml(f.business_type_or_description||"")}" />
-        <div class="row2"><div><label for="business_address_state">Business state</label><input id="business_address_state" maxlength="2" value="${escapeHtml(f.business_address_state||S.state||"")}" /></div>
-        <div><label for="business_address_zip">Business ZIP</label><input id="business_address_zip" value="${escapeHtml(f.business_address_zip||S.zip||"")}" /></div></div>
-        <div class="row2"><div><label for="years_in_business">Years in business</label><input id="years_in_business" type="number" min="0" value="${escapeHtml(f.years_in_business??"")}" /></div>
-        <div><label for="number_of_employees">Employees</label><input id="number_of_employees" type="number" min="0" value="${escapeHtml(f.number_of_employees??"")}" /></div></div>
-        <label for="annual_revenue_range">Revenue range</label><input id="annual_revenue_range" value="${escapeHtml(f.annual_revenue_range||"")}" placeholder="e.g. $250k–$500k" />
-        ${S.product==="trucking"?`<label for="radius_of_operation">Radius</label><select id="radius_of_operation"><option value="">Select</option><option value="local">Local</option><option value="intermediate">Intermediate</option><option value="long_haul">Long haul</option></select>
-        <label for="cargo_type">Cargo type</label><input id="cargo_type" value="${escapeHtml(f.cargo_type||"")}" />
-        <div class="row2"><div><label for="power_unit_count">Power units</label><input id="power_unit_count" type="number" min="0" value="${escapeHtml(f.power_unit_count??"")}" /></div>
-        <div><label for="trailer_count">Trailers</label><input id="trailer_count" type="number" min="0" value="${escapeHtml(f.trailer_count??"")}" /></div></div>
-        <label for="dot_mc_number">DOT/MC (optional)</label><input id="dot_mc_number" value="${escapeHtml(f.dot_mc_number||"")}" />`:""}
-        ${S.product==="commercial_auto"?`<label for="commercial_vehicle_summary">Vehicle summary</label><textarea id="commercial_vehicle_summary" rows="2">${escapeHtml(f.commercial_vehicle_summary||"")}</textarea>`:""}
-        ${navButtons(true)}</div>`;
-      if (cur.id === "drivers") return `<div class="panel"><h2>Drivers / riders</h2>
-        <p class="muted">Do not enter driver’s license numbers.</p>
-        <div class="row2"><div><label for="d_first">First name</label><input id="d_first" required /></div><div><label for="d_last">Last name</label><input id="d_last" required /></div></div>
-        <label for="d_dob">Date of birth</label><input id="d_dob" type="date" />
-        <label for="d_rel">Relationship</label><input id="d_rel" placeholder="self / spouse / child" />
-        ${navButtons(true, "Save driver & continue")}</div>`;
-      if (cur.id === "vehicles") return `<div class="panel"><h2>Vehicles / units</h2>
-        <div class="row2"><div><label for="v_year">Year</label><input id="v_year" type="number" min="1900" max="2100" required /></div>
-        <div><label for="v_make">Make</label><input id="v_make" required /></div></div>
-        <label for="v_model">Model</label><input id="v_model" />
-        <label for="v_own">Ownership</label><select id="v_own"><option value="">Select</option><option>owned</option><option>financed</option><option>leased</option></select>
-        ${navButtons(true, "Save vehicle & continue")}</div>`;
-      if (cur.id === "details") {
-        if (S.product === "boat") return `<div class="panel"><h2>Boat details</h2>
-          <div class="row2"><div><label for="boat_year">Year</label><input id="boat_year" type="number" value="${escapeHtml(f.boat_year??"")}" /></div>
-          <div><label for="boat_make">Make</label><input id="boat_make" value="${escapeHtml(f.boat_make||"")}" /></div></div>
-          <div class="row2"><div><label for="boat_length_ft">Length (ft)</label><input id="boat_length_ft" type="number" value="${escapeHtml(f.boat_length_ft??"")}" /></div>
-          <div><label for="motor_hp">Motor HP</label><input id="motor_hp" type="number" value="${escapeHtml(f.motor_hp??"")}" /></div></div>
-          <label for="boat_storage_or_usage">Storage / usage</label><input id="boat_storage_or_usage" value="${escapeHtml(f.boat_storage_or_usage||"")}" />
-          ${navButtons(true)}</div>`;
-        if (S.product === "golf_cart") return `<div class="panel"><h2>Golf cart details</h2>
-          <div class="row2"><div><label for="cart_year">Year</label><input id="cart_year" type="number" value="${escapeHtml(f.cart_year??"")}" /></div>
-          <div><label for="cart_make">Make</label><input id="cart_make" value="${escapeHtml(f.cart_make||"")}" /></div></div>
-          <label for="street_legal">Street legal?</label><select id="street_legal"><option value="">Select</option><option value="true">Yes</option><option value="false">No</option></select>
-          <label for="cart_usage">Usage</label><input id="cart_usage" value="${escapeHtml(f.cart_usage||"")}" />
-          ${navButtons(true)}</div>`;
-        if (S.product === "commercial_gl") return `<div class="panel"><h2>GL details</h2>
-          <label for="operations_description">Operations description</label><textarea id="operations_description" rows="3">${escapeHtml(f.operations_description||"")}</textarea>
-          <label for="desired_limits">Desired limits</label><input id="desired_limits" value="${escapeHtml(f.desired_limits||"")}" />
-          ${navButtons(true)}</div>`;
-        if (S.product === "workers_comp") return `<div class="panel"><h2>Workers’ comp details</h2>
-          <label for="annual_payroll_estimate">Annual payroll estimate</label><input id="annual_payroll_estimate" value="${escapeHtml(f.annual_payroll_estimate||"")}" />
-          <label for="employees_by_job_type">Employees by job type</label><textarea id="employees_by_job_type" rows="3">${escapeHtml(f.employees_by_job_type||"")}</textarea>
-          ${navButtons(true)}</div>`;
-        // home / renters — checklist + optional notes into policy later
-        return `<div class="panel"><h2>${S.product==="renters"?"Rental":"Property"} notes</h2>
-          <p class="muted">Share what you can; an agent will confirm details. No SSN or payment info.</p>
-          ${renderChecklist(S.checklist)}
-          <label for="property_notes">Notes for the agent (optional)</label><textarea id="property_notes" rows="3">${escapeHtml(f.property_notes||"")}</textarea>
-          ${navButtons(false)}</div>`;
-      }
-      if (cur.id === "policy") return `<div class="panel"><h2>Current policy</h2>
-        <label for="carrier">Current carrier</label><input id="carrier" value="${escapeHtml(f.carrier||"")}" placeholder="or type None" />
-        <label for="current_premium">Approx. premium</label><input id="current_premium" value="${escapeHtml(f.current_premium||"")}" />
-        <label for="premium_frequency">Frequency</label><select id="premium_frequency"><option value="">Select</option><option>monthly</option><option>semi_annual</option><option>annual</option></select>
-        <label for="bodily_injury_limit">BI limit preference</label><input id="bodily_injury_limit" value="${escapeHtml(f.bodily_injury_limit||"")}" />
-        ${navButtons(true)}</div>`;
-      if (cur.id === "consent") return `<div class="panel"><h2>Authorization</h2>
-        <p>I authorize Asshield Insurance to use these details to prepare a quote request and contact me about it.</p>
-        <label><input type="checkbox" id="auth_ok" ${f.auth_ok?"checked":""}/> I agree (required)</label>
-        <p class="muted" style="margin-top:8px">This does not bind coverage or create a policy.</p>
-        ${navButtons(true, "Save consent & review")}</div>`;
-      return `<div class="panel"><p>Unknown step</p></div>`;
-    }
-
-    function navButtons(requireSave, saveLabel) {
+    function navButtons(saveLabel) {
       return `<div class="actions">
         <button type="button" class="secondary" id="btn-back"${S.step===0?" disabled":""}>Back</button>
-        <button type="button" class="primary" id="btn-next">${escapeHtml(saveLabel||"Save & continue")}</button>
-        <button type="button" class="secondary" id="btn-refresh">Refresh status</button>
+        <button type="button" class="cta" id="btn-next">${escapeHtml(saveLabel||"Continue")}</button>
       </div>`;
     }
 
-    function dlRows(rows) {
-      const filtered = rows.filter((r) => r[1] != null && String(r[1]).trim() !== "");
-      if (!filtered.length) return `<p class="muted">None yet</p>`;
-      return `<dl class="review">${filtered.map(([k,v]) =>
-        `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`
-      ).join("")}</dl>`;
+    function renderStep(cur) {
+      const f = S.fields;
+      if (cur.id === "contact") return `<div class="panel"><div class="stripe"></div>
+        <div class="row2"><div><label for="first_name">First name</label><input id="first_name" value="${escapeHtml(f.first_name||"")}" autocomplete="given-name"/></div>
+        <div><label for="last_name">Last name</label><input id="last_name" value="${escapeHtml(f.last_name||"")}" autocomplete="family-name"/></div></div>
+        <label for="email">Email</label><input id="email" type="email" value="${escapeHtml(f.email||"")}"/>
+        <label for="phone">Phone</label><input id="phone" type="tel" value="${escapeHtml(f.phone||"")}"/>
+        <label>Preferred contact</label>${seg("pref-contact",[["call","Call"],["text","Text"],["email","Email"]], f.preferred_contact_method||"email")}
+        ${navButtons("Save & continue")}</div>`;
+
+      if (cur.id === "drivers") {
+        const list = (f.drivers||[]).map((d,i) => `<div class="entity"><div><strong>${escapeHtml(d.name||((d.first_name||"")+" "+(d.last_name||"")))}</strong><div class="sub">${escapeHtml([d.date_of_birth,d.relationship].filter(Boolean).join(" · "))}</div></div>
+          <button type="button" class="linkish" data-rm="${i}">Remove</button></div>`).join("");
+        return `<div class="panel"><div class="stripe"></div>
+          ${list || `<p class="muted">No drivers yet — add at least one.</p>`}
+          <div class="row2"><div><label for="d_first">First name</label><input id="d_first"/></div><div><label for="d_last">Last name</label><input id="d_last"/></div></div>
+          <label for="d_dob">Date of birth</label><input id="d_dob" type="date"/>
+          <label>Relationship</label>${seg("d_rel",[["self","Self"],["spouse","Spouse"],["child","Child"],["other","Other"]],"self")}
+          <div class="actions">
+            <button type="button" class="secondary" id="btn-add-driver">Add driver</button>
+            <button type="button" class="secondary" id="btn-back">Back</button>
+            <button type="button" class="cta" id="btn-next">Continue</button>
+          </div></div>`;
+      }
+
+      if (cur.id === "vehicles") {
+        const list = (f.vehicles||[]).map((v,i) => `<div class="entity"><div><strong>${escapeHtml(v.summary||[v.year,v.make,v.model].filter(Boolean).join(" "))}</strong><div class="sub">${escapeHtml(v.usage||v.ownership||"")}</div></div>
+          <button type="button" class="linkish" data-rm="${i}">Remove</button></div>`).join("");
+        const years = YEAR_OPTS.map(y => `<option value="${y}">${y}</option>`).join("");
+        return `<div class="panel"><div class="stripe"></div>
+          ${list || `<p class="muted">No vehicles yet — add at least one.</p>`}
+          <label for="v_year">Year</label><select id="v_year"><option value="">Select year</option>${years}</select>
+          <label for="v_make">Make</label><input id="v_make" placeholder="Toyota"/>
+          <label for="v_model">Model</label><input id="v_model" placeholder="Camry"/>
+          <label>Usage</label>${seg("v_usage",[["commute","Commute"],["pleasure","Pleasure"],["business","Business"]],"commute")}
+          <label>Ownership</label>${seg("v_own",[["owned","Owned"],["financed","Financed"],["leased","Leased"]],"owned")}
+          <div class="actions">
+            <button type="button" class="secondary" id="btn-add-vehicle">Add vehicle</button>
+            <button type="button" class="secondary" id="btn-back">Back</button>
+            <button type="button" class="cta" id="btn-next">Continue</button>
+          </div></div>`;
+      }
+
+      if (cur.id === "business") return `<div class="panel"><div class="stripe"></div>
+        <label for="business_name">Business name</label><input id="business_name" value="${escapeHtml(f.business_name||"")}"/>
+        <label for="business_type_or_description">Type / description</label><input id="business_type_or_description" value="${escapeHtml(f.business_type_or_description||"")}"/>
+        <div class="row2"><div><label for="business_address_state">State</label><input id="business_address_state" maxlength="2" value="${escapeHtml(f.business_address_state||S.state||"")}"/></div>
+        <div><label for="business_address_zip">ZIP</label><input id="business_address_zip" value="${escapeHtml(f.business_address_zip||S.zip||"")}"/></div></div>
+        <label>Employees</label>${seg("emp",[["1-5","1–5"],["6-20","6–20"],["21-50","21–50"],["51+","51+"]], f.emp_range||"1-5")}
+        ${navButtons()}</div>`;
+
+      if (cur.id === "details") {
+        if (S.product === "boat") return `<div class="panel"><div class="stripe"></div>
+          <label for="boat_year">Year</label><select id="boat_year"><option value="">Year</option>${YEAR_OPTS.map(y=>`<option>${y}</option>`).join("")}</select>
+          <label for="boat_make">Make</label><input id="boat_make" value="${escapeHtml(f.boat_make||"")}"/>
+          <label>Length</label>${seg("boat_len",[["15","Under 20 ft"],["24","20–30 ft"],["35","30–40 ft"],["45","40+ ft"]], "24")}
+          ${navButtons()}</div>`;
+        if (S.product === "golf_cart") return `<div class="panel"><div class="stripe"></div>
+          <label for="cart_year">Year</label><select id="cart_year"><option value="">Year</option>${YEAR_OPTS.map(y=>`<option>${y}</option>`).join("")}</select>
+          <label for="cart_make">Make</label><input id="cart_make"/>
+          <label>Street legal?</label>${seg("street",[["true","Yes"],["false","No"]],"false")}
+          ${navButtons()}</div>`;
+        if (S.product === "workers_comp") return `<div class="panel"><div class="stripe"></div>
+          <label for="annual_payroll_estimate">Payroll estimate</label><input id="annual_payroll_estimate" value="${escapeHtml(f.annual_payroll_estimate||"")}"/>
+          <label for="employees_by_job_type">Employees by job type</label><textarea id="employees_by_job_type" rows="3">${escapeHtml(f.employees_by_job_type||"")}</textarea>
+          ${navButtons()}</div>`;
+        if (S.product === "commercial_gl") return `<div class="panel"><div class="stripe"></div>
+          <label for="operations_description">Operations</label><textarea id="operations_description" rows="3">${escapeHtml(f.operations_description||"")}</textarea>
+          ${navButtons()}</div>`;
+        return `<div class="panel"><div class="stripe"></div>
+          <h3>Helpful to have</h3>${renderChecklist(S.checklist)}
+          <label for="property_notes">Notes for the agent</label><textarea id="property_notes" rows="3">${escapeHtml(f.property_notes||"")}</textarea>
+          ${navButtons()}</div>`;
+      }
+
+      if (cur.id === "policy") return `<div class="panel"><div class="stripe"></div>
+        <label for="carrier">Current carrier</label><input id="carrier" value="${escapeHtml(f.carrier||"")}" placeholder="or type None"/>
+        <label for="current_premium">Approx. premium</label><input id="current_premium" value="${escapeHtml(f.current_premium||"")}"/>
+        <label>Frequency</label>${seg("freq",[["monthly","Monthly"],["semi_annual","Semi-annual"],["annual","Annual"]], f.premium_frequency||"monthly")}
+        ${navButtons()}</div>`;
+
+      if (cur.id === "prefs") return `<div class="panel"><div class="stripe"></div>
+        <h3>Desired coverage level</h3>
+        <div class="pref-grid" id="cov-pref">
+          <button type="button" class="pref-card ${f.coverage_preference==="low"?"on":""}" data-v="low"><strong>Essential</strong><span>Core protections to discuss.</span></button>
+          <button type="button" class="pref-card ${f.coverage_preference!=="low"&&f.coverage_preference!=="high"?"on":""}" data-v="medium"><strong>Balanced</strong><span>Solid limits for most people.</span></button>
+          <button type="button" class="pref-card ${f.coverage_preference==="high"?"on":""}" data-v="high"><strong>Enhanced</strong><span>Higher limits & broader topics.</span></button>
+        </div>
+        <h3>Deductible preference</h3>
+        <div class="pref-grid" id="ded-pref">
+          <button type="button" class="pref-card ${f.deductible_preference==="low"?"on":""}" data-v="low"><strong>Lower</strong><span>Prefer smaller out-of-pocket.</span></button>
+          <button type="button" class="pref-card ${f.deductible_preference!=="low"&&f.deductible_preference!=="high"?"on":""}" data-v="medium"><strong>Medium</strong><span>Balance premium vs. deductible.</span></button>
+          <button type="button" class="pref-card ${f.deductible_preference==="high"?"on":""}" data-v="high"><strong>Higher</strong><span>OK with higher deductible.</span></button>
+        </div>
+        <p class="note">Preferences only — not a quote or price.</p>
+        ${navButtons("Continue")}</div>`;
+
+      if (cur.id === "consent") return `<div class="panel"><div class="stripe"></div>
+        <p>I authorize Asshield Insurance to use these details to prepare a quote request and contact me about it.</p>
+        <label class="toggle"><input type="checkbox" id="auth_ok" ${f.auth_ok?"checked":""}/> I agree (required)</label>
+        <p class="muted">This does not bind coverage or create a policy.</p>
+        ${navButtons("Save & review")}</div>`;
+
+      return `<div class="panel"><p>Unknown step</p></div>`;
     }
+
     function renderReview() {
-      const f = S.fields || {};
-      const drivers = f.drivers || (f.driver_name ? [{ name: f.driver_name, dob: f.driver_dob, relationship: f.driver_rel }] : []);
-      const vehicles = f.vehicles || (f.vehicle ? [{ summary: f.vehicle }] : []);
-      const missingHuman = (S.missing || []).map((m) => m.replace(/_/g, " ")).join(", ") || "None";
-
-      let sections = "";
-      sections += `<div class="review-section"><h3>Quote</h3>${dlRows([
-        ["Product", productLabel(S.product)],
-        ["State / ZIP", [S.state, S.zip].filter(Boolean).join(" ")],
-        ["Reference", S.quote_id]
-      ])}</div>`;
-      sections += `<div class="review-section"><h3>Contact</h3>${dlRows([
-        ["Name", [f.first_name, f.last_name].filter(Boolean).join(" ")],
-        ["Email", f.email],
-        ["Phone", f.phone]
-      ])}</div>`;
-      if (COMMERCIAL.has(S.product) || f.business_name) {
-        sections += `<div class="review-section"><h3>Business</h3>${dlRows([
-          ["Business name", f.business_name],
-          ["Type / description", f.business_type_or_description],
-          ["Business address", [f.business_address_state, f.business_address_zip].filter(Boolean).join(" ")],
-          ["Years in business", f.years_in_business],
-          ["Employees", f.number_of_employees],
-          ["Revenue range", f.annual_revenue_range],
-          ["Radius", f.radius_of_operation],
-          ["Cargo", f.cargo_type],
-          ["Power units", f.power_unit_count],
-          ["Trailers", f.trailer_count],
-          ["DOT/MC", f.dot_mc_number],
-          ["Vehicle summary", f.commercial_vehicle_summary]
-        ])}</div>`;
-      }
-      if (DRIVER_VEHICLE.has(S.product) || drivers.length) {
-        const driverText = drivers.length
-          ? drivers.map((d) => [d.name || [d.first_name, d.last_name].filter(Boolean).join(" "), d.dob || d.date_of_birth, d.relationship].filter(Boolean).join(" · ")).join("; ")
-          : "";
-        sections += `<div class="review-section"><h3>Drivers / riders</h3>${dlRows([["Drivers", driverText || "Not added yet"]])}</div>`;
-      }
-      if (DRIVER_VEHICLE.has(S.product) || vehicles.length) {
-        const vehicleText = vehicles.length
-          ? vehicles.map((v) => v.summary || [v.year, v.make, v.model, v.ownership].filter(Boolean).join(" ")).join("; ")
-          : "";
-        sections += `<div class="review-section"><h3>Vehicles / units</h3>${dlRows([["Vehicles", vehicleText || "Not added yet"]])}</div>`;
-      }
-      if (LINE_DETAIL.has(S.product) || f.boat_make || f.cart_make || f.operations_description || f.annual_payroll_estimate || f.property_notes) {
-        sections += `<div class="review-section"><h3>Line details</h3>${dlRows([
-          ["Operations", f.operations_description],
-          ["Desired limits", f.desired_limits],
-          ["Payroll estimate", f.annual_payroll_estimate],
-          ["Employees by job type", f.employees_by_job_type],
-          ["Boat", [f.boat_year, f.boat_make, f.boat_length_ft != null ? f.boat_length_ft + " ft" : "", f.motor_hp != null ? f.motor_hp + " HP" : "", f.boat_storage_or_usage].filter(Boolean).join(" · ")],
-          ["Golf cart", [f.cart_year, f.cart_make, f.street_legal == null ? "" : (f.street_legal ? "street-legal" : "not street-legal"), f.cart_usage].filter(Boolean).join(" · ")],
-          ["Property notes", f.property_notes]
-        ])}</div>`;
-      }
-      sections += `<div class="review-section"><h3>Current policy</h3>${dlRows([
-        ["Carrier", f.carrier],
-        ["Premium", f.current_premium],
-        ["Frequency", f.premium_frequency],
-        ["BI limit preference", f.bodily_injury_limit]
-      ])}</div>`;
-      sections += `<div class="review-section"><h3>Consent</h3>${dlRows([
-        ["Quote authorization", f.auth_ok ? "Accepted" : (missingHas("quote_authorization") ? "Still needed" : "Recorded")]
-      ])}</div>`;
-
-      const remaining = renderChecklist(S.checklist, { onlyRemaining: true });
-      const remainingBlock = (S.checklist && S.checklist.length)
-        ? `<div class="review-section"><h3>Still needed / helpful</h3>${remaining}</div>`
-        : "";
-
-      return `<div class="panel"><h2>Review & submit</h2>
-        <p class="muted">Confirm everything looks right. Submitting sends a quote request only — <strong>no coverage is bound</strong>.</p>
-        ${sections}
-        <div class="review-section"><h3>Completeness</h3>${dlRows([["Outstanding fields", missingHuman]])}</div>
-        ${remainingBlock}
+      const f = S.fields;
+      const rows = [
+        ["Product", productLabel(S.product), "product"],
+        ["State / ZIP", [S.state,S.zip].filter(Boolean).join(" "), "loc"],
+        ["Name", [f.first_name,f.last_name].filter(Boolean).join(" "), "contact"],
+        ["Email", f.email, "contact"],
+        ["Phone", f.phone, "contact"],
+        ["Drivers", (f.drivers||[]).map(d=>d.name||d.first_name).join(", ") || "—", "drivers"],
+        ["Vehicles", (f.vehicles||[]).map(v=>v.summary).join(", ") || "—", "vehicles"],
+        ["Business", f.business_name, "business"],
+        ["Carrier", f.carrier, "policy"],
+        ["Coverage pref", f.coverage_preference, "prefs"],
+        ["Deductible pref", f.deductible_preference, "prefs"],
+        ["Authorization", f.auth_ok ? "Accepted" : "Needed", "consent"]
+      ].filter(r => r[1]);
+      return `<div class="panel"><div class="stripe"></div>
+        <p class="muted">Tap a row to edit. Submitting sends a request only — <strong>no coverage is bound</strong>.</p>
+        ${rows.map(([k,v,step]) => `<div class="edit-row" data-step="${step}"><div><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div><span class="hint">Edit</span></div>`).join("")}
+        <h3>Still needed</h3>${renderChecklist(S.checklist,{onlyRemaining:true})}
         <div class="actions">
-          <button type="button" class="secondary" id="btn-back">Edit</button>
-          <button type="button" class="primary" id="btn-submit">Submit quote request</button>
+          <button type="button" class="secondary" id="btn-back">Back</button>
+          <button type="button" class="cta" id="btn-submit">Submit quote request</button>
           <button type="button" class="secondary" id="btn-agent">Agent contact</button>
         </div></div>`;
     }
-
-    function showErr(msg){ const e=$("err"); if(e){ e.textContent=msg; e.classList.remove("is-hidden"); } else setStatus(msg); }
 
     async function refreshMissing() {
       if (!S.quote_id) return;
       try {
         const res = await callTool("get_missing_quote_fields", { quote_id: S.quote_id });
-        const sc = res?.structuredContent || res;
-        ingest({ structuredContent: sc });
+        ingest({ structuredContent: res?.structuredContent || res });
       } catch(e){ setStatus("Refresh failed: "+(e?.message||e)); }
     }
 
     function bindStep(cur) {
       $("btn-back") && ($("btn-back").onclick = () => { if (S.step>0){ S.step--; render(); }});
-      $("btn-refresh") && ($("btn-refresh").onclick = () => refreshMissing());
-      $("btn-next").onclick = async () => {
-        if (!S.quote_id) return setStatus("No active quote.");
+      if (cur.id === "contact") bindSeg("pref-contact", v => { S.fields.preferred_contact_method = v; });
+      if (cur.id === "drivers") {
+        bindSeg("d_rel", v => { S.fields._d_rel = v; });
+        $("btn-add-driver").onclick = async () => {
+          const first_name=val("d_first"), last_name=val("d_last");
+          if (!first_name||!last_name) return setStatus("Driver name required.");
+          const args={ quote_id:S.quote_id, first_name, last_name, relationship: S.fields._d_rel||"self" };
+          const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
+          setStatus("Saving driver…");
+          try {
+            await callTool("add_driver", args);
+            S.fields.drivers = S.fields.drivers||[];
+            S.fields.drivers.push({ first_name, last_name, name: first_name+" "+last_name, date_of_birth: dob, relationship: args.relationship });
+            await refreshMissing(); render(); setStatus("Driver added.");
+          } catch(e){ setStatus(String(e?.message||e)); }
+        };
+        rootRm("drivers");
+      }
+      if (cur.id === "vehicles") {
+        bindSeg("v_usage", v => { S.fields._v_usage = v; });
+        bindSeg("v_own", v => { S.fields._v_own = v; });
+        $("btn-add-vehicle").onclick = async () => {
+          const year=Number(val("v_year")), make=val("v_make");
+          if (!year||!make) return setStatus("Year and make required.");
+          const args={ quote_id:S.quote_id, year, make, model: val("v_model")||undefined, ownership: S.fields._v_own||"owned", usage: S.fields._v_usage||"commute" };
+          setStatus("Saving vehicle…");
+          try {
+            await callTool("add_vehicle", args);
+            S.fields.vehicles = S.fields.vehicles||[];
+            S.fields.vehicles.push({ ...args, summary: [year, make, args.model].filter(Boolean).join(" ") });
+            await refreshMissing(); render(); setStatus("Vehicle added.");
+          } catch(e){ setStatus(String(e?.message||e)); }
+        };
+        rootRm("vehicles");
+      }
+      if (cur.id === "business") bindSeg("emp", v => { S.fields.emp_range = v; S.fields.number_of_employees = ({"1-5":3,"6-20":12,"21-50":30,"51+":60})[v]; });
+      if (cur.id === "details" && S.product==="boat") bindSeg("boat_len", v => { S.fields.boat_length_ft = Number(v); });
+      if (cur.id === "details" && S.product==="golf_cart") bindSeg("street", v => { S.fields.street_legal = v==="true"; });
+      if (cur.id === "policy") bindSeg("freq", v => { S.fields.premium_frequency = v; });
+      if (cur.id === "prefs") {
+        $("cov-pref")?.querySelectorAll(".pref-card").forEach(b => b.onclick = () => {
+          S.fields.coverage_preference = b.dataset.v;
+          $("cov-pref").querySelectorAll(".pref-card").forEach(x => x.classList.toggle("on", x===b));
+        });
+        $("ded-pref")?.querySelectorAll(".pref-card").forEach(b => b.onclick = () => {
+          S.fields.deductible_preference = b.dataset.v;
+          $("ded-pref").querySelectorAll(".pref-card").forEach(x => x.classList.toggle("on", x===b));
+        });
+      }
+
+      if ($("btn-next")) $("btn-next").onclick = async () => {
+        if (!S.quote_id && cur.id !== "prefs") return setStatus("No active quote.");
         setStatus("Saving…");
         try {
           if (cur.id === "contact") {
             const first_name=val("first_name"), last_name=val("last_name"), email=val("email"), phone=val("phone");
-            if (!first_name||!last_name) return showErr("First and last name are required.");
-            if (!email && !phone) return showErr("Provide at least an email or phone.");
-            await callTool("save_contact", { quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined, preferred_contact_method: email?"email":"call" });
+            if (!first_name||!last_name) return setStatus("Name required.");
+            if (!email && !phone) return setStatus("Provide email or phone.");
+            await callTool("save_contact", { quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined, preferred_contact_method: S.fields.preferred_contact_method||"email" });
             Object.assign(S.fields,{first_name,last_name,email,phone});
           } else if (cur.id === "business") {
-            const args = { quote_id:S.quote_id, business_name:val("business_name"), business_type_or_description:val("business_type_or_description")||undefined,
-              business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined };
-            if (!args.business_name) return setStatus("Business name is required.");
-            const y=val("years_in_business"); if(y) args.years_in_business=Number(y);
-            const n=val("number_of_employees"); if(n) args.number_of_employees=Number(n);
-            const rev=val("annual_revenue_range"); if(rev) args.annual_revenue_range=rev;
-            if (S.product==="trucking") {
-              const r=val("radius_of_operation"); if(r) args.radius_of_operation=r;
-              const c=val("cargo_type"); if(c) args.cargo_type=c;
-              const p=val("power_unit_count"); if(p!=="") args.power_unit_count=Number(p);
-              const t=val("trailer_count"); if(t!=="") args.trailer_count=Number(t);
-              const d=val("dot_mc_number"); if(d) args.dot_mc_number=d;
-            }
-            if (S.product==="commercial_auto") { const s=val("commercial_vehicle_summary"); if(s) args.commercial_vehicle_summary=s; }
-            await callTool("save_business_details", args);
-            Object.assign(S.fields, args);
-          } else if (cur.id === "drivers") {
-            const first_name=val("d_first"), last_name=val("d_last");
-            if (!first_name||!last_name) return setStatus("Driver name required.");
-            const args={ quote_id:S.quote_id, first_name, last_name };
-            const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
-            const rel=val("d_rel"); if(rel) args.relationship=rel;
-            await callTool("add_driver", args);
-            S.fields.drivers = S.fields.drivers || [];
-            S.fields.drivers.push({ first_name, last_name, name: first_name+" "+last_name, date_of_birth: args.date_of_birth, relationship: args.relationship });
-            S.fields.driver_name = first_name+" "+last_name;
-          } else if (cur.id === "vehicles") {
-            const year=Number(val("v_year")), make=val("v_make");
-            if (!year||!make) return setStatus("Year and make required.");
-            const args={ quote_id:S.quote_id, year, make };
-            const model=val("v_model"); if(model) args.model=model;
-            const own=val("v_own"); if(own) args.ownership=own;
-            await callTool("add_vehicle", args);
-            S.fields.vehicles = S.fields.vehicles || [];
-            S.fields.vehicles.push({ year, make, model: args.model, ownership: args.ownership, summary: [year, make, args.model].filter(Boolean).join(" ") });
-            S.fields.vehicle = year+" "+make;
+            const args={ quote_id:S.quote_id, business_name:val("business_name"), business_type_or_description:val("business_type_or_description")||undefined,
+              business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined,
+              number_of_employees: S.fields.number_of_employees };
+            if (!args.business_name) return setStatus("Business name required.");
+            await callTool("save_business_details", args); Object.assign(S.fields, args);
+          } else if (cur.id === "drivers" || cur.id === "vehicles") {
+            if (cur.id==="drivers" && !(S.fields.drivers||[]).length) return setStatus("Add at least one driver.");
+            if (cur.id==="vehicles" && !(S.fields.vehicles||[]).length) return setStatus("Add at least one vehicle.");
           } else if (cur.id === "details") {
-            if (S.product==="home"||S.product==="renters") {
-              S.fields.property_notes = val("property_notes");
-            } else {
+            if (S.product==="home"||S.product==="renters") S.fields.property_notes = val("property_notes");
+            else {
               const args={ quote_id:S.quote_id };
-              ["operations_description","desired_limits","annual_payroll_estimate","employees_by_job_type","boat_make","boat_storage_or_usage","cart_make","cart_usage"].forEach(k=>{ const v=val(k); if(v) args[k]=v; });
-              ["boat_year","boat_length_ft","motor_hp","cart_year"].forEach(k=>{ const v=val(k); if(v!=="") args[k]=Number(v); });
-              const sl=val("street_legal"); if(sl==="true") args.street_legal=true; if(sl==="false") args.street_legal=false;
-              await callTool("save_line_details", args);
-              Object.assign(S.fields, args);
+              ["operations_description","annual_payroll_estimate","employees_by_job_type","boat_make","cart_make"].forEach(k=>{ const v=val(k); if(v) args[k]=v; });
+              const by=val("boat_year"); if(by) args.boat_year=Number(by);
+              const cy=val("cart_year"); if(cy) args.cart_year=Number(cy);
+              if (S.fields.boat_length_ft) args.boat_length_ft = S.fields.boat_length_ft;
+              if (S.fields.street_legal!=null) args.street_legal = S.fields.street_legal;
+              await callTool("save_line_details", args); Object.assign(S.fields, args);
             }
           } else if (cur.id === "policy") {
             const carrier=val("carrier")||"None provided";
-            const args={ quote_id:S.quote_id, carrier };
-            const prem=val("current_premium"); if(prem) args.current_premium=prem;
-            const freq=val("premium_frequency"); if(freq) args.premium_frequency=freq;
-            const bi=val("bodily_injury_limit"); if(bi) args.bodily_injury_limit=bi;
-            await callTool("save_current_policy", args);
-            Object.assign(S.fields, args);
+            const args={ quote_id:S.quote_id, carrier, current_premium: val("current_premium")||undefined, premium_frequency: S.fields.premium_frequency||"monthly",
+              bodily_injury_limit: S.fields.coverage_preference || "medium" };
+            await callTool("save_current_policy", args); Object.assign(S.fields, args);
+          } else if (cur.id === "prefs") {
+            // persist preferences into policy snapshot as limit preference text
+            if (S.quote_id) {
+              try {
+                await callTool("save_current_policy", {
+                  quote_id: S.quote_id,
+                  carrier: S.fields.carrier || "Preference only",
+                  bodily_injury_limit: `coverage:${S.fields.coverage_preference||"medium"};deductible:${S.fields.deductible_preference||"medium"}`
+                });
+              } catch(_){}
+            }
           } else if (cur.id === "consent") {
             if (!$("auth_ok")?.checked) return setStatus("Please check the authorization box.");
             await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
@@ -544,14 +530,33 @@
           await refreshMissing();
           const steps = stepsFor(S.product);
           if (S.step < steps.length-1) S.step++;
-          render();
-          setStatus("Saved.");
+          render(); setStatus("Saved.");
         } catch(e){ setStatus("Save failed: "+(e?.message||e)); }
       };
     }
 
+    function rootRm(kind) {
+      document.querySelectorAll(".entity .linkish").forEach(btn => {
+        btn.onclick = () => {
+          const i = Number(btn.dataset.rm);
+          if (kind==="drivers") S.fields.drivers.splice(i,1);
+          if (kind==="vehicles") S.fields.vehicles.splice(i,1);
+          render(); setStatus("Removed. (Server row remains until agent cleanup — local UI updated.)");
+        };
+      });
+    }
+
     function bindReview() {
       $("btn-back").onclick = () => { S.step = Math.max(0, stepsFor(S.product).length-2); render(); };
+      document.querySelectorAll(".edit-row").forEach(row => {
+        row.onclick = () => {
+          const map = { contact:0, drivers: null, vehicles: null, business: null, policy: null, prefs: null, consent: null };
+          const steps = stepsFor(S.product);
+          const want = row.dataset.step;
+          const idx = steps.findIndex(s => s.id === want || (want==="loc" && s.id==="contact"));
+          if (idx >= 0) { S.step = idx; render(); }
+        };
+      });
       $("btn-submit").onclick = async () => {
         if (!S.quote_id) return;
         setStatus("Submitting…");
@@ -559,7 +564,12 @@
           if ((S.missing||[]).includes("quote_authorization")) {
             await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
           }
-          const res = await callTool("submit_quote", { quote_id:S.quote_id, notes: S.fields.property_notes || "Submitted from Asshield guided quote card" });
+          const notes = [
+            S.fields.property_notes,
+            S.fields.coverage_preference && `coverage_pref=${S.fields.coverage_preference}`,
+            S.fields.deductible_preference && `deductible_pref=${S.fields.deductible_preference}`
+          ].filter(Boolean).join("; ") || "Submitted from Asshield guided quote card";
+          const res = await callTool("submit_quote", { quote_id: S.quote_id, notes });
           ingest({ structuredContent: res?.structuredContent || res });
           S.phase = "confirmation"; render(); setStatus("Submitted. No coverage is bound.");
         } catch(e){ setStatus("Submit failed: "+(e?.message||e)); }
@@ -575,25 +585,20 @@
     function ingest(payload) {
       const sc = payload?.structuredContent || payload || {};
       const w = sc.widget || {};
-      if (sc.supported === false) { S.phase="unsupported"; S.message=sc.message||""; S.supported=false; render(); return; }
+      if (sc.supported === false) { S.phase="unsupported"; S.message=sc.message||""; render(); return; }
       if (w.quote_id || sc.quote_id || sc.quote?.id) S.quote_id = w.quote_id || sc.quote_id || sc.quote.id;
       if (w.product || sc.product || sc.quote?.product) S.product = w.product || sc.product || sc.quote.product;
-      if (w.product_label) S.product_label = w.product_label;
       if (w.state || sc.state || sc.quote?.state) S.state = w.state || sc.state || sc.quote.state;
       if (w.zip || sc.zip || sc.quote?.zip) S.zip = w.zip || sc.zip || sc.quote.zip;
       if (Array.isArray(w.missing) || Array.isArray(sc.missing)) S.missing = w.missing || sc.missing;
       if (Array.isArray(w.checklist) || Array.isArray(sc.what_to_have_ready)) S.checklist = w.checklist || sc.what_to_have_ready;
       if (w.fields) S.fields = { ...S.fields, ...w.fields };
-      if (w.agent || sc.agent) S.agent = w.agent || sc.agent;
       if (w.callback_sla || sc.callback_sla) S.callback_sla = w.callback_sla || sc.callback_sla;
       if (w.cross_sell || sc.cross_sell) S.cross_sell = w.cross_sell || sc.cross_sell;
-      if (w.privacy_url) S.privacy_url = w.privacy_url;
-      if (sc.submitted || w.phase === "confirmation") { S.phase = "confirmation"; }
+      if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
       else if (w.phase === "consent") S.phase = "consent";
-      else if (w.phase === "progress" || sc.ready_to_submit != null) { if (S.phase==="consent") {/* keep until user continues */} else S.phase="form"; }
-      if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product]) {
+      if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product])
         S.cross_sell = CROSS_DEFAULT[S.product].map(id => ({ id, label: productLabel(id) }));
-      }
       render();
     }
 
@@ -609,7 +614,6 @@
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive:true });
-
     function sync(){ try { if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput }); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
     setInterval(sync, 800); sync();
 
@@ -625,21 +629,24 @@
       ];
       S.fields = {
         first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", phone:"859-555-0100",
+        preferred_contact_method:"email",
         drivers:[{ name:"Jordan Test", date_of_birth:"1990-04-12", relationship:"self" }],
-        vehicles:[{ year:2020, make:"Toyota", model:"Camry", ownership:"owned", summary:"2020 Toyota Camry" }],
+        vehicles:[{ year:2020, make:"Toyota", model:"Camry", ownership:"owned", usage:"commute", summary:"2020 Toyota Camry" }],
         carrier:"Example Mutual", current_premium:"$145/mo", premium_frequency:"monthly",
-        bodily_injury_limit:"100/300", auth_ok:true
+        coverage_preference:"medium", deductible_preference:"medium", auth_ok:true
       };
       S.callback_sla = "An agent will reach out soon";
-      S.cross_sell = [{id:"home",label:productLabel("home")},{id:"auto_home",label:productLabel("auto_home")}];
+      S.cross_sell = [{id:"home",label:"Home"},{id:"auto_home",label:"Auto + Home"}];
       S.missing = [];
-      if (mock==="consent") { S.phase="consent"; }
+      if (mock==="consent") S.phase="consent";
       else if (mock==="contact") { S.phase="form"; S.step=0; }
       else if (mock==="drivers") { S.phase="form"; S.step=1; }
-      else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; S.missing=[]; }
-      else if (mock==="confirmation") { S.phase="confirmation"; }
+      else if (mock==="vehicles") { S.phase="form"; S.step=2; }
+      else if (mock==="prefs") { S.phase="form"; S.step=stepsFor("auto").findIndex(s=>s.id==="prefs"); }
+      else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; }
+      else if (mock==="confirmation") S.phase="confirmation";
       else if (mock==="progress") { S.phase="form"; S.step=0; S.missing=["quote_authorization"]; S.fields.auth_ok=false; }
-      else { S.phase="consent"; }
+      else S.phase="consent";
       render();
     } else render();
   })();

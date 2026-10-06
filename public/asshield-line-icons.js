@@ -1,16 +1,42 @@
-window.ASSHIELD_ICONS = {
-  auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 15h16l-1.2-4.2A3 3 0 0 0 15.9 9H8.1a3 3 0 0 0-2.9 1.8L4 15z"/><path d="M6.5 15v2.5M17.5 15v2.5M7 12h2M15 12h2"/><circle cx="7.5" cy="17.5" r="1.4"/><circle cx="16.5" cy="17.5" r="1.4"/></svg>',
-  home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5 12 5l8 6.5"/><path d="M6.5 10.5V19h11V10.5"/><path d="M10 19v-5h4v5"/></svg>',
-  auto_home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l6-5 6 5"/><path d="M5 10v8h8v-8"/><path d="M14 16h6l-.8-2.6a1.8 1.8 0 0 0-1.7-1.2h-2.2"/><circle cx="15.5" cy="17.5" r="1"/><circle cx="18.8" cy="17.5" r="1"/></svg>',
-  renters: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="10" r="3.2"/><path d="M12.2 10h7.3v3.2"/><path d="M16.2 13.2V10"/><path d="M18.5 13.2V10"/></svg>',
-  motorcycle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="17.5" cy="16.5" r="2.5"/><path d="M9 16.5h4.5L16 11h2.5"/><path d="M11.5 11.5 9 16.5"/><path d="M12 9.5h3"/></svg>',
-  commercial_auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15h13V8.5H8.5L6 11H3v4z"/><path d="M16 11h3.2L21 13.5V15h-5"/><circle cx="7.5" cy="16.5" r="1.5"/><circle cx="17" cy="16.5" r="1.5"/></svg>',
-  commercial_gl: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20V6.5L12 4l7 2.5V20"/><path d="M9 20v-5h6v5"/><path d="M9 10h.01M12 10h.01M15 10h.01M9 13h.01M12 13h.01M15 13h.01"/></svg>',
-  workers_comp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9.5a4 4 0 1 0 8 0"/><path d="M6.5 9.5h11"/><path d="M8.5 13.5c.8 2.2 2.1 3.5 3.5 3.5s2.7-1.3 3.5-3.5"/><path d="M7 20h10"/></svg>',
-  trucking: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 15.5h11.5V7H7.5L5 10H2.5v5.5z"/><path d="M14 10.5h4l2.5 2.8V15.5H14"/><circle cx="6.5" cy="17" r="1.6"/><circle cx="17" cy="17" r="1.6"/><path d="M2.5 12.5h4"/></svg>',
-  boat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v10"/><path d="M12 5.5 18 13H12"/><path d="M5 17.5c1.5 1.2 3.4 1.8 7 1.8s5.5-.6 7-1.8"/><path d="M4.5 15.5h15"/></svg>',
-  golf_cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14h11l2 3h3"/><path d="M6 14V9.5h6.5V14"/><path d="M8 9.5V8h4"/><circle cx="8" cy="17.5" r="1.5"/><circle cx="16.5" cy="17.5" r="1.5"/></svg>'
-};
+window.ASSHIELD_ICONS = (function () {
+  const o = 'fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"';
+  function svg(paths) {
+    return `<svg viewBox="0 0 48 48" ${o} aria-hidden="true">${paths}</svg>`;
+  }
+  return {
+    auto: svg('<path d="M8 28h32l-2.4-8.2A5 5 0 0 0 32.8 16H15.2a5 5 0 0 0-4.8 3.8L8 28z"/><path d="M13 28v5M35 28v5M14 22h4M30 22h4"/><circle cx="15" cy="34" r="3"/><circle cx="33" cy="34" r="3"/>'),
+    home: svg('<path d="M8 22 24 10l16 12"/><path d="M12 20.5V38h24V20.5"/><path d="M20 38V28h8v10"/>'),
+    auto_home: svg('<path d="M6 22l10-8 10 8"/><path d="M9 20v16h14V20"/><path d="M28 30h12l-1.5-5a3 3 0 0 0-2.8-2H29"/><circle cx="31" cy="34" r="2.2"/><circle cx="37.5" cy="34" r="2.2"/>'),
+    renters: svg('<circle cx="18" cy="20" r="6.5"/><path d="M24.5 20H40v6.5"/><path d="M33 26.5V20M37.5 26.5V20"/>'),
+    motorcycle: svg('<circle cx="13" cy="33" r="5"/><circle cx="35" cy="33" r="5"/><path d="M18 33h9L32 22h5"/><path d="M23 23 18 33"/><path d="M24 18h6"/>'),
+    commercial_auto: svg('<path d="M6 30h26V16H17L12 22H6v8z"/><path d="M32 22h6l4 5v3H32"/><circle cx="14" cy="34" r="3"/><circle cx="34" cy="34" r="3"/>'),
+    commercial_gl: svg('<path d="M10 40V12l14-6 14 6v28"/><path d="M18 40v-10h12v10"/><path d="M18 18h.01M24 18h.01M30 18h.01M18 24h.01M24 24h.01M30 24h.01"/>'),
+    workers_comp: svg('<path d="M16 19a8 8 0 1 0 16 0"/><path d="M12 19h24"/><path d="M17 27c1.5 4 4 6.5 7 6.5s5.5-2.5 7-6.5"/><path d="M14 40h20"/>'),
+    trucking: svg('<path d="M4 31h22V14H15L10 20H4v11z"/><path d="M26 21h8l5 5.5V31H26"/><circle cx="12" cy="35" r="3.2"/><circle cx="34" cy="35" r="3.2"/>'),
+    boat: svg('<path d="M24 8v20"/><path d="M24 10l14 16H24"/><path d="M10 36c3 2.2 7 3.2 14 3.2s11-1 14-3.2"/><path d="M8 32h32"/>'),
+    golf_cart: svg('<path d="M8 28h22l4 6h6"/><path d="M12 28V18h14v10"/><path d="M16 18v-4h8"/><circle cx="16" cy="36" r="3"/><circle cx="33" cy="36" r="3"/>')
+  };
+})();
 window.asshieldIcon = function (id) {
   return (window.ASSHIELD_ICONS && window.ASSHIELD_ICONS[id]) || window.ASSHIELD_ICONS.auto;
 };
+
+/* Compact ZIP3 → state for Asshield licensed states only */
+window.ASSHIELD_ZIP_LOOKUP = function (zip) {
+  const z = String(zip || "").replace(/\D/g, "");
+  if (z.length < 3) return null;
+  const p = parseInt(z.slice(0, 3), 10);
+  const ranges = [
+    ["FL", 320, 349], ["GA", 300, 319], ["GA", 398, 399],
+    ["AL", 350, 369], ["TN", 370, 385], ["MS", 386, 397],
+    ["KY", 400, 427], ["OH", 430, 459], ["IN", 460, 479],
+    ["SC", 290, 299], ["NC", 270, 289],
+    ["PA", 150, 196], ["AR", 716, 729],
+    ["TX", 733, 733], ["TX", 750, 799], ["TX", 885, 885]
+  ];
+  for (const [st, a, b] of ranges) {
+    if (p >= a && p <= b) return st;
+  }
+  return null;
+};
+window.ASSHIELD_LICENSED = ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"];

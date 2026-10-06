@@ -76,6 +76,13 @@ export type LineDetails = {
   cargo_type?: string;
   power_unit_count?: number;
   trailer_count?: number;
+  // Agent / preference extras (UI)
+  callback_preference?: "morning" | "afternoon" | "evening";
+  intake_notes?: string;
+  coverage_preference?: "low" | "medium" | "high";
+  deductible_preference?: "low" | "medium" | "high";
+  selected_coverages?: string[];
+  bundle_lines?: string[];
 };
 
 export function isCommercialProduct(product: string): boolean {

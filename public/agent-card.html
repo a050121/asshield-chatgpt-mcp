@@ -6,23 +6,26 @@
   <title>Asshield Agent Contact</title>
   <style>/*__ASSHIELD_THEME__*/</style>
   <style>
-    .row { display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:.9rem; }
-    .row .k { color:var(--muted); font-weight:600; }
-    .row .v { font-weight:700; text-align:right; word-break:break-word; color:var(--navy); }
+    .row { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); font-size:.92rem; }
+    .row .k { color:var(--muted); font-weight:700; }
+    .row .v { font-weight:750; text-align:right; word-break:break-word; }
   </style>
 </head>
 <body>
   <div class="card" role="region" aria-label="Asshield agent contact card">
     <header class="hero">
-      <div class="hero-row">
-        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
-        <div>
-          <h1 id="agency">Asshield Insurance</h1>
-          <p class="sub">Independent insurance agency</p>
+      <div class="hero-motif" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-top">
+          <img class="hero-logo" src="LOGO_SRC" alt="" width="40" height="40" />
+          <span class="hero-brand">Asshield Insurance</span>
         </div>
+        <h1 class="hero-title">Talk to a <span class="accent">real agent</span>.</h1>
+        <p class="hero-sub">Joshua Williams can help with your quote request. Contact info only — no coverage is bound here.</p>
+        <span class="hero-badge">Agent contact</span>
       </div>
-      <span class="hero-badge">Agent contact</span>
     </header>
+    <div class="trust"><strong>Licensed in 12 states</strong> · Verify via NAIC state lookup</div>
     <div class="body">
       <div class="row"><span class="k">Agent</span><span class="v" id="name">Joshua Williams</span></div>
       <div class="row"><span class="k">Phone</span><span class="v"><a id="phone" href="tel:+18593680162">859-368-0162</a></span></div>
@@ -30,58 +33,136 @@
       <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Ste 103</span></div>
       <div class="row is-hidden" id="license-row"><span class="k">License #</span><span class="v" id="license"></span></div>
       <div class="row"><span class="k">Website</span><span class="v"><a id="website" href="https://www.asshield.com" target="_blank" rel="noopener noreferrer">asshield.com</a></span></div>
-      <h3 style="margin-top:14px">Licensed states</h3>
+      <h3>Licensed states</h3>
       <div class="chip-row" id="states"></div>
       <div class="actions">
-        <a class="btn primary" id="call-btn" href="tel:+18593680162">Call office</a>
+        <a class="btn cta" id="call-btn" href="tel:+18593680162">Call</a>
+        <a class="btn secondary" id="email-btn" href="mailto:joshuawilliams@asshield.com">Email</a>
+        <button type="button" class="secondary" id="btn-copy">Copy phone</button>
         <a class="btn secondary" id="verify" href="https://content.naic.org/state-insurance-departments" target="_blank" rel="noopener noreferrer">Verify license</a>
-        <a class="btn secondary is-hidden" id="booking" href="#" target="_blank" rel="noopener noreferrer">Book appointment</a>
+        <a class="btn secondary is-hidden" id="booking" href="#" target="_blank" rel="noopener noreferrer">Book</a>
       </div>
+      <h3>Request a callback</h3>
+      <p class="note" style="margin-top:0">Pick a time window. Saved to your quote notes when a quote is active.</p>
+      <div class="seg" id="callback-seg" role="group" aria-label="Callback preference">
+        <button type="button" data-v="morning">Morning</button>
+        <button type="button" data-v="afternoon">Afternoon</button>
+        <button type="button" data-v="evening">Evening</button>
+      </div>
+      <div class="actions">
+        <button type="button" class="cta" id="btn-callback">Save callback preference</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
       <p class="note">This card shares Asshield contact information only. It does not bind coverage or confirm a policy is in effect.</p>
     </div>
+    <footer class="foot">
+      <div><p class="foot-title">Talk to an agent</p><p class="muted" style="margin:0">Office hours approx. Mon–Fri 9–5 ET</p></div>
+      <a href="tel:+18593680162">859-368-0162</a>
+    </footer>
   </div>
+  <div class="toast is-hidden" id="toast" role="status"></div>
   <script>
   (function () {
+    let callbackPref = null;
+    let quoteId = null;
+    let contact = { first_name: "Customer", last_name: "Lead", phone: null, email: null };
+    function $(id){ return document.getElementById(id); }
     function applyTheme(theme) {
       document.documentElement.classList.remove("theme-dark","theme-light");
       if (theme === "dark" || theme === "light") document.documentElement.classList.add("theme-" + theme);
     }
+    function toast(msg) {
+      const t = $("toast"); t.textContent = msg; t.classList.remove("is-hidden");
+      setTimeout(() => t.classList.add("is-hidden"), 1800);
+    }
+    function setStatus(m){ $("status").textContent = m || ""; }
+    const pending = new Map(); let seq = 1;
+    function callTool(name, args) {
+      if (window.openai?.callTool) return window.openai.callTool(name, args);
+      return new Promise((resolve, reject) => {
+        const id = seq++; pending.set(id,{resolve,reject});
+        window.parent.postMessage({ jsonrpc:"2.0", id, method:"tools/call", params:{ name, arguments: args||{} } }, "*");
+        setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 20000);
+      });
+    }
     function fill(data) {
       if (!data) return;
       const a = data.agent || data;
-      if (a.agency) document.getElementById("agency").textContent = a.agency;
-      if (a.name) document.getElementById("name").textContent = a.name;
+      if (data.quote_id) quoteId = data.quote_id;
+      if (data.widget?.quote_id) quoteId = data.widget.quote_id;
+      if (a.name) $("name").textContent = a.name;
       if (a.phone) {
-        document.getElementById("phone").textContent = a.phone;
+        $("phone").textContent = a.phone;
         const tel = a.phone_tel || ("+1" + String(a.phone).replace(/\D/g, ""));
-        document.getElementById("phone").href = "tel:" + tel;
-        document.getElementById("call-btn").href = "tel:" + tel;
+        $("phone").href = "tel:" + tel; $("call-btn").href = "tel:" + tel;
       }
       if (a.email) {
-        document.getElementById("email").textContent = a.email;
-        document.getElementById("email").href = "mailto:" + a.email;
+        $("email").textContent = a.email; $("email").href = "mailto:" + a.email; $("email-btn").href = "mailto:" + a.email;
       }
-      if (a.address) document.getElementById("address").textContent = a.address;
-      if (a.website) document.getElementById("website").href = a.website;
-      const licRow = document.getElementById("license-row");
-      if (a.license_number) {
-        licRow.classList.remove("is-hidden");
-        document.getElementById("license").textContent = a.license_number;
-      } else {
-        licRow.classList.add("is-hidden");
-        document.getElementById("license").textContent = "";
-      }
-      const b = document.getElementById("booking");
+      if (a.address) $("address").textContent = a.address;
+      if (a.website) $("website").href = a.website;
+      const licRow = $("license-row");
+      if (a.license_number) { licRow.classList.remove("is-hidden"); $("license").textContent = a.license_number; }
+      else { licRow.classList.add("is-hidden"); $("license").textContent = ""; }
+      const b = $("booking");
       if (a.booking_url) { b.classList.remove("is-hidden"); b.href = a.booking_url; }
-      else { b.classList.add("is-hidden"); b.removeAttribute("href"); }
-      if (a.verify_license_url) document.getElementById("verify").href = a.verify_license_url;
-      const states = a.licensed_states || [];
-      document.getElementById("states").innerHTML = states.map((s) => `<span class="chip">${s}</span>`).join("");
+      else { b.classList.add("is-hidden"); }
+      if (a.verify_license_url) $("verify").href = a.verify_license_url;
+      $("states").innerHTML = (a.licensed_states || []).map((s) => `<span class="chip-static">${s}</span>`).join("");
     }
+    document.querySelectorAll("#callback-seg button").forEach((btn) => {
+      btn.onclick = () => {
+        callbackPref = btn.dataset.v;
+        document.querySelectorAll("#callback-seg button").forEach((x) => x.classList.toggle("on", x === btn));
+      };
+    });
+    $("btn-copy").onclick = async () => {
+      const phone = $("phone").textContent.trim();
+      try {
+        await navigator.clipboard.writeText(phone);
+        $("btn-copy").textContent = "Copied!";
+        toast("Phone copied");
+        setTimeout(() => { $("btn-copy").textContent = "Copy phone"; }, 1600);
+      } catch (_) {
+        setStatus("Could not copy — long-press the number instead.");
+      }
+    };
+    $("btn-callback").onclick = async () => {
+      if (!callbackPref) return setStatus("Pick morning, afternoon, or evening.");
+      try {
+        const ws = window.openai?.widgetState || {};
+        quoteId = quoteId || ws.quote_id;
+        if (!quoteId) {
+          try { window.openai?.setWidgetState?.({ callback_preference: callbackPref }); } catch(_){}
+          setStatus("Saved preference locally. Start a quote so we can attach it to your request.");
+          toast("Preference saved");
+          return;
+        }
+        const args = {
+          quote_id: quoteId,
+          first_name: ws.first_name || contact.first_name || "Customer",
+          last_name: ws.last_name || contact.last_name || "Lead",
+          phone: ws.phone || undefined,
+          email: ws.email || undefined,
+          preferred_contact_method: "call",
+          callback_preference: callbackPref,
+          intake_notes: `Callback preference: ${callbackPref}`
+        };
+        await callTool("save_contact", args);
+        setStatus("Callback preference saved to your quote notes.");
+        toast("Callback preference saved");
+      } catch (e) {
+        setStatus("Could not save: " + (e?.message || e));
+      }
+    };
     window.addEventListener("message", (event) => {
       if (event.source !== window.parent) return;
       const message = event.data;
       if (!message || message.jsonrpc !== "2.0") return;
+      if (message.id != null && pending.has(message.id)) {
+        const p = pending.get(message.id); pending.delete(message.id);
+        if (message.error) p.reject(message.error); else p.resolve(message.result); return;
+      }
       if (message.method === "ui/notifications/tool-result") fill(message.params?.structuredContent || message.params);
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
@@ -90,6 +171,7 @@
       try {
         if (window.openai?.toolOutput) fill(window.openai.toolOutput);
         if (window.openai?.theme) applyTheme(window.openai.theme);
+        if (window.openai?.widgetState?.quote_id) quoteId = window.openai.widgetState.quote_id;
       } catch (_) {}
     }
     setInterval(sync, 800); sync();
@@ -100,10 +182,11 @@
         email: "joshuawilliams@asshield.com", address: "2240 Executive Dr Ste 103",
         website: "https://www.asshield.com",
         licensed_states: ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"],
-        verify_license_url: "https://content.naic.org/state-insurance-departments",
-        license_number: mock === "license" ? "DEMO-ONLY" : undefined,
-        booking_url: mock === "booking" ? "https://www.asshield.com" : undefined
+        verify_license_url: "https://content.naic.org/state-insurance-departments"
       });
+      if (mock === "callback") {
+        document.querySelector('#callback-seg [data-v="afternoon"]')?.click();
+      }
     }
   })();
   </script>

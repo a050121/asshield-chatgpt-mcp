@@ -272,6 +272,8 @@ export async function saveContact(input: {
   phone?: string;
   email?: string;
   preferred_contact_method?: "call" | "text" | "email";
+  callback_preference?: "morning" | "afternoon" | "evening";
+  intake_notes?: string;
 }) {
   const customerPayload = {
     first_name: input.first_name,
@@ -301,6 +303,12 @@ export async function saveContact(input: {
       input.quote_id,
       String(quoteRow?.product ?? "")
     );
+    if (input.callback_preference || input.intake_notes) {
+      await mergeLineDetails(input.quote_id, {
+        ...(input.callback_preference ? { callback_preference: input.callback_preference } : {}),
+        ...(input.intake_notes ? { intake_notes: input.intake_notes } : {})
+      } as LineDetails);
+    }
     return {
       quote_id: input.quote_id,
       customer: {
@@ -310,6 +318,8 @@ export async function saveContact(input: {
         email: customer.email,
         preferred_contact_method: customer.preferred_contact_method
       },
+      callback_preference: input.callback_preference,
+      intake_notes: input.intake_notes,
       next_step: nextStepAfterContact(product)
     };
   }
@@ -341,6 +351,13 @@ export async function saveContact(input: {
     String(quoteMeta?.product ?? "")
   );
 
+  if (input.callback_preference || input.intake_notes) {
+    await mergeLineDetails(input.quote_id, {
+      ...(input.callback_preference ? { callback_preference: input.callback_preference } : {}),
+      ...(input.intake_notes ? { intake_notes: input.intake_notes } : {})
+    } as LineDetails);
+  }
+
   return {
     quote_id: input.quote_id,
     customer: {
@@ -350,6 +367,8 @@ export async function saveContact(input: {
       email: customer.email,
       preferred_contact_method: customer.preferred_contact_method
     },
+    callback_preference: input.callback_preference,
+    intake_notes: input.intake_notes,
     next_step: nextStepAfterContact(product)
   };
 }

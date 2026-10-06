@@ -3,62 +3,65 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Asshield Coverage Overview</title>
+  <title>Asshield Coverage Explorer</title>
   <style>/*__ASSHIELD_THEME__*/</style>
 </head>
 <body>
-  <div class="card" role="region" aria-label="Asshield coverage overview">
+  <div class="card" role="region" aria-label="Asshield coverage explorer">
     <header class="hero">
-      <div class="hero-row">
-        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
-        <div>
-          <h1 id="title">Coverage overview</h1>
-          <p class="sub" id="subtitle">General information — not advice</p>
+      <div class="hero-motif" aria-hidden="true"></div>
+      <div class="hero-inner">
+        <div class="hero-top">
+          <img class="hero-logo" src="LOGO_SRC" alt="" width="40" height="40" />
+          <span class="hero-brand">Asshield Insurance</span>
         </div>
+        <h1 class="hero-title">Coverage, <span class="accent">explained</span>.</h1>
+        <p class="hero-sub" id="subtitle">General information — not advice. An Asshield agent will confirm what fits you.</p>
+        <span class="hero-badge" id="line-badge">Coverage Q&amp;A</span>
       </div>
-      <span class="hero-badge">Coverage Q&amp;A</span>
     </header>
+    <div class="trust"><strong>Licensed in 12 states</strong> · Quote intake only · No prices in chat</div>
     <div class="body">
-      <div class="callout" style="display:flex;gap:12px;align-items:flex-start">
-        <span class="tile-icon" id="line-icon" aria-hidden="true"></span>
-        <div><strong id="one-liner"></strong></div>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <span class="tile-icon" id="line-icon" style="width:48px;height:48px;color:var(--primary)"></span>
+        <div><strong id="one-liner" style="font-size:1rem"></strong></div>
       </div>
-      <div id="topic-note" class="callout is-hidden"></div>
-      <h2>What it typically covers</h2>
-      <ul id="covers"></ul>
-      <h2>Common add-ons to discuss</h2>
-      <ul id="addons"></ul>
-      <h2>What to have ready</h2>
+      <h3>Explore coverages</h3>
+      <div id="accordion"></div>
+      <h3>Common add-ons</h3>
+      <div class="chips" id="addons"></div>
+      <h3>What to have ready</h3>
       <ul class="checklist" id="ready"></ul>
-      <h2>General notes</h2>
-      <ul id="notes"></ul>
+      <h3>Coverage preference (no prices)</h3>
+      <div class="pref-grid" id="prefs" role="group" aria-label="Coverage preference">
+        <button type="button" class="pref-card" data-v="low"><strong>Essential</strong><span>Core liability-focused protections to discuss with an agent.</span></button>
+        <button type="button" class="pref-card" data-v="medium"><strong>Balanced</strong><span>Solid limits and common add-ons for most households.</span></button>
+        <button type="button" class="pref-card" data-v="high"><strong>Enhanced</strong><span>Higher limits and broader protection topics.</span></button>
+      </div>
       <label for="state">State</label>
       <input id="state" maxlength="2" placeholder="KY" />
       <label for="zip">ZIP</label>
       <input id="zip" maxlength="10" placeholder="40505" />
       <div class="actions">
-        <button type="button" class="primary" id="btn-quote">Start a quote request</button>
+        <button type="button" class="cta" id="btn-quote">Start my quote</button>
         <button type="button" class="secondary" id="btn-options">See all lines</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <p class="note" id="disclaimer"></p>
     </div>
+    <footer class="foot">
+      <div><p class="foot-title">Talk to an agent</p><p class="muted" style="margin:0">We’ll confirm coverages in writing before anything is bound.</p></div>
+      <a href="tel:+18593680162">859-368-0162</a>
+    </footer>
   </div>
   <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
   (function () {
-    let state = { product: null, label: "" };
+    let state = { product: null, label: "", covers: [], selectedCoverages: new Set(), pref: "medium" };
     function $(id){ return document.getElementById(id); }
     function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark"||t==="light") document.documentElement.classList.add("theme-"+t); }
     function setStatus(m){ $("status").textContent = m||""; }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-    function list(el, items, checklist){
-      if (checklist) {
-        el.innerHTML = (items||[]).map(i => `<li><span class="mark" aria-hidden="true"></span><span class="txt">${escapeHtml(i)}</span></li>`).join("");
-      } else {
-        el.innerHTML = (items||[]).map(i => `<li>${escapeHtml(i)}</li>`).join("");
-      }
-    }
     const pending = new Map(); let seq = 1;
     function callTool(name, args) {
       if (window.openai?.callTool) return window.openai.callTool(name, args);
@@ -68,25 +71,76 @@
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 20000);
       });
     }
+    function renderAccordions() {
+      const root = $("accordion");
+      root.innerHTML = (state.covers || []).map((c, i) => {
+        const on = state.selectedCoverages.has(c);
+        return `<div class="acc" data-i="${i}">
+          <button type="button" class="acc-h" aria-expanded="false"><span>${escapeHtml(c.slice(0, 72))}${c.length>72?"…":""}</span><span class="chev">›</span></button>
+          <div class="acc-b">
+            <p>${escapeHtml(c)}</p>
+            <label class="toggle"><input type="checkbox" data-cov="${escapeHtml(c)}" ${on?"checked":""}/> Add to my quote</label>
+          </div>
+        </div>`;
+      }).join("");
+      root.querySelectorAll(".acc-h").forEach((btn) => {
+        btn.onclick = () => {
+          const acc = btn.parentElement;
+          const open = acc.classList.toggle("open");
+          btn.setAttribute("aria-expanded", open ? "true" : "false");
+        };
+      });
+      root.querySelectorAll("input[data-cov]").forEach((inp) => {
+        inp.onchange = () => {
+          const c = inp.getAttribute("data-cov");
+          if (inp.checked) state.selectedCoverages.add(c); else state.selectedCoverages.delete(c);
+          syncState();
+        };
+      });
+    }
+    function syncState() {
+      try {
+        window.openai?.setWidgetState?.({
+          product: state.product,
+          selected_coverages: [...state.selectedCoverages],
+          coverage_preference: state.pref
+        });
+      } catch(_){}
+    }
     function fill(sc) {
       if (!sc || sc.found === false) {
-        $("title").textContent = "Coverage overview";
         $("one-liner").textContent = sc?.message || "Choose a product line.";
         return;
       }
       state.product = sc.product; state.label = sc.label || sc.product;
-      $("title").textContent = sc.label || sc.product;
-      $("subtitle").textContent = "General information — not advice";
+      state.covers = sc.covers || [];
+      $("line-badge").textContent = state.label;
       $("one-liner").textContent = sc.one_liner || "";
       $("line-icon").innerHTML = window.asshieldIcon(sc.product);
-      if (sc.topic_note) { $("topic-note").classList.remove("is-hidden"); $("topic-note").textContent = sc.topic_note; }
-      else $("topic-note").classList.add("is-hidden");
-      list($("covers"), sc.covers);
-      list($("addons"), sc.common_add_ons);
-      list($("ready"), sc.what_to_have_ready, true);
-      list($("notes"), sc.general_notes);
       $("disclaimer").textContent = sc.disclaimer || "";
+      $("addons").innerHTML = (sc.common_add_ons||[]).map(a => `<button type="button" class="chip" data-a="${escapeHtml(a)}">${escapeHtml(a)}</button>`).join("");
+      $("addons").querySelectorAll(".chip").forEach(ch => {
+        ch.onclick = () => {
+          ch.classList.toggle("on");
+          const a = ch.getAttribute("data-a");
+          if (ch.classList.contains("on")) state.selectedCoverages.add(a); else state.selectedCoverages.delete(a);
+          syncState();
+        };
+      });
+      $("ready").innerHTML = (sc.what_to_have_ready||[]).map(i => `<li><span class="mark"></span><span class="txt">${escapeHtml(i)}</span></li>`).join("");
+      renderAccordions();
+      document.querySelectorAll(".pref-card").forEach(p => {
+        p.classList.toggle("on", p.dataset.v === state.pref);
+      });
     }
+    document.querySelectorAll(".pref-card").forEach(p => {
+      p.onclick = () => {
+        state.pref = p.dataset.v;
+        document.querySelectorAll(".pref-card").forEach(x => x.classList.toggle("on", x === p));
+        syncState();
+        setStatus("Preference saved as “" + state.pref + "” (no prices — agent confirms).");
+      };
+    });
     window.addEventListener("message", (event) => {
       if (event.source !== window.parent) return;
       const message = event.data;
@@ -107,24 +161,32 @@
       const zip = $("zip").value.trim();
       if (!/^[A-Z]{2}$/.test(st) || !/^\d{5}(-\d{4})?$/.test(zip)) return setStatus("Enter state and ZIP to start.");
       setStatus("Starting quote…");
-      try { await callTool("start_quote", { product: state.product, state: st, zip }); setStatus("Quote started."); }
-      catch(e){ setStatus("Could not start: " + (e?.message||e)); }
+      try {
+        await callTool("start_quote", { product: state.product, state: st, zip });
+        syncState();
+        setStatus("Quote started. Preference: " + state.pref + ".");
+      } catch(e){ setStatus("Could not start: " + (e?.message||e)); }
     };
     $("btn-options").onclick = async () => {
-      try { await callTool("show_insurance_options", {}); setStatus("Opening options…"); }
-      catch(e){ setStatus(String(e?.message||e)); }
+      try { await callTool("show_insurance_options", {}); } catch(e){ setStatus(String(e?.message||e)); }
     };
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       fill({
         found: true, product: "auto", label: "Auto",
         one_liner: "Protect your car and liability on the road.",
-        covers: ["Liability for injuries or property damage you cause while driving (subject to policy terms)", "Optional collision and comprehensive when selected"],
+        covers: [
+          "Liability for injuries or property damage you cause while driving (subject to policy terms)",
+          "Optional collision and comprehensive when selected",
+          "Uninsured / underinsured motorist topics an agent may discuss"
+        ],
         common_add_ons: ["Roadside assistance", "Rental reimbursement", "UM/UIM"],
         what_to_have_ready: ["State and ZIP", "Driver names and DOB", "Year/make/model", "Current carrier if any"],
-        general_notes: ["Most U.S. states require drivers to carry at least a minimum amount of auto liability insurance; exact limits vary by state."],
         disclaimer: "General information only — not insurance advice. An Asshield licensed agent will confirm. No coverage is bound."
       });
+      if (mock === "open") {
+        setTimeout(() => { document.querySelector(".acc-h")?.click(); }, 50);
+      }
     }
   })();
   </script>
