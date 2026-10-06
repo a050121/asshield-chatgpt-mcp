@@ -73,6 +73,7 @@
       phase: "consent", step: 0, quote_id: null, product: null, state: null, zip: null,
       fields: { drivers: [], vehicles: [], coverage_preference: "medium", deductible_preference: "medium" },
       missing: [], checklist: [], callback_sla: "An agent will reach out soon",
+      asshield_estimate: null,
       cross_sell: [], privacy_url: "https://www.asshield.com/privacy"
     };
 
@@ -242,6 +243,33 @@
         const [t] = heroForStep("confirmation"); $("hero-title").innerHTML = t;
         const ref = S.quote_id || "—";
         const cross = (S.cross_sell||[]).slice(0,3);
+        const est = S.asshield_estimate;
+        const priceHtml = est && Array.isArray(est.lines) ? est.lines.map(line => {
+          if (line.kind === "agent_will_price") {
+            return `<p class="estimate-agent-price">${escapeHtml(line.label)}: Agent will price this</p>`;
+          }
+          return `<p class="estimate-price"><span class="amt">${escapeHtml(line.display)}</span></p>`;
+        }).join("") : "";
+        const proposalHtml = est && Array.isArray(est.proposal) && est.proposal.length
+          ? `<div class="proposal-box"><h3>Asshield proposal outline</h3><ul class="proposal-list">${
+              est.proposal.map(it => `<li><span class="pn">${escapeHtml(it.name)}</span><span class="pl">${escapeHtml(it.limit_or_detail)}</span></li>`).join("")
+            }</ul></div>`
+          : "";
+        const discLead = (est && est.disclaimer_lead) || "*Estimate only. Not a quote or offer of insurance. No coverage is bound.";
+        const discBody = (est && est.disclaimer_body) || "Your actual premium is based on the carrier, insurance score, claims history, driving and property records, and other carrier rating factors once your quote is processed by our agency. It may be higher or lower, and we do not represent that this is the price you will be offered once all reports and quotes are complete.";
+        const estimateHtml = est ? `<div class="estimate-box" id="estimate-box">
+            <p class="estimate-brand">Asshield Insurance</p>
+            <p class="estimate-title">Estimated starting price + proposal</p>
+            ${priceHtml}
+            <div class="estimate-disclosure" role="note">
+              <span class="info-ico" aria-hidden="true">i</span>
+              <div class="disc-body">
+                <p class="disc-lead">${escapeHtml(discLead)}</p>
+                <p class="disc-fine">${escapeHtml(discBody)}</p>
+              </div>
+            </div>
+            ${proposalHtml}
+          </div>` : "";
         root.innerHTML = `<div class="panel">
           <div class="success-hero">
             <div class="success-ring"><svg viewBox="0 0 48 48" fill="none" width="40" height="40">
@@ -252,6 +280,7 @@
           </div>
           <p style="text-align:center">Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you.<br/><strong>No coverage is bound.</strong></p>
           <p class="agency-line">One request, and a licensed agent shops multiple carriers for you.</p>
+          ${estimateHtml}
           <ol class="timeline">
             <li class="done"><span class="dot"></span><div><strong>Received</strong><div class="muted">In Asshield’s queue.</div></div></li>
             <li class="current"><span class="dot"></span><div><strong>Agent review</strong><div class="muted">A licensed agent reviews your details.</div></div></li>
@@ -697,6 +726,7 @@
       if (w.fields) S.fields = { ...S.fields, ...w.fields };
       if (w.callback_sla || sc.callback_sla) S.callback_sla = w.callback_sla || sc.callback_sla;
       if (w.cross_sell || sc.cross_sell) S.cross_sell = w.cross_sell || sc.cross_sell;
+      if (w.asshield_estimate || sc.asshield_estimate) S.asshield_estimate = w.asshield_estimate || sc.asshield_estimate;
       if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
       else if (w.phase === "consent") S.phase = "consent";
       if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product])
@@ -748,7 +778,23 @@
       else if (mock==="vehicles") { S.phase="form"; S.step=2; }
       else if (mock==="prefs") { S.phase="form"; S.step=stepsFor("auto").findIndex(s=>s.id==="prefs"); }
       else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; }
-      else if (mock==="confirmation") S.phase="confirmation";
+      else if (mock==="confirmation") {
+        S.phase="confirmation";
+        S.asshield_estimate = {
+          brand: "Asshield Insurance",
+          title: "Asshield estimate + proposal",
+          lines: [{ product:"auto", label:"Auto", kind:"priced", amount:65, frequency:"month", unit:"per_vehicle",
+            display:"Estimated starting at $65/mo per vehicle · $65/mo for 1 vehicle*", asterisk:true }],
+          proposal: [
+            { name:"Bodily injury liability", limit_or_detail:"100/300 (per person / per accident)" },
+            { name:"Property damage liability", limit_or_detail:"$100,000" },
+            { name:"Comprehensive & collision", limit_or_detail:"Subject to $1,000 deductible" }
+          ],
+          disclaimer_lead: "*Estimate only. Not a quote or offer of insurance. No coverage is bound.",
+          disclaimer_body: "Your actual premium is based on the carrier, insurance score, claims history, driving and property records, and other carrier rating factors once your quote is processed by our agency. It may be higher or lower, and we do not represent that this is the price you will be offered once all reports and quotes are complete.",
+          estimates_are_not_quotes: true, no_coverage_bound: true
+        };
+      }
       else if (mock==="progress") { S.phase="form"; S.step=0; S.missing=["quote_authorization"]; S.fields.auth_ok=false; }
       else S.phase="consent";
       render();

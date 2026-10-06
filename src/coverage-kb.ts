@@ -76,7 +76,8 @@ export function explainCoverage(product: string, topic?: string) {
       product,
       message: `No curated coverage overview for "${product}". Ask to see insurance options or start a quote for a supported line.`,
       disclaimer: getDisclaimer(),
-      general_notes: getGeneralNotes()
+      general_notes: getGeneralNotes(),
+      estimates_are_not_quotes: true
     };
   }
   const topicNote =
@@ -97,7 +98,10 @@ export function explainCoverage(product: string, topic?: string) {
     general_notes: getGeneralNotes(),
     disclaimer: getDisclaimer(),
     topic_note: topicNote,
-    cta: "Offer to start a quote or show insurance options. Never claim coverage is bound."
+    cta: "Offer to start a quote or show insurance options. Never claim coverage is bound.",
+    estimates_are_not_quotes: true,
+    estimate_note:
+      "Any Asshield estimated starting prices are illustrations only — not quotes, offers, or bound premiums. Actual premiums depend on carrier rating after agency review."
   };
 }
 

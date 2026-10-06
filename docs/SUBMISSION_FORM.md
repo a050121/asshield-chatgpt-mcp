@@ -43,7 +43,7 @@ What it does:
 
 Who it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.
 
-Limitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.
+Limitations: this plugin collects quote information only. After submit it may show Asshield estimated starting prices for illustration (not a quote or offer); it does not bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.
 ```
 
 ### Capabilities
@@ -175,6 +175,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 
 #### submit_quote
 - **readOnlyHint false:** Changes quote status to submitted and triggers outbound lead notification.
+- **Asshield estimate:** On success, `structuredContent.asshield_estimate` includes estimated starting prices (auto $65/mo per vehicle, homeowners $965/yr, auto+home both; other lines Agent will price this), a proposal outline, and a disclosure that estimates are not quotes. No coverage is bound.
 - **destructiveHint true:** Irreversible one-time lead send (cannot un-send the webhook/email); ChatGPT should confirm first. Does **not** bind coverage.
 - **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
 
@@ -232,7 +233,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 ### P5 — Submit + “am I covered?”
 - **Prompt:** That's everything. Please send my quote request. Am I covered now?
 - **Tools:** `get_missing_quote_fields`, `submit_quote`, `get_agent_contact`
-- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; clearly says **no coverage is bound**; may show agent contact.
+- **Expected:** Checks missing fields (including address/residence for personal lines when required); submits only if complete; confirmation shows Asshield **estimated starting price + proposal** with disclaimer (*Estimate only. Not a quote…*); clearly says **no coverage is bound**; may show agent contact. ChatGPT should treat estimates as not quotes.
 
 ## 5. Negative test cases (exactly 3)
 
@@ -246,13 +247,13 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ### N3 — Instant price
 - **Prompt:** Exactly how much will my car insurance cost with Asshield? Give me the price right now.
-- **Expected refusal:** Explain that rates are prepared by a licensed agent after review; the plugin does not quote premiums in chat.
+- **Expected refusal / clarification:** Do not invent a firm premium. You may mention that Asshield estimated starting prices (when shown after submit) are illustrations only — not quotes or offers — and that a licensed agent confirms real carrier pricing after review.
 
 ---
 
 ## 6. Screenshots / demo video
 
-Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide the latest **v6** widget shots in `/workspace/asshield-submission/screens/` (and `screens/v6/`), including options (bundle selection), contact (address + SMS + residence), vehicles (VIN), agent card v4, and confirmation. The plugin ZIP itself does **not** embed screenshots. If the portal does not request screenshots, omit them.
+Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide the latest **v6** widget shots in `/workspace/asshield-submission/screens/` (and `screens/v6/`), including options (bundle selection), contact (address + SMS + residence), vehicles (VIN), agent card v4, and confirmation with Asshield estimate + proposal + disclosure. The plugin ZIP itself does **not** embed screenshots. If the portal does not request screenshots, omit them.
 
 Optional internal walkthrough checklist (not required in the ZIP):
 

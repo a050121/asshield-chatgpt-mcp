@@ -266,7 +266,9 @@ export function withQuoteWidget(
     callback_sla: config.callbackSlaText,
     cross_sell: cross,
     disclaimer: getDisclaimer(),
-    agent: phase === "confirmation" ? agentContactPayload() : undefined
+    agent: phase === "confirmation" ? agentContactPayload() : undefined,
+    asshield_estimate: phase === "confirmation" ? (result.asshield_estimate || null) : undefined,
+    estimates_are_not_quotes: phase === "confirmation" ? true : undefined
   };
 
   return {
@@ -275,6 +277,12 @@ export function withQuoteWidget(
     what_to_have_ready: checklist,
     callback_sla: config.callbackSlaText,
     cross_sell: cross,
+    ...(phase === "confirmation" && result.asshield_estimate
+      ? {
+          asshield_estimate: result.asshield_estimate,
+          estimates_are_not_quotes: true
+        }
+      : {}),
     widget
   };
 }

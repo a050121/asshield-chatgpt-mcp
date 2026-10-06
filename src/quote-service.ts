@@ -18,6 +18,7 @@ import {
   LICENSED_STATES
 } from "./licensed-states.js";
 import { assertNoRestrictedData } from "./restricted-data.js";
+import { buildAsshieldEstimate } from "./asshield-estimates.js";
 
 function requireDb() {
   if (!db) throw new Error("Supabase client is not configured");
@@ -1087,13 +1088,41 @@ export async function submitQuote(input: {
     };
   }
 
+  const leadForEstimate = await loadLeadSnapshot(input.quote_id).catch(() => null);
+  const product = String(leadForEstimate?.product || "");
+  const vehicleCount = Array.isArray(leadForEstimate?.vehicles) ? leadForEstimate!.vehicles.length : 0;
+  let coveragePref: string | null = "medium";
+  let deductiblePref: string | null = "medium";
+  const notes = String(leadForEstimate?.notes || input.notes || "");
+  const prefMatch = notes.match(/coverage_pref=([a-z]+)/i);
+  const dedMatch = notes.match(/deductible_pref=([a-z]+)/i);
+  if (prefMatch) coveragePref = prefMatch[1];
+  if (dedMatch) deductiblePref = dedMatch[1];
+  for (const pol of (leadForEstimate?.current_policies || []) as Record<string, unknown>[]) {
+    const bi = String(pol.bodily_injury_limit || "");
+    const cm = bi.match(/coverage:([a-z]+)/i);
+    const dm = bi.match(/deductible:([a-z]+)/i);
+    if (cm) coveragePref = cm[1];
+    if (dm) deductiblePref = dm[1];
+  }
+  const asshield_estimate = buildAsshieldEstimate({
+    product: product || "auto",
+    vehicle_count: vehicleCount || 1,
+    coverage_preference: coveragePref,
+    deductible_preference: deductiblePref
+  });
+
   return {
     submitted: true,
     quote: {
       id: quoteRow.id,
-      status: quoteRow.status
+      status: quoteRow.status,
+      product: product || undefined
     },
+    product: product || undefined,
+    asshield_estimate,
+    estimates_are_not_quotes: true,
     message:
-      "Quote request submitted to Asshield. This is not confirmation of coverage or a bound policy. A licensed Asshield agent will follow up using your preferred contact method."
+      "Quote request submitted to Asshield. Asshield shows estimated starting prices for illustration only — they are not quotes or offers of insurance, and no coverage is bound. A licensed Asshield agent will follow up using your preferred contact method."
   };
 }

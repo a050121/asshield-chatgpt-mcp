@@ -302,7 +302,7 @@ function createMcpServer(): McpServer {
     {
       title: "Submit quote request",
       description:
-        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price. Renders the Asshield quote confirmation card (reference number, agent will contact, no coverage bound) and agent contact details.",
+        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price. Renders the Asshield quote confirmation card with Asshield estimated starting prices + proposal (estimates are not quotes), reference number, agent will contact, no coverage bound, and agent contact details.",
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       _meta: quoteCardMeta(),
       inputSchema: {
@@ -355,7 +355,7 @@ function createMcpServer(): McpServer {
     {
       title: "Explain coverage (general info)",
       description:
-        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Offer to start a quote afterward. Does not invent specific state statutes.",
+        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Asshield estimated starting prices (when shown elsewhere) are not quotes. Offer to start a quote afterward. Does not invent specific state statutes.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: coverageCardMeta(),
       inputSchema: {
@@ -389,7 +389,7 @@ function createMcpServer(): McpServer {
       const structured = {
         agent,
         message:
-          "Asshield Insurance agent contact. An agent can help with your quote request. No coverage is bound by viewing this card."
+          "Asshield Insurance agent contact. An agent can help with your quote request. Asshield estimated starting prices are not quotes or offers of insurance. No coverage is bound by viewing this card."
       };
       return toolTextResult(structured);
     }
