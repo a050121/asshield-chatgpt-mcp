@@ -4,7 +4,7 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.4.0):** `review.demo_recording_url` is the v3 Unlisted YouTube demo `https://youtu.be/6BFu7ziuLKc` (replaces MujQJvlc9DE). Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.4.0):** `review.demo_recording_url` is the v3 Unlisted YouTube demo `https://youtu.be/6BFu7ziuLKc`. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
 Package ZIP (repo): `dist/asshield-insurance-plugin-1.4.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
@@ -262,7 +262,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 4. Out-of-state CA polite decline  
 5. Consent + submit + “not covered / not bound” wording + agent contact  
 
-**Demo recording URL (done):** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` (replaces `MujQJvlc9DE`) — set in `plugin.json` `review.demo_recording_url` for **1.4.0**.
+**Demo recording URL (done):** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` — set in `plugin.json` `review.demo_recording_url` for **1.4.0**.
 ## 7. Release notes
 
 ```
