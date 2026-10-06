@@ -7,8 +7,17 @@
   <style>/*__ASSHIELD_THEME__*/</style>
   <style>
     .row { display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); font-size:.92rem; }
-    .row .k { color:var(--muted); font-weight:700; }
+    .row .k { color:var(--muted); font-weight:700; flex-shrink:0; }
     .row .v { font-weight:750; text-align:right; word-break:break-word; }
+    .offices { margin: 4px 0 8px; display:flex; flex-direction:column; gap:8px; }
+    .office-item {
+      border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+      background: var(--card); font-size: .88rem;
+    }
+    .office-item .olabel { font-weight: 800; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+    .office-item .oaddr { font-weight: 700; line-height: 1.35; }
+    .office-item .ophone { margin-top: 4px; font-weight: 750; }
+    .office-item.primary { border-color: rgba(26,159,224,.35); background: rgba(26,159,224,.06); }
   </style>
 </head>
 <body>
@@ -35,9 +44,12 @@
       <div class="row"><span class="k">Agent</span><span class="v" id="name">Joshua Williams</span></div>
       <div class="row"><span class="k">Phone</span><span class="v"><a id="phone" href="tel:+18593680162">859-368-0162</a></span></div>
       <div class="row"><span class="k">Email</span><span class="v"><a id="email" href="mailto:joshuawilliams@asshield.com">joshuawilliams@asshield.com</a></span></div>
-      <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Ste 103</span></div>
-      <div class="row is-hidden" id="license-row"><span class="k">License #</span><span class="v" id="license"></span></div>
+      <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Unit 103, Lexington, KY 40505</span></div>
+      <div class="row is-hidden" id="hours-row"><span class="k">Hours</span><span class="v" id="hours"></span></div>
+      <div class="row is-hidden" id="license-row"><span class="k" id="license-label">Agency licenses</span><span class="v" id="license"></span></div>
       <div class="row"><span class="k">Website</span><span class="v"><a id="website" href="https://www.asshield.com" target="_blank" rel="noopener noreferrer">asshield.com</a></span></div>
+      <h3>Offices</h3>
+      <div class="offices" id="offices"></div>
       <h3>Licensed states</h3>
       <div class="chip-row" id="states"></div>
       <div class="actions">
@@ -61,7 +73,7 @@
       <p class="note">This card shares Asshield contact information only. It does not bind coverage or confirm a policy is in effect.</p>
     </div>
     <footer class="foot">
-      <div><p class="foot-title">Talk to an agent</p><p class="muted" style="margin:0">Joshua Williams · Asshield Insurance</p></div>
+      <div><p class="foot-title">Talk to an agent</p><p class="muted" style="margin:0" id="foot-hours">Mon–Fri 9–7 · Sat 9–5 ET</p></div>
       <a href="tel:+18593680162">859-368-0162</a>
     </footer>
   </div>
@@ -106,9 +118,45 @@
       }
       if (a.address) $("address").textContent = a.address;
       if (a.website) $("website").href = a.website;
+      const hoursRow = $("hours-row");
+      if (a.office_hours) {
+        hoursRow.classList.remove("is-hidden");
+        $("hours").textContent = a.office_hours;
+      } else {
+        hoursRow.classList.add("is-hidden");
+        $("hours").textContent = "";
+      }
+      if (a.office_hours_footer) $("foot-hours").textContent = a.office_hours_footer;
       const licRow = $("license-row");
-      if (a.license_number) { licRow.classList.remove("is-hidden"); $("license").textContent = a.license_number; }
-      else { licRow.classList.add("is-hidden"); $("license").textContent = ""; }
+      if (a.license_number) {
+        licRow.classList.remove("is-hidden");
+        $("license").textContent = a.license_number;
+        $("license-label").textContent = a.license_label || "Agency licenses";
+      } else {
+        licRow.classList.add("is-hidden");
+        $("license").textContent = "";
+      }
+      const officesEl = $("offices");
+      const offices = Array.isArray(a.offices) && a.offices.length
+        ? a.offices
+        : [{
+            label: "Lexington, KY",
+            address: a.address,
+            phone: a.phone,
+            phone_tel: a.phone_tel,
+            primary: true
+          }];
+      officesEl.innerHTML = offices.map((o) => {
+        const tel = o.phone_tel || (o.phone ? ("+1" + String(o.phone).replace(/\D/g, "")) : "");
+        const phoneHtml = o.phone
+          ? `<div class="ophone"><a href="tel:${tel}">${o.phone}</a></div>`
+          : "";
+        return `<div class="office-item${o.primary ? " primary" : ""}">
+          <div class="olabel">${o.label || (o.primary ? "Primary" : "Office")}</div>
+          <div class="oaddr">${o.address || [o.street, o.city_state_zip].filter(Boolean).join(", ")}</div>
+          ${phoneHtml}
+        </div>`;
+      }).join("");
       const b = $("booking");
       if (a.booking_url) { b.classList.remove("is-hidden"); b.href = a.booking_url; }
       else { b.classList.add("is-hidden"); }
@@ -184,7 +232,18 @@
     if (mock) {
       fill({
         agency: "Asshield Insurance", name: "Joshua Williams", phone: "859-368-0162", phone_tel: "+18593680162",
-        email: "joshuawilliams@asshield.com", address: "2240 Executive Dr Ste 103",
+        email: "joshuawilliams@asshield.com",
+        address: "2240 Executive Dr Unit 103, Lexington, KY 40505",
+        street: "2240 Executive Dr Unit 103",
+        office_city_state_zip: "Lexington, KY 40505",
+        office_hours: "Mon–Fri 9am–7pm · Sat 9am–5pm ET",
+        office_hours_footer: "Mon–Fri 9–7 · Sat 9–5 ET",
+        license_number: "KY Agency #867084 · FL Agency #L120146",
+        license_label: "Agency licenses",
+        offices: [
+          { id: "lexington", label: "Lexington, KY", street: "2240 Executive Dr Unit 103", city_state_zip: "Lexington, KY 40505", address: "2240 Executive Dr Unit 103, Lexington, KY 40505", phone: "859-368-0162", phone_tel: "+18593680162", primary: true },
+          { id: "fort_walton_beach", label: "Fort Walton Beach, FL", street: "139 Beal Pkwy SE, Suite 203", city_state_zip: "Fort Walton Beach, FL 32548", address: "139 Beal Pkwy SE, Suite 203, Fort Walton Beach, FL 32548", phone: "850-684-0164", phone_tel: "+18506840164", primary: false }
+        ],
         website: "https://www.asshield.com",
         licensed_states: ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"],
         verify_license_url: "https://content.naic.org/state-insurance-departments"

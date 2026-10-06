@@ -174,6 +174,30 @@ export function coverageCardMeta() {
 export function agentContactPayload() {
   const license = config.agentLicenseNumber.trim();
   const booking = config.bookingUrl.trim();
+  const hours = config.officeHoursText.trim();
+  const hoursFooter = config.officeHoursFooter.trim();
+  const offices = [
+    {
+      id: "lexington",
+      label: "Lexington, KY",
+      street: config.agentStreet,
+      city_state_zip: config.officeCityStateZip || undefined,
+      address: config.agentAddress,
+      phone: config.agentPhone,
+      phone_tel: config.agentPhoneTel,
+      primary: true
+    },
+    {
+      id: "fort_walton_beach",
+      label: "Fort Walton Beach, FL",
+      street: config.flOfficeStreet,
+      city_state_zip: config.flOfficeCityStateZip || undefined,
+      address: config.flOfficeAddress,
+      phone: config.flOfficePhone,
+      phone_tel: config.flOfficePhoneTel,
+      primary: false
+    }
+  ];
   return {
     agency: "Asshield Insurance",
     name: config.agentName,
@@ -183,11 +207,16 @@ export function agentContactPayload() {
     address: config.agentAddress,
     street: config.agentStreet,
     office_city_state_zip: config.officeCityStateZip || undefined,
+    office_hours: hours || undefined,
+    office_hours_footer: hoursFooter || undefined,
+    offices,
     website: config.agencyWebsite,
     privacy_url: config.privacyUrl,
     licensed_states: [...LICENSED_STATES],
     verify_license_url: config.naicLookupUrl,
-    ...(license ? { license_number: license } : {}),
+    ...(license
+      ? { license_number: license, license_label: "Agency licenses", agency_licenses: license }
+      : {}),
     ...(booking ? { booking_url: booking } : {}),
     note: "Contact information only. No coverage is bound by viewing this card."
   };
