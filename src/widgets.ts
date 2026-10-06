@@ -26,7 +26,7 @@ export const COVERAGE_CARD_URI = "ui://widget/asshield-coverage-card/v1.html";
 function logoDataUri(): string {
   try {
     const png = readFileSync(
-      join(__dirname, "..", "chatgpt-plugin/asshield-insurance/assets/icon.png")
+      join(__dirname, "..", "chatgpt-plugin/asshield-insurance/assets/logo.png")
     );
     return `data:image/png;base64,${png.toString("base64")}`;
   } catch {

@@ -12,8 +12,13 @@
       <div class="hero-motif" aria-hidden="true"></div>
       <div class="hero-inner">
         <div class="hero-top">
-          <img class="hero-logo" src="LOGO_SRC" alt="" width="40" height="40" />
-          <span class="hero-brand">Asshield Insurance</span>
+          <div class="hero-logo-plate">
+            <img class="hero-logo" src="LOGO_SRC" alt="Asshield Insurance" width="512" height="512" />
+          </div>
+          <div class="hero-brand-block">
+            <span class="hero-brand">Asshield Insurance</span>
+            <span class="hero-brand-tag">Independent agency</span>
+          </div>
         </div>
         <h1 class="hero-title" id="hero-title">Get covered <span class="accent">your way</span>.</h1>
         <p class="hero-sub" id="hdr-sub">Quote request · licensed agency</p>
@@ -311,14 +316,17 @@
       if (cur.id === "vehicles") {
         const list = (f.vehicles||[]).map((v,i) => `<div class="entity"><div><strong>${escapeHtml(v.summary||[v.year,v.make,v.model].filter(Boolean).join(" "))}</strong><div class="sub">${escapeHtml(v.usage||v.ownership||"")}</div></div>
           <button type="button" class="linkish" data-rm="${i}">Remove</button></div>`).join("");
-        const years = YEAR_OPTS.map(y => `<option value="${y}">${y}</option>`).join("");
+        const lastV = (f.vehicles && f.vehicles.length) ? f.vehicles[f.vehicles.length - 1] : null;
+        const prefYear = lastV?.year ? Number(lastV.year) : "";
+        const years = YEAR_OPTS.map(y => `<option value="${y}" ${prefYear===y?"selected":""}>${y}</option>`).join("");
+        const yearPlaceholderSelected = prefYear ? "" : "selected";
         return `<div class="panel"><div class="stripe"></div>
           ${list || `<p class="muted">No vehicles yet — add at least one.</p>`}
-          <label for="v_year">Year</label><select id="v_year"><option value="">Select year</option>${years}</select>
-          <label for="v_make">Make</label><input id="v_make" placeholder="Toyota"/>
-          <label for="v_model">Model</label><input id="v_model" placeholder="Camry"/>
-          <label>Usage</label>${seg("v_usage",[["commute","Commute"],["pleasure","Pleasure"],["business","Business"]],"commute")}
-          <label>Ownership</label>${seg("v_own",[["owned","Owned"],["financed","Financed"],["leased","Leased"]],"owned")}
+          <label for="v_year">Year</label><select id="v_year"><option value="" ${yearPlaceholderSelected}>Select year</option>${years}</select>
+          <label for="v_make">Make</label><input id="v_make" placeholder="Toyota" value="${escapeHtml(lastV?.make||"")}"/>
+          <label for="v_model">Model</label><input id="v_model" placeholder="Camry" value="${escapeHtml(lastV?.model||"")}"/>
+          <label>Usage</label>${seg("v_usage",[["commute","Commute"],["pleasure","Pleasure"],["business","Business"]], lastV?.usage||"commute")}
+          <label>Ownership</label>${seg("v_own",[["owned","Owned"],["financed","Financed"],["leased","Leased"]], lastV?.ownership||"owned")}
           <div class="actions">
             <button type="button" class="secondary" id="btn-add-vehicle">Add vehicle</button>
             <button type="button" class="secondary" id="btn-back">Back</button>

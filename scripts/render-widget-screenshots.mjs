@@ -6,10 +6,10 @@ import { createServer } from "node:http";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
-const outDir = "/workspace/asshield-submission/screens/v4";
+const outDir = "/workspace/asshield-submission/screens/v5";
 mkdirSync(outDir, { recursive: true });
 
-const logo = readFileSync(join(root, "chatgpt-plugin/asshield-insurance/assets/icon.png"));
+const logo = readFileSync(join(root, "chatgpt-plugin/asshield-insurance/assets/logo.png"));
 const logoUri = `data:image/png;base64,${logo.toString("base64")}`;
 const theme = readFileSync(join(root, "public", "asshield-widget-theme.css"), "utf8");
 const icons = readFileSync(join(root, "public", "asshield-line-icons.js"), "utf8");
