@@ -1,9 +1,9 @@
 # Asshield Insurance — OpenAI ChatGPT / Codex plugin submission form
 
 Copy-paste-ready answers for the Plugins directory upload + review form.
-Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
+MCP exposes **10 tools**. Prepared: **October 5, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.1.0.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.1.1.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -14,7 +14,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **App / plugin name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.1.0 |
+| **Version** | 1.1.1 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -99,22 +99,74 @@ Limitations: this app collects quote information only. It does not provide rates
 
 ---
 
-## 3. Tools — annotation justifications
+## 3. Tools (10) — annotations and justifications
 
-All tools set explicit `readOnlyHint` / `destructiveHint` / `openWorldHint` booleans.
+Live `tools/list` on `https://mcp.asshield.com/mcp` returns **10 tools**. Every tool sets explicit booleans for `readOnlyHint`, `destructiveHint`, and `openWorldHint`. OpenAI no longer requires annotation justifications in the package; one-sentence justifications below are for the review form / Scan Tools appeal notes. There is **no** standard `plugin.json` field for them (they are not embedded in the ZIP).
 
-| Tool | RO | DES | OW | Notes |
-|---|---|---|---|---|
-| start_quote | false | false | false | Creates quote when state licensed |
-| save_contact | false | false | false | Additive contact write |
-| save_business_details | false | false | false | Commercial/trucking business profile (no FEIN) |
-| save_line_details | false | false | false | GL / WC / boat / golf cart fields |
-| add_driver | false | false | false | Drivers/riders; no DL number |
-| add_vehicle | false | false | false | Vehicles/bikes/units; VIN optional |
-| save_current_policy | false | false | false | Additive policy snapshot |
-| save_consent | false | false | false | Explicit consent only |
-| get_missing_quote_fields | **true** | false | false | Read-only completeness |
-| submit_quote | false | **true** | false | Irreversible lead send; not a bind |
+| Tool | readOnlyHint | destructiveHint | openWorldHint |
+|---|---|---|---|
+| start_quote | false | false | false |
+| save_contact | false | false | false |
+| save_business_details | false | false | false |
+| save_line_details | false | false | false |
+| add_driver | false | false | false |
+| add_vehicle | false | false | false |
+| save_current_policy | false | false | false |
+| save_consent | false | false | false |
+| get_missing_quote_fields | true | false | false |
+| submit_quote | false | true | **true** |
+
+### Per-hint justifications (one sentence each)
+
+#### start_quote
+- **readOnlyHint false:** Creates a new quote record in Asshield’s store when the state is licensed.
+- **destructiveHint false:** Additive create only; unsupported states create nothing and nothing is deleted.
+- **openWorldHint false:** Writes only to Asshield’s private quote store, not an open or public system.
+
+#### save_contact
+- **readOnlyHint false:** Persists customer contact fields and links them to the active quote.
+- **destructiveHint false:** Additive / non-destructive contact save for the quote workflow.
+- **openWorldHint false:** Stays inside Asshield’s bounded private customer/quote data.
+
+#### save_business_details
+- **readOnlyHint false:** Persists commercial/trucking business profile fields on the quote.
+- **destructiveHint false:** Additive profile update; does not delete or revoke anything.
+- **openWorldHint false:** Confined to Asshield’s private line-details store (no FEIN/SSN).
+
+#### save_line_details
+- **readOnlyHint false:** Persists specialty line fields (GL, workers’ comp, boat, golf cart).
+- **destructiveHint false:** Additive specialty-detail write only.
+- **openWorldHint false:** Private Asshield quote metadata only.
+
+#### add_driver
+- **readOnlyHint false:** Inserts a driver/rider row on the active quote.
+- **destructiveHint false:** Additive insert; does not overwrite or remove other records.
+- **openWorldHint false:** Private Asshield drivers table only (no driver’s license numbers).
+
+#### add_vehicle
+- **readOnlyHint false:** Inserts a vehicle/bike/unit row on the active quote.
+- **destructiveHint false:** Additive insert without destructive side effects.
+- **openWorldHint false:** Private Asshield vehicles table only.
+
+#### save_current_policy
+- **readOnlyHint false:** Persists current-carrier and coverage preference fields.
+- **destructiveHint false:** Additive policy snapshot for comparison.
+- **openWorldHint false:** Private Asshield current_policies data only.
+
+#### save_consent
+- **readOnlyHint false:** Records an explicit consent choice on the quote.
+- **destructiveHint false:** Additive consent log entry (never inferred).
+- **openWorldHint false:** Private Asshield consents store only.
+
+#### get_missing_quote_fields
+- **readOnlyHint true:** Only reads quote completeness; does not modify any data.
+- **destructiveHint false:** Read-only tools are labeled non-destructive.
+- **openWorldHint false:** Reads Asshield’s private quote state only.
+
+#### submit_quote
+- **readOnlyHint false:** Changes quote status to submitted and triggers outbound lead notification.
+- **destructiveHint true:** Irreversible one-time lead send (cannot un-send the webhook/email); ChatGPT should confirm first. Does **not** bind coverage.
+- **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
 
 ### Zapier / webhook field to add
 
@@ -126,7 +178,7 @@ It is a single-line summary of business/line-specific intake (commercial, boat, 
 
 ### Restricted data
 
-Never collect: SSN, FEIN/EIN, driver's license **numbers**, payment cards, passwords, PHI.
+Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, passwords, PHI.
 
 ## 4. Positive test cases (exactly 5)
 
@@ -221,3 +273,14 @@ Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, a
 4. Record demo video URL.
 5. Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render when the portal shows the token.
 6. Keep Supabase + lead email/webhook configured so reviewer submits reach ops (mark any live test **TEST**).
+
+## 10. Remaining blockers
+
+1. **Business verification** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write) before Submit for Review.
+2. **Demo video URL** — Replace placeholder `review.demo_recording_url` in `plugin.json` (`https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING`) with a real Loom/YouTube unlisted walkthrough of the 5 positive + 3 negative cases, then rebuild the ZIP.
+3. **Domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact portal token; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
+4. **Counsel approval** — Confirm licensed-state list (AL AR FL GA IN KY NC OH PA SC TN TX), 7-year retention language, and limitation-of-liability / venue copy on `/terms` and `/privacy`.
+5. **One real TEST submission** — After Zapier template includes `details_summary`, submit exactly one clearly marked **TEST** quote and confirm the email shows the new field (do not bind; intake only).
+6. **Upload ZIP → Scan Tools** — Upload `dist/asshield-insurance-plugin-1.1.1.zip`, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review.
+7. **Publish after approval** — When the review is approved, choose **Publish plugin** in the dashboard (not automatic).
+

@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.1.0",
-  "description": "Start an insurance quote request with Asshield Insurance for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines. Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
+  "version": "1.1.1",
+  "description": "Start an insurance quote request with Asshield Insurance using 10 quote-intake tools for personal (auto, home, auto+home, renters), commercial (commercial auto, GL, workers' comp, trucking), and specialty (boat, golf cart, motorcycle) lines. Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
     "email": "joshuawilliams@asshield.com",
@@ -100,13 +100,14 @@
           ]
         },
         "commerce": false,
-        "commerce_description": "This app does not sell products, process payments, or bind insurance. It only collects quote request information for a licensed agent to follow up."
+        "commerce_description": "This app does not sell products, process payments, or bind insurance. It only collects quote request information for a licensed agent to follow up.",
+        "demo_recording_url": "https://example.com/REPLACE-WITH-ASSHIELD-DEMO-RECORDING"
       },
       "publication": {
         "countries": [
           "US"
         ],
-        "release_notes": "Adds commercial auto, commercial GL, workers' comp, trucking, boat, golf cart, and motorcycle quote intake with business/line detail tools, licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
+        "release_notes": "10 MCP tools for personal, commercial, and specialty quote intake (including motorcycle and trucking), with accurate tool annotations (submit_quote openWorldHint true for Zapier/email lead send), licensed-state checks, and details_summary on lead alerts. Quote intake only \u2014 does not bind coverage."
       }
     }
   }

@@ -180,11 +180,13 @@ The MCP server code is the same in both cases. Publishing adds the package, veri
 
 Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the token shown in the plugin portal. The server then returns it as plain text at `/.well-known/openai-apps-challenge` (404 when unset).
 
-## MCP tools included
+## MCP tools included (10)
+
+The live server at `https://mcp.asshield.com/mcp` exposes **10 tools**:
 
 ### `start_quote`
 
-Creates a new quote record.
+Creates a new quote record for personal, commercial, or specialty lines (licensed states only).
 
 Example intent:
 
@@ -196,13 +198,21 @@ Start an auto quote in Kentucky, ZIP 40509.
 
 Adds the customer to the active quote.
 
+### `save_business_details`
+
+Saves commercial / trucking business profile fields (never FEIN/SSN).
+
+### `save_line_details`
+
+Saves specialty fields for commercial GL, workers' comp, boat, or golf cart.
+
 ### `add_driver`
 
-Adds a driver. This MVP deliberately does not collect the driver's license number.
+Adds a driver or rider. Does not collect the driver's license number.
 
 ### `add_vehicle`
 
-Adds year, make, model, optional VIN, use, ownership, and annual mileage.
+Adds year, make, model, optional VIN, use, ownership, and annual mileage (also motorcycles / commercial units).
 
 ### `save_current_policy`
 
@@ -214,11 +224,11 @@ Records explicit consent. Do not infer consent.
 
 ### `get_missing_quote_fields`
 
-Checks whether the minimum intake is complete.
+Read-only check whether the minimum intake is complete for the active product line.
 
 ### `submit_quote`
 
-Marks the intake submitted. It never represents the policy as bound or effective.
+Marks the intake submitted and notifies Asshield (Zapier webhook / email). It never represents the policy as bound or effective. Annotated `openWorldHint: true` because it sends outbound.
 
 ## Recommended next build steps
 

@@ -244,8 +244,8 @@ function createMcpServer(): McpServer {
     {
       title: "Submit quote request",
       description:
-        "Send a completed quote intake to Asshield Insurance for a licensed agent to review. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time send; it does not bind, issue, or guarantee coverage or a price.",
-      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price.",
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
       inputSchema: {
         quote_id: z.string().uuid(),
         notes: z.string().max(2000).optional()

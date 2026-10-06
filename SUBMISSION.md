@@ -39,7 +39,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 - [ ] **No cold starts.** The Render free plan sleeps when idle, and cold starts can hit reviewer timeouts. Move to a paid instance.
 - [x] **Licensed states only.** `start_quote` accepts AL/AR/FL/GA/IN/KY/NC/OH/PA/SC/TN/TX; other states get `supported: false` and no quote record. See `src/licensed-states.ts`.
 - [x] **Response minimization.** Trimmed consent `created_at`/`id`, customer `id`, submit `notify`/`submitted_at`, and narrowed `current_policy` select. Keep `quote_id`.
-- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all 8 tools.
+- [ ] **Deploy this commit**, then confirm `tools/list` shows annotations on all **10 tools**.
 - [ ] **Domain verification at submission.** Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render to the exact portal token, redeploy, and check that `https://<mcp-host>/.well-known/openai-apps-challenge` returns only the token.
 
 ### 3. Auth / OAuth
@@ -61,7 +61,7 @@ Status as of **Oct 5, 2026**. Researched against OpenAI's official docs (links a
 
 ### 6. Review materials
 - [x] 5 positive and 3 negative test cases in `plugin.json` (imported automatically from the ZIP).
-- [ ] **Run all 8 cases** against the production server before submitting. Correct `expected_behavior` if the results differ.
+- [ ] **Run all 5 positive + 3 negative test cases** against the production server before submitting. Correct `expected_behavior` if the results differ.
 - [ ] **Demo video URL (BLOCKER).** Record a walkthrough of the test cases and host it unlisted (YouTube/Loom). Add it as `review.demo_recording_url` in `plugin.json` or enter it in Review details.
 - [ ] Release notes: done (`publication.release_notes`).
 - [ ] Countries: `["US"]`.
