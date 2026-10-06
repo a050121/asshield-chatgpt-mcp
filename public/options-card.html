@@ -93,7 +93,8 @@
       }
       detectedState = st;
       el.className = "zip-status ok";
-      el.textContent = `We cover ${st}`;
+      const stateNames = { AL:"Alabama", AR:"Arkansas", FL:"Florida", GA:"Georgia", IN:"Indiana", KY:"Kentucky", NC:"North Carolina", OH:"Ohio", PA:"Pennsylvania", SC:"South Carolina", TN:"Tennessee", TX:"Texas" };
+      el.textContent = `We cover ${stateNames[st] || st} (${st})`;
       updateCta();
     }
     const pending = new Map(); let seq = 1;
