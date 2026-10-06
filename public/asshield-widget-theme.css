@@ -173,6 +173,9 @@ body {
   display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
 }
 .foot a { color: var(--accent-bright); font-weight: 700; text-decoration: none; }
+.foot.foot-provenance-only { padding-top: 10px; padding-bottom: 12px; }
+.foot.foot-provenance-only .provenance { margin: 0; }
+.foot-main.is-hidden { display: none !important; }
 .foot a:hover { text-decoration: underline; }
 .foot .muted { color: rgba(232,243,250,.72); font-size: .82rem; }
 .foot-title { font-weight: 800; font-size: .95rem; margin: 0 0 2px; }
@@ -572,3 +575,42 @@ a { color: var(--accent); font-weight: 700; }
 .carrier-network {
   margin: 8px 0 0; font-size: .78rem; font-weight: 700; color: #0d74a8; line-height: 1.4;
 }
+
+/* —— Dark-mode readability for proposal / estimate / independent —— */
+@media (prefers-color-scheme: dark) {
+  .proposal-meta strong,
+  .proposal-cov .cn,
+  .proposal-brand { color: var(--ink) !important; }
+  .proposal-cov .cl,
+  .proposal-sec-hd span,
+  .proposal-list .pl,
+  .proposal-meta { color: var(--muted) !important; }
+  .estimate-price .amt { color: var(--cta-bright) !important; }
+  .estimate-disclosure { background: rgba(255,255,255,0.06); border-color: var(--line); }
+  .proposal-letterhead, .proposal-section, .estimate-box, .independent-box {
+    background: var(--tile); border-color: var(--line);
+  }
+  .confirmation-banner { background: rgba(212,168,75,0.12); border-color: rgba(212,168,75,0.35); }
+}
+html.theme-dark .proposal-meta strong,
+html.theme-dark .proposal-cov .cn,
+html.theme-dark .proposal-brand { color: var(--ink) !important; }
+html.theme-dark .proposal-cov .cl,
+html.theme-dark .proposal-sec-hd span,
+html.theme-dark .proposal-list .pl,
+html.theme-dark .proposal-meta { color: var(--muted) !important; }
+html.theme-dark .estimate-price .amt { color: var(--cta-bright) !important; }
+html.theme-dark .estimate-disclosure { background: rgba(255,255,255,0.06); border-color: var(--line); }
+html.theme-dark .proposal-letterhead,
+html.theme-dark .proposal-section,
+html.theme-dark .estimate-box,
+html.theme-dark .independent-box {
+  background: var(--tile); border-color: var(--line);
+}
+html.theme-dark .confirmation-banner { background: rgba(212,168,75,0.12); border-color: rgba(212,168,75,0.35); }
+html.theme-dark input, html.theme-dark textarea, html.theme-dark select {
+  background: var(--tile); color: var(--ink); border-color: var(--line);
+}
+html.theme-dark .pref-card { background: var(--tile); color: var(--ink); border-color: var(--line); }
+html.theme-dark .edit-row { border-color: var(--line); }
+html.theme-dark .entity { background: var(--tile); border-color: var(--line); }

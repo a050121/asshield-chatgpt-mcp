@@ -17,7 +17,9 @@ import {
   licensedStatesMessage,
   LICENSED_STATES
 } from "./licensed-states.js";
+import { randomBytes } from "node:crypto";
 import { assertNoRestrictedData } from "./restricted-data.js";
+import { isOpenAIReviewerTest } from "./notify.js";
 import { buildAsshieldEstimate } from "./asshield-estimates.js";
 import { buildConfirmationMessaging } from "./confirmation-copy.js";
 
@@ -742,11 +744,34 @@ export async function saveCurrentPolicy(input: {
   return { current_policy: data, next_step: "consent" };
 }
 
+
+export async function issueConsentNonce(quoteId: string): Promise<string> {
+  const nonce = randomBytes(16).toString("hex");
+  await mergeLineDetails(quoteId, { consent_nonce: nonce });
+  return nonce;
+}
+
+async function readConsentNonce(quoteId: string): Promise<string | null> {
+  const details = await readLineDetails(quoteId);
+  const n = details?.consent_nonce;
+  return n ? String(n) : null;
+}
+
 export async function saveConsent(input: {
   quote_id: string;
   consent_type: "quote_authorization" | "sms" | "email";
   accepted: boolean;
+  consent_nonce?: string;
 }) {
+  // Affirmative quote authorization must come from the widget with a matching nonce.
+  if (input.consent_type === "quote_authorization" && input.accepted === true) {
+    const expected = await readConsentNonce(input.quote_id);
+    if (!expected || !input.consent_nonce || input.consent_nonce !== expected) {
+      throw new Error(
+        "Consent must be recorded from the Asshield quote card checkbox (missing or invalid consent_nonce)."
+      );
+    }
+  }
   const payload = {
     quote_id: input.quote_id,
     consent_type: input.consent_type,
@@ -1066,6 +1091,20 @@ export async function submitQuote(input: {
   let notify: Awaited<ReturnType<typeof notifyLeadSubmitted>> | null = null;
   try {
     const lead = await loadLeadSnapshot(input.quote_id);
+    if (isOpenAIReviewerTest(lead)) {
+      lead.campaign = "TEST - OpenAI review";
+      lead.notes = [lead.notes, "TEST - OpenAI review"].filter(Boolean).join(" | ");
+      // Persist tag without logging PII beyond the TEST marker
+      try {
+        if (config.useMemoryStore) {
+          memoryStore.update("quotes", input.quote_id, { campaign: lead.campaign, notes: lead.notes }, ["id"]);
+        } else {
+          await requireDb().from("quotes").update({ campaign: lead.campaign, notes: lead.notes }).eq("id", input.quote_id);
+        }
+      } catch {
+        /* non-fatal */
+      }
+    }
     notify = await notifyLeadSubmitted(lead);
 
     if (!config.useMemoryStore) {

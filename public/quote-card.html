@@ -39,7 +39,7 @@
       <p class="status" id="status" role="status" aria-live="polite"></p>
     </div>
     <footer class="foot">
-      <div class="foot-main">
+      <div class="foot-main is-hidden" id="foot-main">
         <div>
         <p class="foot-title">Talk to an agent</p>
         <p class="muted" style="margin:0">Asshield licensed agents</p>
@@ -76,6 +76,7 @@
       asshield_estimate: null,
       confirmation_banner: null,
       independent_section: null,
+      consent_nonce: null,
       cross_sell: [], privacy_url: "https://www.asshield.com/privacy"
     };
 
@@ -186,7 +187,7 @@
         business: ['About the <span class="accent">business</span>.', "Never FEIN, SSN, or payment info."],
         details: ['A few more <span class="accent">details</span>.', "Only what helps an agent prepare options."],
         policy: ['Current <span class="accent">coverage</span>.', "Carrier and rough premium if you have one."],
-        prefs: ['Coverage <span class="accent">preferences</span>.', "No prices — just how you’d like to approach limits."],
+        prefs: ['Coverage <span class="accent">preferences</span>.', "Tell us how you’d like to approach limits — an agent confirms pricing."],
         consent_auth: ['Almost <span class="accent">done</span>.', "Authorize Asshield to prepare a quote request."],
         review: ['Review & <span class="accent">submit</span>.', "Tap any field to edit. No coverage is bound."],
         confirmation: ['Request <span class="accent">received</span>.', "An Asshield agent will contact you."]
@@ -207,7 +208,18 @@
       });
     }
 
+
+    function updateFoot() {
+      const main = $("foot-main");
+      if (!main) return;
+      // Phone/agent foot only on confirmation (agent card has its own). Provenance always stays.
+      const show = S.phase === "confirmation";
+      main.classList.toggle("is-hidden", !show);
+    }
+
     function render() {
+      updateFoot();
+
       renderStepper(); updateRing(); persistWidget();
       const root = $("panels");
       const loc = [S.state, S.zip].filter(Boolean).join(" ");
@@ -515,13 +527,13 @@
           <button type="button" class="pref-card ${f.deductible_preference!=="low"&&f.deductible_preference!=="high"?"on":""}" data-v="medium"><strong>Medium</strong><span>Balance premium vs. deductible.</span></button>
           <button type="button" class="pref-card ${f.deductible_preference==="high"?"on":""}" data-v="high"><strong>Higher</strong><span>OK with higher deductible.</span></button>
         </div>
-        <p class="note">Preferences only — not a quote or price.</p>
+        <p class="note">Preferences guide your agent. Firm premiums come after review; post-submit Asshield estimates (when shown) are illustrations only*.</p>
         ${navButtons("Continue")}</div>`;
 
       if (cur.id === "consent") return `<div class="panel"><div class="stripe"></div>
         <p>I authorize Asshield Insurance to use these details to prepare a quote request and contact me about it.</p>
         <label class="toggle"><input type="checkbox" id="auth_ok" ${f.auth_ok?"checked":""}/> I agree (required)</label>
-        <p class="muted">This does not bind coverage or create a policy.</p>
+        <p class="muted">This does not bind coverage or create a policy. Asshield estimated starting prices (when shown after submit) are illustrations — not carrier quotes.</p>
         ${navButtons("Save & review")}</div>`;
 
       return `<div class="panel"><p>Unknown step</p></div>`;
@@ -547,12 +559,12 @@
         ["Authorization", f.auth_ok ? "Accepted" : "Needed", "consent"]
       ].filter(r => r[1]);
       return `<div class="panel"><div class="stripe"></div>
-        <p class="muted">Tap a row to edit. Submitting sends a request only — <strong>no coverage is bound</strong>.</p>
+        <p class="muted">Tap a row to edit. Submitting sends a request only — <strong>no coverage is bound</strong>. Asshield may then show estimated starting prices* for illustration.</p>
         ${rows.map(([k,v,step]) => `<div class="edit-row" data-step="${step}"><div><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div><span class="hint">Edit</span></div>`).join("")}
         <h3>Still needed</h3>${renderChecklist(S.checklist,{onlyRemaining:true})}
         <div class="actions">
           <button type="button" class="secondary" id="btn-back">Back</button>
-          <button type="button" class="cta" id="btn-submit">Submit quote request</button>
+          <button type="button" class="cta" id="btn-submit"${S.fields.auth_ok?"":" disabled"} title="${S.fields.auth_ok?"":"Accept authorization on the Consent step first"}">Submit quote request</button>
           <button type="button" class="secondary" id="btn-agent">Agent contact</button>
         </div></div>`;
     }
@@ -721,7 +733,7 @@
             }
           } else if (cur.id === "consent") {
             if (!$("auth_ok")?.checked) return setStatus("Please check the authorization box.");
-            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
+            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
             S.fields.auth_ok = true;
           }
           await refreshMissing();
@@ -756,10 +768,17 @@
       });
       $("btn-submit").onclick = async () => {
         if (!S.quote_id) return;
+        if (!S.fields.auth_ok) {
+          setStatus("Please accept authorization on the Consent step before submitting.");
+          const steps = stepsFor(S.product);
+          const ci = steps.findIndex(s => s.id === "consent");
+          if (ci >= 0) { S.step = ci; render(); }
+          return;
+        }
         setStatus("Submitting…");
         try {
           if ((S.missing||[]).includes("quote_authorization")) {
-            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true });
+            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
           }
           const notes = [
             S.fields.property_notes,
@@ -797,6 +816,7 @@
         S.confirmation_banner = w.confirmation_banner || sc.confirmation_banner || sc.confirmation.banner;
       if (w.independent_section || sc.independent_section || sc.confirmation?.independent)
         S.independent_section = w.independent_section || sc.independent_section || sc.confirmation.independent;
+      if (w.consent_nonce || sc.consent_nonce) S.consent_nonce = w.consent_nonce || sc.consent_nonce;
       if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
       else if (w.phase === "consent") S.phase = "consent";
       if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product])
@@ -833,7 +853,7 @@
         first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", phone:"859-555-0100",
         preferred_contact_method:"email",
         contact_street:"123 Test St", contact_unit:"", contact_city:"Lexington", contact_state:"KY", contact_zip:"40505",
-        residence_status:"own", sms_consent:true,
+        residence_status:"own", sms_consent:false,
         drivers:[{ name:"Jordan Test", date_of_birth:"1990-04-12", relationship:"self" }],
         vehicles:[{ year:2020, make:"Toyota", model:"Camry", vin:"1HGBH41JXMN109186", ownership:"owned", usage:"commute", summary:"2020 Toyota Camry" }],
         carrier:"Example Mutual", current_premium:"$145/mo", premium_frequency:"monthly",

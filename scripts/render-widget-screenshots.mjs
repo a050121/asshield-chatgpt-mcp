@@ -57,6 +57,7 @@ const shots = [
   { file: "quote-card.html", mock: "consent", name: "quote-consent-light", colorScheme: "light", width: 420 },
   { file: "quote-card.html", mock: "consent", name: "quote-consent-dark", colorScheme: "dark", width: 420 },
   { file: "quote-card.html", mock: "contact", name: "quote-step-contact-light", colorScheme: "light", width: 420 },
+  { file: "quote-card.html", mock: "contact", name: "quote-step-contact-dark", colorScheme: "dark", width: 420 },
   { file: "quote-card.html", mock: "drivers", name: "quote-step-drivers-light", colorScheme: "light", width: 420 },
   { file: "quote-card.html", mock: "vehicles", name: "quote-step-vehicles-light", colorScheme: "light", width: 420 },
   { file: "quote-card.html", mock: "prefs", name: "quote-prefs-light", colorScheme: "light", width: 420 },

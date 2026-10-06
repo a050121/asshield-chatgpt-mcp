@@ -14,7 +14,8 @@ import {
   saveCurrentPolicy,
   saveConsent,
   getMissingFields,
-  submitQuote
+  submitQuote,
+  issueConsentNonce
 } from "./quote-service.js";
 import { notificationConfigured } from "./notify.js";
 import { QUOTE_PRODUCTS } from "./types.js";
@@ -34,10 +35,10 @@ import { RestrictedDataError, restrictedDataRefusal } from "./restricted-data.js
 const productEnum = z.enum(QUOTE_PRODUCTS);
 
 
-function restrictedToolError(err: RestrictedDataError) {
+function restrictedToolResult(err: RestrictedDataError) {
+  // Success-style response: value not collected/stored. Never echo the raw value.
   const payload = restrictedDataRefusal(err.matched);
   return {
-    isError: true as const,
     content: [{ type: "text" as const, text: JSON.stringify(payload) }],
     structuredContent: payload
   };
@@ -47,7 +48,7 @@ function createMcpServer(): McpServer {
   const app = new McpServer(
     {
       name: "asshield-insurance",
-      version: "0.5.0"
+      version: "0.5.1"
     },
     {
       instructions:
@@ -63,7 +64,7 @@ function createMcpServer(): McpServer {
     {
       title: "Start an Asshield quote",
       description:
-        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage or return a price. Renders the Asshield guided quote card (consent, multi-step form, review). Includes a what-to-have-ready checklist for the line.",
+        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage. Asshield may later show estimated starting prices only; final pricing comes from a licensed agent. Renders the Asshield guided quote card (consent, multi-step form, review). Includes a what-to-have-ready checklist for the line.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
       _meta: quoteCardMeta(),
       inputSchema: {
@@ -75,7 +76,15 @@ function createMcpServer(): McpServer {
     async (input) => {
       const result = await startQuote(input) as Record<string, unknown>;
       const phase = result.supported === false ? "consent" : "consent";
+      const qid = (result.quote_id || (result.quote as { id?: string } | undefined)?.id) as string | undefined;
+      if (qid && result.supported !== false) {
+        const consent_nonce = await issueConsentNonce(qid);
+        result.consent_nonce = consent_nonce;
+      }
       const enriched = withQuoteWidget(result, phase);
+      if (result.consent_nonce && enriched.widget && typeof enriched.widget === "object") {
+        (enriched.widget as Record<string, unknown>).consent_nonce = result.consent_nonce;
+      }
       return toolTextResult(enriched);
     }
   );
@@ -111,7 +120,7 @@ function createMcpServer(): McpServer {
         const result = await saveContact(input);
         return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
       } catch (err) {
-        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        if (err instanceof RestrictedDataError) return restrictedToolResult(err);
         throw err;
       }
     }
@@ -146,7 +155,7 @@ function createMcpServer(): McpServer {
         const result = await saveBusinessDetails(input);
         return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
       } catch (err) {
-        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        if (err instanceof RestrictedDataError) return restrictedToolResult(err);
         throw err;
       }
     }
@@ -182,7 +191,7 @@ function createMcpServer(): McpServer {
         const result = await saveLineDetails(input);
         return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
       } catch (err) {
-        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        if (err instanceof RestrictedDataError) return restrictedToolResult(err);
         throw err;
       }
     }
@@ -259,22 +268,34 @@ function createMcpServer(): McpServer {
     }
   );
 
+  // Widget-only: model cannot call this (openai/visibility private). Requires consent_nonce from the quote card.
   app.registerTool(
     "save_consent",
     {
-      title: "Save consent",
+      title: "Save consent (widget)",
       description:
-        "Record a customer's affirmative consent. Never infer consent; accepted must reflect an explicit user choice.",
+        "Widget-only. Record a customer's affirmative consent from the Asshield quote card checkbox. Requires consent_nonce issued to the card. Never infer consent.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+      _meta: {
+        "openai/visibility": "private"
+      },
       inputSchema: {
         quote_id: z.string().uuid(),
         consent_type: z.enum(["quote_authorization", "sms", "email"]),
-        accepted: z.boolean()
+        accepted: z.boolean(),
+        consent_nonce: z.string().min(8).max(128).optional()
       }
     },
     async (input) => {
-      const result = await saveConsent(input);
-      return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      try {
+        const result = await saveConsent(input);
+        return { content: [{ type: "text", text: JSON.stringify(result) }], structuredContent: result };
+      } catch (err) {
+        return {
+          content: [{ type: "text", text: JSON.stringify({ ok: false, message: String((err as Error)?.message || err) }) }],
+          structuredContent: { ok: false, message: String((err as Error)?.message || err) }
+        };
+      }
     }
   );
 
@@ -291,7 +312,12 @@ function createMcpServer(): McpServer {
     },
     async ({ quote_id }) => {
       const result = await getMissingFields(quote_id) as Record<string, unknown>;
+      const consent_nonce = await issueConsentNonce(quote_id);
+      result.consent_nonce = consent_nonce;
       const enriched = withQuoteWidget(result, "progress");
+      if (enriched.widget && typeof enriched.widget === "object") {
+        (enriched.widget as Record<string, unknown>).consent_nonce = consent_nonce;
+      }
       return toolTextResult(enriched);
     }
   );
@@ -303,7 +329,7 @@ function createMcpServer(): McpServer {
       title: "Submit quote request",
       description:
         "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price. Renders the Asshield quote confirmation card with Asshield estimated starting prices + proposal (estimates are not quotes), reference number, agent will contact, no coverage bound, and agent contact details.",
-      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       _meta: quoteCardMeta(),
       inputSchema: {
         quote_id: z.string().uuid(),
@@ -322,7 +348,7 @@ function createMcpServer(): McpServer {
         }
         return toolTextResult(enriched);
       } catch (err) {
-        if (err instanceof RestrictedDataError) return restrictedToolError(err);
+        if (err instanceof RestrictedDataError) return restrictedToolResult(err);
         throw err;
       }
     }
@@ -344,7 +370,7 @@ function createMcpServer(): McpServer {
       return toolTextResult({
         ...options,
         message:
-          "Asshield insurance options. Tap a line to start a quote request in a licensed state. Quote intake only — no coverage is bound."
+          "Asshield insurance options. Tap a line to start a quote request in a licensed state. Quote intake only — no coverage is bound. Asshield estimated starting prices may appear after submit (illustrations only)."
       });
     }
   );
@@ -355,7 +381,7 @@ function createMcpServer(): McpServer {
     {
       title: "Explain coverage (general info)",
       description:
-        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Asshield estimated starting prices (when shown elsewhere) are not quotes. Offer to start a quote afterward. Does not invent specific state statutes.",
+        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Asshield estimated starting prices (when shown after submit) are illustrations only — not quotes; final pricing comes from a licensed agent. Offer to start a quote afterward. Does not invent specific state statutes.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: coverageCardMeta(),
       inputSchema: {

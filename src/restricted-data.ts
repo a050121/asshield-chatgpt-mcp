@@ -17,8 +17,9 @@ export class RestrictedDataError extends Error {
   readonly code = "restricted_data_refused";
   readonly matched: string;
   constructor(matched: string) {
+    // Do not echo the restricted value — only the category.
     super(
-      `Asshield refused to store restricted data (${matched}). Do not send SSN, FEIN, driver's license numbers, payment cards, or passwords. Quote intake does not need them.`
+      `Asshield does not collect ${matched}. That value was not stored. You can continue the quote without it.`
     );
     this.name = "RestrictedDataError";
     this.matched = matched;
@@ -35,7 +36,30 @@ export function findRestrictedIdentifier(text: unknown): string | null {
   return null;
 }
 
-/** Scan every string field on a plain object (shallow + one nested level). */
+/** Strip restricted identifiers from string fields (replace with empty). Returns whether anything was stripped. */
+export function stripRestrictedData(
+  payload: Record<string, unknown>,
+  fields?: string[]
+): { stripped: boolean; matched: string | null; clean: Record<string, unknown> } {
+  const keys = fields ?? Object.keys(payload);
+  const clean: Record<string, unknown> = { ...payload };
+  let matched: string | null = null;
+  let stripped = false;
+  for (const k of keys) {
+    const v = clean[k];
+    if (typeof v === "string") {
+      const hit = findRestrictedIdentifier(v);
+      if (hit) {
+        matched = matched || hit;
+        clean[k] = "";
+        stripped = true;
+      }
+    }
+  }
+  return { stripped, matched, clean };
+}
+
+/** Scan fields; throw without including the raw value in logs/messages. */
 export function assertNoRestrictedData(payload: Record<string, unknown>, fields?: string[]) {
   const keys = fields ?? Object.keys(payload);
   for (const k of keys) {
@@ -48,12 +72,13 @@ export function assertNoRestrictedData(payload: Record<string, unknown>, fields?
 }
 
 export function restrictedDataRefusal(matched: string) {
-  const message = new RestrictedDataError(matched).message;
   return {
+    ok: true as const,
+    collected: false as const,
     refused: true as const,
-    code: "restricted_data_refused" as const,
+    code: "restricted_data_not_collected" as const,
     matched_type: matched,
     stored: false as const,
-    message
+    message: `Asshield does not collect ${matched}. That value was not stored. You can continue the quote without it.`
   };
 }

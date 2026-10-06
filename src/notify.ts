@@ -36,13 +36,27 @@ export type NotifyResult = {
   email: { attempted: boolean; ok: boolean; provider?: string; error?: string };
 };
 
+export function isOpenAIReviewerTest(lead: LeadSnapshot): boolean {
+  const last = String(lead.customer?.last_name ?? "").trim().toLowerCase();
+  const zip = String(lead.zip ?? "").trim();
+  const notes = String(lead.notes ?? "");
+  const campaign = String(lead.campaign ?? "");
+  if (/TEST\s*-\s*OpenAI review/i.test(notes) || /openai_review_test/i.test(notes)) return true;
+  if (/TEST\s*-\s*OpenAI review/i.test(campaign)) return true;
+  // Documented reviewer path: last name Reviewer (often with ZIP 40505)
+  if (last === "reviewer") return true;
+  if (zip.startsWith("40505") && last === "reviewer") return true;
+  return false;
+}
+
 function buildSubject(lead: LeadSnapshot): string {
   const name = lead.customer
     ? `${String(lead.customer.first_name ?? "")} ${String(lead.customer.last_name ?? "")}`.trim()
     : "Unknown";
   const product = lead.product ?? "quote";
   const state = lead.state ?? "??";
-  return `[Asshield ChatGPT] New ${product} quote — ${name} (${state})`;
+  const base = `[Asshield ChatGPT] New ${product} quote — ${name} (${state})`;
+  return isOpenAIReviewerTest(lead) ? `TEST - OpenAI review | ${base}` : base;
 }
 
 function buildTextBody(lead: LeadSnapshot): string {

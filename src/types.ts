@@ -78,6 +78,8 @@ export type LineDetails = {
   trailer_count?: number;
   // Agent / preference extras (UI)
   callback_preference?: "morning" | "afternoon" | "evening";
+  /** One-time nonce for widget-only quote_authorization consent. */
+  consent_nonce?: string;
   intake_notes?: string;
   coverage_preference?: "low" | "medium" | "high";
   deductible_preference?: "low" | "medium" | "high";

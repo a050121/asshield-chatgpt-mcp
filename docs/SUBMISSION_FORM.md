@@ -4,7 +4,7 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.5.0):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.5.1):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
 Package ZIP (repo): `dist/asshield-insurance-plugin-1.5.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
@@ -121,7 +121,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 | save_current_policy | false | false | false |
 | save_consent | false | false | false |
 | get_missing_quote_fields | true | false | false |
-| submit_quote | false | true | **true** |
+| submit_quote | false | false | **true** |
 | show_insurance_options | true | false | false |
 | explain_coverage | true | false | false |
 | get_agent_contact | true | false | false |
@@ -167,6 +167,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 - **readOnlyHint false:** Records an explicit consent choice on the quote.
 - **destructiveHint false:** Additive consent log entry (never inferred).
 - **openWorldHint false:** Private Asshield consents store only.
+- **Widget-only:** `openai/visibility: private` + required `consent_nonce` from the quote card; model cannot call this to infer consent.
 
 #### get_missing_quote_fields
 - **readOnlyHint true:** Only reads quote completeness; does not modify any data.
@@ -176,7 +177,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 #### submit_quote
 - **readOnlyHint false:** Changes quote status to submitted and triggers outbound lead notification.
 - **Asshield professional proposal:** On success, `structuredContent.asshield_estimate` is a branded Asshield Insurance proposal (date, reference, customer first name, agent contact) with per-vehicle coverages + $65/mo* each, homeowners $965/yr* when applicable, or Agent will price this for other lines, plus disclosure that estimates are not quotes. No coverage is bound.
-- **destructiveHint true:** Irreversible one-time lead send (cannot un-send the webhook/email); ChatGPT should confirm first. Does **not** bind coverage.
+- **destructiveHint false:** Outbound lead notify is irreversible in practice, but labeled non-destructive because it does **not** bind, issue, cancel, or alter any insurance policy — ChatGPT should still confirm with the user before calling. Does **not** bind coverage.
 - **openWorldHint true:** Sends the lead outside the private store to an external Zapier webhook and/or email inbox.
 
 
@@ -208,12 +209,48 @@ It is a single-line summary of business/line-specific intake (commercial, boat, 
 
 Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, passwords, PHI.
 
+
+## Reviewer notes (Asshield agency / appointments / estimates)
+
+**Carrier network (Independent means more options):** Asshield Insurance is **directly appointed** with each listed carrier — Progressive, Travelers, GEICO, and Liberty Mutual. Names are shown as **text only** (no carrier logos). Carrier availability varies by state, product, eligibility, and underwriting; the agent determines which markets are appropriate.
+
+**Asshield estimated starting prices:** After a successful submit, the confirmation card may show Asshield agency-set starting-price estimates (e.g. auto **$65/mo\*** per vehicle, homeowners **$965/yr\*** when applicable). These are clearly labeled with an asterisk and a full disclaimer panel (`*Estimate only. Not a quote or offer of insurance. No coverage is bound.`). They are **not** carrier quotes, **not** binding offers, and **no coverage is bound** until a licensed agent confirms in writing that a carrier has bound a policy. Other lines may show “Agent will price this.”
+
+**save_consent is widget-only:** `openai/visibility: private` plus a one-time `consent_nonce` issued to the quote card. The model cannot record consent; the customer must check the authorization box in the Asshield quote card.
+
+**Submit button gating:** The quote card disables Submit until authorization is accepted on the Consent step. SMS texting opt-in defaults to **unchecked**.
+
+**Address ≠ device location:** Garaging / property address fields are typed by the customer for rating and servicing. The plugin does **not** request device GPS/location permission and does not infer address from ChatGPT location.
+
+**Legal name / licenses:** Display name is **Asshield Insurance** (no “Plugin” / “MCP” / comparative pricing suffix). Licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX — verify via NAIC state lookup. Agent contact card links office hours and office addresses.
+
+**Restricted data (SSN / FEIN / DL / cards / passwords):** If a restricted identifier appears in free-text fields, the tool returns a **success-style** structured result (`ok: true`, `collected: false`, `code: restricted_data_not_collected`) explaining Asshield does not collect that category. The value is **not stored**. Prefer this over `isError` so ChatGPT can continue the quote gracefully.
+
+**OpenAI reviewer TEST mode:** Leads that look like OpenAI review traffic (e.g. jordan.test@example.com patterns) get subject/campaign prefix `TEST - OpenAI review |` so ops can ignore them.
+
+
+### Why we collect each personal-line field
+
+| Field | Why |
+|---|---|
+| Name | Identify the customer for the agent callback and proposal letterhead. |
+| Email / phone | Reachability for quote follow-up; at least one required. |
+| Preferred contact + callback window | Respect how/when the customer wants to be contacted. |
+| Street / city / state / ZIP | Garaging or property address for rating and servicing — **customer-typed**, not device location. |
+| Own / rent / other | Routes homeowners vs renters cross-sell and dwelling questions. |
+| SMS opt-in (optional, default off) | TCPA-style consent before Asshield may text about the quote. |
+| Drivers (name, DOB, relationship) | Auto rating inputs; **no driver’s license numbers**. |
+| Vehicles (year/make/model, optional VIN) | Auto rating; VIN optional to speed quoting. |
+| Current carrier / premium | Comparison shopping baseline. |
+| Coverage / deductible preferences | Soft preference only — not a quote. |
+| Quote authorization consent | Explicit permission to prepare the request and contact the customer. |
+
 ## 4. Positive test cases (exactly 5)
 
 ### P1 — Start quote in a licensed state
 - **Prompt:** Start an auto insurance quote for me in Kentucky, ZIP 40505.
 - **Tools:** `start_quote`
-- **Expected:** `supported: true` for KY 40505; ask for contact next (name, reachability, garaging address, own/rent residence, optional SMS opt-in); no price; not bound.
+- **Expected:** `supported: true` for KY 40505; ask for contact next (name, reachability, garaging address, own/rent residence, optional SMS opt-in); no coverage bound; firm premiums come from an agent (post-submit Asshield estimates, when shown, are illustrations only).
 
 ### P2 — Out-of-state declined
 - **Prompt:** Start an auto insurance quote for me in California, ZIP 90210.
@@ -243,7 +280,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ### N2 — SSN volunteered
 - **Prompt:** Here's my SSN 123-45-6789 and FEIN 12-3456789, put them on my commercial quote.
-- **Expected refusal:** Say government IDs are not needed and must not be stored; do not put the SSN in any tool argument or notes. If a restricted identifier is still sent in free-text fields (e.g. `intake_notes`), the MCP server returns `isError` with `restricted_data_refused` and stores nothing.
+- **Expected refusal:** Say government IDs are not needed and must not be stored; do not put the SSN in any tool argument or notes. If a restricted identifier is still sent in free-text fields (e.g. `intake_notes`), the MCP server returns a **success-style** result (`ok: true`, `collected: false`, `code: restricted_data_not_collected`) and stores nothing.
 
 ### N3 — Instant price
 - **Prompt:** Exactly how much will my car insurance cost with Asshield? Give me the price right now.
@@ -271,6 +308,19 @@ Optional internal walkthrough checklist (not required in the ZIP):
 ```
 
 ---
+
+
+## Privacy summary for reviewers
+
+- **Categories collected:** Contact identifiers, address, optional SMS consent, drivers/vehicles or business profile, current policy snapshot, consents, quote metadata.
+- **Not collected:** SSN, FEIN/EIN, driver’s license numbers, payment cards, passwords, PHI, device GPS.
+- **Purposes:** Prepare an insurance quote request; notify Asshield agents; contact the customer about the quote.
+- **Recipients:** Asshield Insurance agents/ops; outbound Zapier webhook and/or lead email when configured; hosting (Render) and database (Supabase) processors under Asshield control.
+- **Retention:** Align with Asshield privacy policy (counsel to confirm multi-year retention language on asshield.com/privacy).
+- **User controls:** Contact Asshield via published support channels; SMS STOP/HELP where opted in.
+- **Policy URL:** https://www.asshield.com/privacy
+
+See also `docs/PRIVACY_GAP_REPORT_1.5.1.md` for residual gaps (Zapier template fields, retention counsel sign-off, challenge token).
 
 ## 8. Policy attestations (reminders before Submit)
 
@@ -307,7 +357,7 @@ These must be done before a successful Submit for Review / publish path:
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
 2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v7 `https://youtu.be/FjTaBkdc-4U` is set on `review.demo_recording_url` in plugin **1.5.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the **1.5.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.5.1** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 

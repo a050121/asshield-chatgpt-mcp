@@ -70,7 +70,7 @@ Status as of **Oct 5, 2026**.
 
 ### 7. Compliance language (already built in; keep it consistent everywhere)
 - Never says or implies coverage is bound, issued, active, or guaranteed. `submit_quote` returns "not confirmation of coverage or a bound policy."
-- No prices in chat. A licensed agent prepares the quote.
+- Quote intake only. A licensed agent prepares the quote; post-submit Asshield estimates (when shown) are illustrations with a full disclaimer, not carrier quotes.
 - Restricted data the guidelines forbid is **never collected**: SSNs and other government IDs, driver's license numbers, payment card data, credentials, health info. Date of birth is collected for drivers only and must be disclosed in the privacy policy.
 - Consent is explicit and recorded per type (`quote_authorization`, `sms`, `email`) and never inferred. SMS consent language should be TCPA-aligned (counsel).
 - `submit_quote` is marked `destructiveHint: true` (a one-time outbound send), so ChatGPT asks the user to confirm.

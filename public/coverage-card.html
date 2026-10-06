@@ -25,7 +25,7 @@
         <span class="hero-badge" id="line-badge">Coverage Q&amp;A</span>
       </div>
     </header>
-    <div class="trust"><strong>Licensed in 12 states</strong> · Quote intake only · No prices in chat</div>
+    <div class="trust"><strong>Licensed in 12 states</strong> · Quote intake only · No coverage bound in chat</div>
     <div class="body">
       <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
         <span class="tile-icon" id="line-icon" style="width:48px;height:48px;color:var(--primary)"></span>
@@ -37,7 +37,7 @@
       <div class="chips" id="addons"></div>
       <h3>What to have ready</h3>
       <ul class="checklist" id="ready"></ul>
-      <h3>Coverage preference (no prices)</h3>
+      <h3>Coverage preference</h3>
       <div class="pref-grid" id="prefs" role="group" aria-label="Coverage preference">
         <button type="button" class="pref-card" data-v="low"><strong>Essential</strong><span>Core liability-focused protections to discuss with an agent.</span></button>
         <button type="button" class="pref-card" data-v="medium"><strong>Balanced</strong><span>Solid limits and common add-ons for most households.</span></button>
@@ -54,11 +54,7 @@
       <p class="status" id="status" role="status" aria-live="polite"></p>
       <p class="note" id="disclaimer"></p>
     </div>
-    <footer class="foot">
-      <div class="foot-main">
-        <div><p class="foot-title">Talk to an agent</p><p class="muted" style="margin:0">We’ll confirm coverages in writing before anything is bound.</p></div>
-      <a href="tel:+18593680162">859-368-0162</a>
-      </div>
+    <footer class="foot foot-provenance-only">
       <p class="provenance">Information provided by Asshield Insurance. General answers in chat come from ChatGPT.</p>
     </footer>
   </div>
@@ -146,7 +142,7 @@
         state.pref = p.dataset.v;
         document.querySelectorAll(".pref-card").forEach(x => x.classList.toggle("on", x === p));
         syncState();
-        setStatus("Preference saved as “" + state.pref + "” (no prices — agent confirms).");
+        setStatus("Preference saved as “" + state.pref + "” — an agent confirms coverage and pricing.");
       };
     });
     window.addEventListener("message", (event) => {
