@@ -57,8 +57,8 @@ export const config = {
     process.env.AGENT_LICENSE_NUMBER ?? "KY Agency #867084 · FL Agency #L120146",
   /** Optional booking URL; shown only when set. */
   bookingUrl: process.env.BOOKING_URL ?? "",
-  agentName: process.env.AGENT_NAME ?? "Joshua Williams",
-  agentEmail: process.env.AGENT_EMAIL ?? "joshuawilliams@asshield.com",
+  agentName: process.env.AGENT_NAME ?? "Asshield licensed agents",
+  agentEmail: process.env.AGENT_EMAIL ?? "quote@asshield.com",
   agentPhone: process.env.AGENT_PHONE ?? "859-368-0162",
   agentPhoneTel: process.env.AGENT_PHONE_TEL ?? "+18593680162",
   agentStreet,

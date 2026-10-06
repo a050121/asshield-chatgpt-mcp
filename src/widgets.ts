@@ -201,6 +201,8 @@ export function agentContactPayload() {
   return {
     agency: "Asshield Insurance",
     name: config.agentName,
+    team: config.agentName,
+    team_label: "Team",
     phone: config.agentPhone,
     phone_tel: config.agentPhoneTel,
     email: config.agentEmail,

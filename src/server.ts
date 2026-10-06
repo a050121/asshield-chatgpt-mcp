@@ -340,7 +340,7 @@ function createMcpServer(): McpServer {
     {
       title: "Get Asshield agent contact",
       description:
-        "Read-only Asshield Insurance agent contact card: agency name, agent Joshua Williams, primary Lexington KY office phone/email/address, Fort Walton Beach FL office, agency licenses (KY/FL), office hours, website, licensed states, and NAIC license verification link. Optional booking URL appears only when configured. Does not book appointments or bind coverage.",
+        "Read-only Asshield Insurance agent contact card: agency name, Asshield licensed agents team, primary Lexington KY office phone/email/address, Fort Walton Beach FL office, agency licenses (KY/FL), office hours, website, licensed states, and NAIC license verification link. Optional booking URL appears only when configured. Does not book appointments or bind coverage.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: agentCardMeta(),
       inputSchema: {}

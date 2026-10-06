@@ -5,7 +5,7 @@
   "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal, commercial, and specialty lines using 13 tools with Apps SDK widgets (options picker, coverage Q&A, guided quote card, agent contact). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
   "author": {
     "name": "Asshield Insurance",
-    "email": "joshuawilliams@asshield.com",
+    "email": "quote@asshield.com",
     "url": "https://www.asshield.com"
   },
   "homepage": "https://www.asshield.com",

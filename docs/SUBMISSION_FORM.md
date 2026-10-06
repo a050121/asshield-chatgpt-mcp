@@ -86,7 +86,7 @@ Limitations: this plugin collects quote information only. It does not provide ra
 
 ### Support contact (for reviewers / end users)
 
-- Email: joshuawilliams@asshield.com (also insurancelexky@gmail.com)
+- Email: quote@asshield.com (also insurancelexky@gmail.com)
 - Phone: FL (850) 684-0164 · KY (859) 368-0162 · mobile 859-494-8012
 - Hours: Monday–Friday ~9:00 a.m.–5:00 p.m. Eastern Time (approximate)
 

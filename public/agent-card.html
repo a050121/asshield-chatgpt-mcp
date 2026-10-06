@@ -35,16 +35,15 @@
           </div>
         </div>
         <h1 class="hero-title">Talk to a <span class="accent">real agent</span>.</h1>
-        <p class="hero-sub">Joshua Williams can help with your quote request. Contact info only — no coverage is bound here.</p>
+        <p class="hero-sub">One of our licensed agents can help with your quote request. Contact info only — no coverage is bound here.</p>
         <span class="hero-badge">Agent contact</span>
       </div>
     </header>
     <div class="trust"><strong>Licensed in 12 states</strong> · Verify via NAIC state lookup</div>
     <div class="body">
-      <div class="row"><span class="k">Agent</span><span class="v" id="name">Joshua Williams</span></div>
+      <div class="row"><span class="k" id="team-label">Team</span><span class="v" id="name">Asshield licensed agents</span></div>
       <div class="row"><span class="k">Phone</span><span class="v"><a id="phone" href="tel:+18593680162">859-368-0162</a></span></div>
-      <div class="row"><span class="k">Email</span><span class="v"><a id="email" href="mailto:joshuawilliams@asshield.com">joshuawilliams@asshield.com</a></span></div>
-      <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Unit 103, Lexington, KY 40505</span></div>
+      <div class="row"><span class="k">Email</span><span class="v"><a id="email" href="mailto:quote@asshield.com">quote@asshield.com</a></span></div>
       <div class="row is-hidden" id="hours-row"><span class="k">Hours</span><span class="v" id="hours"></span></div>
       <div class="row is-hidden" id="license-row"><span class="k" id="license-label">Agency licenses</span><span class="v" id="license"></span></div>
       <div class="row"><span class="k">Website</span><span class="v"><a id="website" href="https://www.asshield.com" target="_blank" rel="noopener noreferrer">asshield.com</a></span></div>
@@ -54,7 +53,7 @@
       <div class="chip-row" id="states"></div>
       <div class="actions">
         <a class="btn cta" id="call-btn" href="tel:+18593680162">Call</a>
-        <a class="btn secondary" id="email-btn" href="mailto:joshuawilliams@asshield.com">Email</a>
+        <a class="btn secondary" id="email-btn" href="mailto:quote@asshield.com">Email</a>
         <button type="button" class="secondary" id="btn-copy">Copy phone</button>
         <a class="btn secondary" id="verify" href="https://content.naic.org/state-insurance-departments" target="_blank" rel="noopener noreferrer">Verify license</a>
         <a class="btn secondary is-hidden" id="booking" href="#" target="_blank" rel="noopener noreferrer">Book</a>
@@ -107,7 +106,8 @@
       const a = data.agent || data;
       if (data.quote_id) quoteId = data.quote_id;
       if (data.widget?.quote_id) quoteId = data.widget.quote_id;
-      if (a.name) $("name").textContent = a.name;
+      if (a.name || a.team) $("name").textContent = a.name || a.team;
+      if (a.team_label) $("team-label").textContent = a.team_label;
       if (a.phone) {
         $("phone").textContent = a.phone;
         const tel = a.phone_tel || ("+1" + String(a.phone).replace(/\D/g, ""));
@@ -116,7 +116,6 @@
       if (a.email) {
         $("email").textContent = a.email; $("email").href = "mailto:" + a.email; $("email-btn").href = "mailto:" + a.email;
       }
-      if (a.address) $("address").textContent = a.address;
       if (a.website) $("website").href = a.website;
       const hoursRow = $("hours-row");
       if (a.office_hours) {
@@ -231,8 +230,9 @@
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       fill({
-        agency: "Asshield Insurance", name: "Joshua Williams", phone: "859-368-0162", phone_tel: "+18593680162",
-        email: "joshuawilliams@asshield.com",
+        agency: "Asshield Insurance", name: "Asshield licensed agents", team: "Asshield licensed agents", team_label: "Team",
+        phone: "859-368-0162", phone_tel: "+18593680162",
+        email: "quote@asshield.com",
         address: "2240 Executive Dr Unit 103, Lexington, KY 40505",
         street: "2240 Executive Dr Unit 103",
         office_city_state_zip: "Lexington, KY 40505",
