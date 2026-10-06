@@ -11,7 +11,8 @@ import { LICENSED_STATES } from "./licensed-states.js";
 import {
   checklistFor,
   crossSellFor,
-  getDisclaimer
+  getDisclaimer,
+  productLabel
 } from "./coverage-kb.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,7 +35,12 @@ function logoDataUri(): string {
 }
 
 function loadHtml(name: string): string {
-  return readFileSync(join(publicDir, name), "utf8").replaceAll("LOGO_SRC", logoDataUri());
+  const theme = readFileSync(join(publicDir, "asshield-widget-theme.css"), "utf8");
+  const icons = readFileSync(join(publicDir, "asshield-line-icons.js"), "utf8");
+  return readFileSync(join(publicDir, name), "utf8")
+    .replaceAll("LOGO_SRC", logoDataUri())
+    .replace("/*__ASSHIELD_THEME__*/", theme)
+    .replace("/*__ASSHIELD_ICONS__*/", icons);
 }
 
 const uiCsp = {
@@ -207,6 +213,7 @@ export function withQuoteWidget(
     quote_id: quoteId,
     reference_number: quoteId,
     product,
+    product_label: product ? productLabel(product) : undefined,
     state,
     zip,
     missing: (result.missing as string[] | undefined) || [],
@@ -224,6 +231,7 @@ export function withQuoteWidget(
 
   return {
     ...result,
+    product_label: product ? productLabel(product) : undefined,
     what_to_have_ready: checklist,
     callback_sla: config.callbackSlaText,
     cross_sell: cross,

@@ -58,7 +58,7 @@ Status as of **Oct 5, 2026**.
 - [ ] Approve the icons in `assets/` (512px logo + 128px composer icon, light and dark). Swap in official files if preferred: square, at least 48px, no larger than 5 MiB.
 - [ ] Display name "Asshield Insurance". Subtitle "Start an insurance quote" (30 character limit). Category "Finance". Confirm the category exists in the dashboard picker.
 - [ ] **Review risk: the brand name.** Plugins must suit general audiences, including ages 13–17. A reviewer may question the name. Be ready to explain that it's a trademarked, state-licensed agency name (FL #L120146, KY #867084).
-- [ ] Screenshots: Custom Apps SDK widgets are present. If the portal requests screenshots, provide widget screenshots from `/workspace/asshield-submission/screens/v2/` (options, coverage, guided steps, confirmation timeline, agent; light/dark).
+- [ ] Screenshots: Custom Apps SDK widgets are present. If the portal requests screenshots, provide widget screenshots from `/workspace/asshield-submission/screens/v3/` (options, coverage, guided steps, confirmation timeline, agent; light/dark).
 - [ ] No pricing, discounts, or comparative claims in the listing (already compliant). No Lexington emphasis (compliant).
 
 ### 6. Review materials

@@ -4,94 +4,70 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Asshield Coverage Overview</title>
-  <style>
-    :root {
-      --brand:#1A7FBF; --brand-bright:#1A9FE0; --navy:#0c2438; --ink:#071521;
-      --muted:#5b6d7e; --bg:#f5f8fb; --card:#fff; --line:rgba(12,36,56,.12);
-      --radius:16px; --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    }
-    html.theme-dark { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    html.theme-light { --bg:#f5f8fb; --card:#fff; --ink:#071521; --muted:#5b6d7e; --line:rgba(12,36,56,.12); --navy:#0c2438; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:var(--font); color:var(--ink); background:transparent; padding:8px; }
-    .card { max-width:480px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:0 8px 28px rgba(7,21,33,.08); }
-    .header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
-    .header img { width:40px; height:40px; border-radius:10px; }
-    h1 { margin:0; font-size:1.05rem; color:var(--navy); }
-    .sub { margin:2px 0 0; font-size:.78rem; color:var(--muted); }
-    .badge { display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--brand); background:rgba(26,127,191,.12); border-radius:999px; padding:.2rem .55rem; margin-bottom:10px; }
-    h2 { margin:12px 0 6px; font-size:.92rem; }
-    ul { margin:6px 0 10px; padding-left:1.15rem; }
-    li { font-size:.86rem; line-height:1.45; margin-bottom:4px; }
-    .callout { padding:10px 12px; border-radius:12px; background:rgba(26,127,191,.1); border:1px solid rgba(26,127,191,.25); font-size:.84rem; line-height:1.4; margin:10px 0; }
-    .checklist li::marker { content: "☐ "; }
-    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
-    .btn { font:inherit; font-weight:650; border-radius:999px; padding:.7rem 1.1rem; border:1.5px solid transparent; cursor:pointer; }
-    .btn.primary { background:linear-gradient(135deg,var(--brand-bright),var(--brand)); color:#fff; }
-    .btn.secondary { background:transparent; border-color:var(--line); color:var(--navy); }
-    .note { font-size:.75rem; color:var(--muted); margin-top:12px; line-height:1.4; }
-    .status { font-size:.8rem; color:var(--muted); margin-top:8px; min-height:1.1em; }
-    label { display:block; font-size:.72rem; font-weight:650; color:var(--muted); margin:8px 0 4px; text-transform:uppercase; }
-    input { width:100%; padding:.65rem .75rem; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
-    .panel { margin-top:8px; padding-top:4px; }
-    .is-hidden { display:none !important; }
-  </style>
+  <style>/*__ASSHIELD_THEME__*/</style>
 </head>
 <body>
   <div class="card" role="region" aria-label="Asshield coverage overview">
-    <div class="header">
-      <img src="LOGO_SRC" alt="" width="40" height="40" />
-      <div>
-        <h1 id="title">Coverage overview</h1>
-        <p class="sub" id="subtitle">General information</p>
+    <header class="hero">
+      <div class="hero-row">
+        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
+        <div>
+          <h1 id="title">Coverage overview</h1>
+          <p class="sub" id="subtitle">General information — not advice</p>
+        </div>
       </div>
-    </div>
-    <span class="badge">Coverage Q&amp;A</span>
-    <p class="callout" id="one-liner"></p>
-    <div id="topic-note" class="is-hidden callout"></div>
-    <h2>What it typically covers</h2>
-    <ul id="covers"></ul>
-    <h2>Common add-ons to discuss</h2>
-    <ul id="addons"></ul>
-    <h2>What to have ready</h2>
-    <ul class="checklist" id="ready"></ul>
-    <h2>General notes</h2>
-    <ul id="notes"></ul>
-    <div class="panel">
+      <span class="hero-badge">Coverage Q&amp;A</span>
+    </header>
+    <div class="body">
+      <div class="callout" style="display:flex;gap:12px;align-items:flex-start">
+        <span class="tile-icon" id="line-icon" aria-hidden="true"></span>
+        <div><strong id="one-liner"></strong></div>
+      </div>
+      <div id="topic-note" class="callout is-hidden"></div>
+      <h2>What it typically covers</h2>
+      <ul id="covers"></ul>
+      <h2>Common add-ons to discuss</h2>
+      <ul id="addons"></ul>
+      <h2>What to have ready</h2>
+      <ul class="checklist" id="ready"></ul>
+      <h2>General notes</h2>
+      <ul id="notes"></ul>
       <label for="state">State</label>
       <input id="state" maxlength="2" placeholder="KY" />
       <label for="zip">ZIP</label>
       <input id="zip" maxlength="10" placeholder="40505" />
+      <div class="actions">
+        <button type="button" class="primary" id="btn-quote">Start a quote request</button>
+        <button type="button" class="secondary" id="btn-options">See all lines</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="note" id="disclaimer"></p>
     </div>
-    <div class="actions">
-      <button type="button" class="btn primary" id="btn-quote">Start a quote request</button>
-      <button type="button" class="btn secondary" id="btn-options">See all lines</button>
-    </div>
-    <p class="status" id="status" role="status" aria-live="polite"></p>
-    <p class="note" id="disclaimer"></p>
   </div>
+  <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
   (function () {
     let state = { product: null, label: "" };
     function $(id){ return document.getElementById(id); }
-    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark") document.documentElement.classList.add("theme-dark"); if(t==="light") document.documentElement.classList.add("theme-light"); }
+    function applyTheme(t){ document.documentElement.classList.remove("theme-dark","theme-light"); if(t==="dark"||t==="light") document.documentElement.classList.add("theme-"+t); }
     function setStatus(m){ $("status").textContent = m||""; }
-    function list(el, items){ el.innerHTML = (items||[]).map(i => `<li>${escapeHtml(i)}</li>`).join(""); }
     function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-
+    function list(el, items, checklist){
+      if (checklist) {
+        el.innerHTML = (items||[]).map(i => `<li><span class="mark" aria-hidden="true"></span><span class="txt">${escapeHtml(i)}</span></li>`).join("");
+      } else {
+        el.innerHTML = (items||[]).map(i => `<li>${escapeHtml(i)}</li>`).join("");
+      }
+    }
     const pending = new Map(); let seq = 1;
     function callTool(name, args) {
       if (window.openai?.callTool) return window.openai.callTool(name, args);
       return new Promise((resolve, reject) => {
-        const id = seq++; pending.set(id, {resolve,reject});
+        const id = seq++; pending.set(id,{resolve,reject});
         window.parent.postMessage({ jsonrpc:"2.0", id, method:"tools/call", params:{ name, arguments: args||{} } }, "*");
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 20000);
       });
     }
-
     function fill(sc) {
       if (!sc || sc.found === false) {
         $("title").textContent = "Coverage overview";
@@ -99,18 +75,18 @@
         return;
       }
       state.product = sc.product; state.label = sc.label || sc.product;
-      $("title").textContent = (sc.icon ? sc.icon + " " : "") + (sc.label || sc.product);
+      $("title").textContent = sc.label || sc.product;
       $("subtitle").textContent = "General information — not advice";
       $("one-liner").textContent = sc.one_liner || "";
+      $("line-icon").innerHTML = window.asshieldIcon(sc.product);
       if (sc.topic_note) { $("topic-note").classList.remove("is-hidden"); $("topic-note").textContent = sc.topic_note; }
       else $("topic-note").classList.add("is-hidden");
       list($("covers"), sc.covers);
       list($("addons"), sc.common_add_ons);
-      list($("ready"), sc.what_to_have_ready);
+      list($("ready"), sc.what_to_have_ready, true);
       list($("notes"), sc.general_notes);
       $("disclaimer").textContent = sc.disclaimer || "";
     }
-
     window.addEventListener("message", (event) => {
       if (event.source !== window.parent) return;
       const message = event.data;
@@ -123,10 +99,8 @@
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive:true });
-
     function sync(){ try { if (window.openai?.toolOutput) fill(window.openai.toolOutput); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
     setInterval(sync, 800); sync();
-
     $("btn-quote").onclick = async () => {
       if (!state.product) return setStatus("No product selected.");
       const st = $("state").value.trim().toUpperCase();
@@ -140,11 +114,10 @@
       try { await callTool("show_insurance_options", {}); setStatus("Opening options…"); }
       catch(e){ setStatus(String(e?.message||e)); }
     };
-
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       fill({
-        found: true, product: "auto", label: "Auto", icon: "🚗",
+        found: true, product: "auto", label: "Auto",
         one_liner: "Protect your car and liability on the road.",
         covers: ["Liability for injuries or property damage you cause while driving (subject to policy terms)", "Optional collision and comprehensive when selected"],
         common_add_ons: ["Roadside assistance", "Rental reimbursement", "UM/UIM"],

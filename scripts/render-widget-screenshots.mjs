@@ -1,6 +1,6 @@
 /**
  * Headless render of Asshield widget HTML states with a mock window.openai.
- * Saves PNGs under /workspace/asshield-submission/screens/v2/
+ * Saves PNGs under /workspace/asshield-submission/screens/v3/
  */
 import { chromium } from "playwright";
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
@@ -10,14 +10,19 @@ import { createServer } from "node:http";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
-const outDir = "/workspace/asshield-submission/screens/v2";
+const outDir = "/workspace/asshield-submission/screens/v3";
 mkdirSync(outDir, { recursive: true });
 
 const logo = readFileSync(join(root, "chatgpt-plugin/asshield-insurance/assets/icon.png"));
 const logoUri = `data:image/png;base64,${logo.toString("base64")}`;
 
 function load(name) {
-  return readFileSync(join(root, "public", name), "utf8").replaceAll("LOGO_SRC", logoUri);
+  const theme = readFileSync(join(root, "public", "asshield-widget-theme.css"), "utf8");
+  const icons = readFileSync(join(root, "public", "asshield-line-icons.js"), "utf8");
+  return readFileSync(join(root, "public", name), "utf8")
+    .replaceAll("LOGO_SRC", logoUri)
+    .replace("/*__ASSHIELD_THEME__*/", theme)
+    .replace("/*__ASSHIELD_ICONS__*/", icons);
 }
 
 const files = {
@@ -76,7 +81,7 @@ for (const s of shots) {
 
 await browser.close();
 server.close();
-writeFileSync(join(outDir, "README.md"), `# Asshield widget screenshots v2
+writeFileSync(join(outDir, "README.md"), `# Asshield widget screenshots v3
 
 Generated headlessly with Playwright + mock window.openai.
 

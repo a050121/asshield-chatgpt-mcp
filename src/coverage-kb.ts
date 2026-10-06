@@ -105,6 +105,25 @@ function kbHas(id: string): boolean {
   return Boolean(loadKb().lines[id]);
 }
 
+export const PRODUCT_LABELS: Record<string, string> = {
+  auto: "Auto",
+  home: "Home",
+  auto_home: "Auto + Home",
+  renters: "Renters",
+  commercial_auto: "Commercial Auto",
+  commercial_gl: "Commercial GL",
+  workers_comp: "Workers' Comp",
+  boat: "Boat",
+  golf_cart: "Golf Cart",
+  motorcycle: "Motorcycle",
+  trucking: "Trucking"
+};
+
+export function productLabel(product: string | undefined | null): string {
+  if (!product) return "Quote";
+  return PRODUCT_LABELS[product] || product.replace(/_/g, " ");
+}
+
 export function checklistFor(product: string): string[] {
   return getLineKb(product)?.what_to_have_ready ?? [];
 }

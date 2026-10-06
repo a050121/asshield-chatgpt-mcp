@@ -4,71 +4,47 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Asshield Agent Contact</title>
+  <style>/*__ASSHIELD_THEME__*/</style>
   <style>
-    :root {
-      --brand: #1A7FBF; --brand-bright: #1A9FE0; --navy: #0c2438; --ink: #071521;
-      --muted: #5b6d7e; --bg: #f5f8fb; --card: #fff; --line: rgba(12,36,56,.12);
-      --radius: 16px; --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    }
-    html.theme-dark { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    html.theme-light { --bg:#f5f8fb; --card:#fff; --ink:#071521; --muted:#5b6d7e; --line:rgba(12,36,56,.12); --navy:#0c2438; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:var(--font); color:var(--ink); padding:8px; background:transparent; }
-    .card { max-width:440px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:0 8px 28px rgba(7,21,33,.08); }
-    .header { display:flex; gap:12px; align-items:center; margin-bottom:12px; }
-    .header img { width:44px; height:44px; border-radius:12px; }
-    h1 { margin:0; font-size:1.05rem; color:var(--navy); }
-    .sub { margin:2px 0 0; font-size:.78rem; color:var(--muted); }
-    .badge { display:inline-block; font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--brand); background:rgba(26,127,191,.12); border-radius:999px; padding:.2rem .55rem; margin-bottom:10px; }
-    .row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-size:.88rem; }
-    .row .k { color:var(--muted); }
-    .row .v { font-weight:600; text-align:right; word-break:break-word; }
-    a { color:var(--brand); font-weight:650; text-decoration:none; }
-    a:hover { text-decoration:underline; }
-    .states { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
-    .chip { font-size:.72rem; font-weight:700; padding:.25rem .45rem; border-radius:8px; background:var(--bg); border:1px solid var(--line); }
-    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-    .btn { display:inline-flex; align-items:center; justify-content:center; font:inherit; font-weight:650; border-radius:999px; padding:.7rem 1.1rem; border:1.5px solid transparent; }
-    .btn.primary { background:linear-gradient(135deg,var(--brand-bright),var(--brand)); color:#fff; }
-    .btn.secondary { background:transparent; border-color:var(--line); color:var(--navy); }
-    .note { font-size:.78rem; color:var(--muted); margin-top:12px; line-height:1.4; }
-    .is-hidden { display:none !important; }
+    .row { display:flex; justify-content:space-between; gap:12px; padding:11px 0; border-bottom:1px solid var(--line); font-size:.9rem; }
+    .row .k { color:var(--muted); font-weight:600; }
+    .row .v { font-weight:700; text-align:right; word-break:break-word; color:var(--navy); }
   </style>
 </head>
 <body>
   <div class="card" role="region" aria-label="Asshield agent contact card">
-    <div class="header">
-      <img src="LOGO_SRC" alt="Asshield Insurance" width="44" height="44" />
-      <div>
-        <h1 id="agency">Asshield Insurance</h1>
-        <p class="sub">Independent insurance agency</p>
+    <header class="hero">
+      <div class="hero-row">
+        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
+        <div>
+          <h1 id="agency">Asshield Insurance</h1>
+          <p class="sub">Independent insurance agency</p>
+        </div>
       </div>
+      <span class="hero-badge">Agent contact</span>
+    </header>
+    <div class="body">
+      <div class="row"><span class="k">Agent</span><span class="v" id="name">Joshua Williams</span></div>
+      <div class="row"><span class="k">Phone</span><span class="v"><a id="phone" href="tel:+18593680162">859-368-0162</a></span></div>
+      <div class="row"><span class="k">Email</span><span class="v"><a id="email" href="mailto:joshuawilliams@asshield.com">joshuawilliams@asshield.com</a></span></div>
+      <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Ste 103</span></div>
+      <div class="row is-hidden" id="license-row"><span class="k">License #</span><span class="v" id="license"></span></div>
+      <div class="row"><span class="k">Website</span><span class="v"><a id="website" href="https://www.asshield.com" target="_blank" rel="noopener noreferrer">asshield.com</a></span></div>
+      <h3 style="margin-top:14px">Licensed states</h3>
+      <div class="chip-row" id="states"></div>
+      <div class="actions">
+        <a class="btn primary" id="call-btn" href="tel:+18593680162">Call office</a>
+        <a class="btn secondary" id="verify" href="https://content.naic.org/state-insurance-departments" target="_blank" rel="noopener noreferrer">Verify license</a>
+        <a class="btn secondary is-hidden" id="booking" href="#" target="_blank" rel="noopener noreferrer">Book appointment</a>
+      </div>
+      <p class="note">This card shares Asshield contact information only. It does not bind coverage or confirm a policy is in effect.</p>
     </div>
-    <span class="badge">Agent contact</span>
-    <div class="row"><span class="k">Agent</span><span class="v" id="name">Joshua Williams</span></div>
-    <div class="row"><span class="k">Phone</span><span class="v"><a id="phone" href="tel:+18593680162">859-368-0162</a></span></div>
-    <div class="row"><span class="k">Email</span><span class="v"><a id="email" href="mailto:joshuawilliams@asshield.com">joshuawilliams@asshield.com</a></span></div>
-    <div class="row"><span class="k">Office</span><span class="v" id="address">2240 Executive Dr Ste 103</span></div>
-    <div class="row is-hidden" id="license-row"><span class="k">License #</span><span class="v" id="license"></span></div>
-    <div class="row"><span class="k">Website</span><span class="v"><a id="website" href="https://www.asshield.com" target="_blank" rel="noopener noreferrer">asshield.com</a></span></div>
-    <p class="sub" style="margin-top:12px">Licensed states</p>
-    <div class="states" id="states"></div>
-    <div class="actions">
-      <a class="btn primary" id="call-btn" href="tel:+18593680162">Call office</a>
-      <a class="btn secondary" id="verify" href="https://content.naic.org/state-insurance-departments" target="_blank" rel="noopener noreferrer">Verify license</a>
-      <a class="btn secondary is-hidden" id="booking" href="#" target="_blank" rel="noopener noreferrer">Book appointment</a>
-    </div>
-    <p class="note">This card shares Asshield contact information only. It does not bind coverage or confirm a policy is in effect.</p>
   </div>
   <script>
   (function () {
     function applyTheme(theme) {
-      document.documentElement.classList.remove("theme-dark", "theme-light");
-      if (theme === "dark") document.documentElement.classList.add("theme-dark");
-      if (theme === "light") document.documentElement.classList.add("theme-light");
+      document.documentElement.classList.remove("theme-dark","theme-light");
+      if (theme === "dark" || theme === "light") document.documentElement.classList.add("theme-" + theme);
     }
     function fill(data) {
       if (!data) return;
@@ -96,13 +72,8 @@
         document.getElementById("license").textContent = "";
       }
       const b = document.getElementById("booking");
-      if (a.booking_url) {
-        b.classList.remove("is-hidden");
-        b.href = a.booking_url;
-      } else {
-        b.classList.add("is-hidden");
-        b.removeAttribute("href");
-      }
+      if (a.booking_url) { b.classList.remove("is-hidden"); b.href = a.booking_url; }
+      else { b.classList.add("is-hidden"); b.removeAttribute("href"); }
       if (a.verify_license_url) document.getElementById("verify").href = a.verify_license_url;
       const states = a.licensed_states || [];
       document.getElementById("states").innerHTML = states.map((s) => `<span class="chip">${s}</span>`).join("");
@@ -111,10 +82,7 @@
       if (event.source !== window.parent) return;
       const message = event.data;
       if (!message || message.jsonrpc !== "2.0") return;
-      if (message.method === "ui/notifications/tool-result") {
-        const sc = message.params?.structuredContent || message.params;
-        fill(sc);
-      }
+      if (message.method === "ui/notifications/tool-result") fill(message.params?.structuredContent || message.params);
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive: true });
@@ -124,17 +92,12 @@
         if (window.openai?.theme) applyTheme(window.openai.theme);
       } catch (_) {}
     }
-    setInterval(sync, 800);
-    sync();
+    setInterval(sync, 800); sync();
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       fill({
-        agency: "Asshield Insurance",
-        name: "Joshua Williams",
-        phone: "859-368-0162",
-        phone_tel: "+18593680162",
-        email: "joshuawilliams@asshield.com",
-        address: "2240 Executive Dr Ste 103",
+        agency: "Asshield Insurance", name: "Joshua Williams", phone: "859-368-0162", phone_tel: "+18593680162",
+        email: "joshuawilliams@asshield.com", address: "2240 Executive Dr Ste 103",
         website: "https://www.asshield.com",
         licensed_states: ["AL","AR","FL","GA","IN","KY","NC","OH","PA","SC","TN","TX"],
         verify_license_url: "https://content.naic.org/state-insurance-departments",

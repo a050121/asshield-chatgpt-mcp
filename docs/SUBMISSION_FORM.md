@@ -252,7 +252,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 ## 6. Screenshots / demo video
 
-Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/v2/`). If the portal does not request screenshots, omit them.
+Screenshots: This plugin includes Apps SDK custom UI widgets (options picker, coverage Q&A, guided quote stepper, confirmation timeline, agent contact). If the submission portal requests screenshots, provide screenshots of those widgets (see `/workspace/asshield-submission/screens/v3/`). If the portal does not request screenshots, omit them.
 
 Optional internal walkthrough checklist (not required in the ZIP):
 

@@ -4,87 +4,119 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Asshield Quote</title>
-  <style>
-    :root {
-      --brand:#1A7FBF; --brand-bright:#1A9FE0; --navy:#0c2438; --ink:#071521;
-      --muted:#5b6d7e; --bg:#f5f8fb; --card:#fff; --line:rgba(12,36,56,.12);
-      --ok:#1a6b4a; --danger:#9b2c2c; --radius:16px;
-      --font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    }
-    html.theme-dark { --bg:#0b1520; --card:#122233; --ink:#f5f8fb; --muted:#a8b6c4; --line:rgba(255,255,255,.14); --navy:#e8f3fa; }
-    html.theme-light { --bg:#f5f8fb; --card:#fff; --ink:#071521; --muted:#5b6d7e; --line:rgba(12,36,56,.12); --navy:#0c2438; }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:var(--font); color:var(--ink); background:transparent; padding:8px; }
-    .card { max-width:480px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px; box-shadow:0 8px 28px rgba(7,21,33,.08); }
-    .header { display:flex; gap:12px; align-items:center; margin-bottom:10px; }
-    .header img { width:40px; height:40px; border-radius:10px; }
-    h1 { margin:0; font-size:1.05rem; color:var(--navy); }
-    .sub { margin:2px 0 0; font-size:.78rem; color:var(--muted); }
-    .badge { display:inline-block; font-size:.68rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--brand); background:rgba(26,127,191,.12); border-radius:999px; padding:.2rem .55rem; margin-bottom:8px; }
-    .stepper { display:flex; gap:4px; flex-wrap:wrap; margin:8px 0 14px; }
-    .step-pill { font-size:.65rem; font-weight:700; padding:.25rem .45rem; border-radius:999px; border:1px solid var(--line); color:var(--muted); background:transparent; cursor:pointer; }
-    .step-pill.done { color:var(--ok); border-color:rgba(26,107,74,.35); background:rgba(26,107,74,.08); }
-    .step-pill.active { color:#fff; border-color:var(--brand); background:var(--brand); }
-    .step-pill:focus-visible { outline:2px solid var(--brand); outline-offset:1px; }
-    h2 { margin:0 0 8px; font-size:.98rem; }
-    p, li { font-size:.86rem; line-height:1.45; }
-    .muted { color:var(--muted); }
-    .callout { padding:10px 12px; border-radius:12px; background:rgba(26,127,191,.1); border:1px solid rgba(26,127,191,.25); font-size:.84rem; margin:8px 0 12px; }
-    .panel { animation: fade .22s ease; }
-    @keyframes fade { from { opacity:0; transform:translateY(4px);} to { opacity:1; transform:none;} }
-    label { display:block; font-size:.72rem; font-weight:650; color:var(--muted); margin:8px 0 4px; text-transform:uppercase; letter-spacing:.03em; }
-    input, select, textarea { width:100%; padding:.65rem .75rem; border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink); font:inherit; }
-    input:invalid:not(:placeholder-shown) { border-color:var(--danger); }
-    input:focus, select:focus, textarea:focus { outline:2px solid var(--brand); outline-offset:1px; }
-    .row2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    @media (max-width:380px){ .row2 { grid-template-columns:1fr; } }
-    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
-    button, .btn {
-      font:inherit; font-weight:650; border-radius:999px; padding:.7rem 1.1rem;
-      border:1.5px solid transparent; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;
-    }
-    button.primary, .btn.primary { background:linear-gradient(135deg,var(--brand-bright),var(--brand)); color:#fff; }
-    button.secondary, .btn.secondary { background:transparent; border-color:var(--line); color:var(--navy); }
-    button:disabled { opacity:.55; cursor:not-allowed; }
-    .status { font-size:.8rem; color:var(--muted); margin-top:10px; min-height:1.2em; }
-    .err { color:var(--danger); font-size:.8rem; margin-top:4px; }
-    .review dt { font-size:.72rem; color:var(--muted); text-transform:uppercase; margin-top:8px; }
-    .review dd { margin:2px 0 0; font-weight:650; font-size:.88rem; }
-    .timeline { list-style:none; padding:0; margin:12px 0; }
-    .timeline li { display:flex; gap:10px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--line); font-size:.86rem; }
-    .dot { width:12px; height:12px; border-radius:50%; margin-top:4px; background:var(--line); flex-shrink:0; }
-    .timeline li.done .dot { background:var(--ok); }
-    .timeline li.current .dot { background:var(--brand); box-shadow:0 0 0 3px rgba(26,127,191,.25); }
-    .checklist { list-style:none; padding:0; }
-    .checklist li { padding:6px 0; border-bottom:1px solid var(--line); font-size:.84rem; }
-    .checklist li::before { content:"☐ "; color:var(--brand); font-weight:700; }
-    .is-hidden { display:none !important; }
-    a { color:var(--brand); font-weight:650; }
-  </style>
+  <style>/*__ASSHIELD_THEME__*/</style>
 </head>
 <body>
   <div class="card" role="region" aria-label="Asshield quote request">
-    <div class="header">
-      <img src="LOGO_SRC" alt="" width="40" height="40" />
-      <div>
-        <h1>Asshield Insurance</h1>
-        <p class="sub" id="hdr-sub">Quote request · licensed agency</p>
+    <header class="hero">
+      <div class="hero-row">
+        <img class="hero-logo" src="LOGO_SRC" alt="" width="48" height="48" />
+        <div>
+          <h1>Asshield Insurance</h1>
+          <p class="sub" id="hdr-sub">Quote request · licensed agency</p>
+        </div>
       </div>
+      <span class="hero-badge" id="phase-badge">Quote</span>
+    </header>
+    <div class="body">
+      <div class="progress-wrap is-hidden" id="progress-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="muted" style="font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase" id="progress-label">Step</span>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-labelledby="progress-label">
+          <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+      <nav class="stepper is-hidden" id="stepper" aria-label="Quote steps"></nav>
+      <div id="panels"></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
     </div>
-    <span class="badge" id="phase-badge">Quote</span>
-    <nav class="stepper" id="stepper" aria-label="Quote steps"></nav>
-    <div id="panels"></div>
-    <p class="status" id="status" role="status" aria-live="polite"></p>
   </div>
+  <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
-  (function () {
+(function () {
     const DRIVER_VEHICLE = new Set(["auto","auto_home","motorcycle","commercial_auto","trucking"]);
     const COMMERCIAL = new Set(["commercial_auto","commercial_gl","workers_comp","trucking"]);
     const LINE_DETAIL = new Set(["commercial_gl","workers_comp","boat","golf_cart"]);
     const CROSS_DEFAULT = { auto:["home","auto_home"], home:["auto","auto_home"], renters:["auto"], motorcycle:["auto"], boat:["home","auto"], golf_cart:["home"], commercial_auto:["commercial_gl"], commercial_gl:["workers_comp"], workers_comp:["commercial_gl"], trucking:["commercial_gl"], auto_home:["renters"] };
+    const PRODUCT_LABELS = {
+      auto:"Auto", home:"Home", auto_home:"Auto + Home", renters:"Renters",
+      commercial_auto:"Commercial Auto", commercial_gl:"Commercial GL", workers_comp:"Workers' Comp",
+      boat:"Boat", golf_cart:"Golf Cart", motorcycle:"Motorcycle", trucking:"Trucking"
+    };
+    function productLabel(id) {
+      if (!id) return "Quote";
+      return PRODUCT_LABELS[id] || String(id).replace(/_/g, " ");
+    }
+    function missingHas(key) {
+      return (S.missing || []).includes(key);
+    }
+    /** Heuristic: is a checklist tip already satisfied by collected quote state? */
+    function checklistItemDone(text) {
+      const t = String(text || "").toLowerCase();
+      const f = S.fields || {};
+      if (/state and zip|garaged|property state|rental state|business address state/.test(t)) {
+        return Boolean(S.state && S.zip);
+      }
+      if (/names? and dates? of birth|\bdrivers?\b|\briders?\b/.test(t)) {
+        if ((f.drivers && f.drivers.length) || f.driver_name) return true;
+        return !missingHas("at_least_one_driver");
+      }
+      if (/year, make, and model|year\/make\/model|vehicle|motorcycle|power unit|unit counts|boat|golf cart|cart/.test(t) && !/driver/.test(t)) {
+        if ((f.vehicles && f.vehicles.length) || f.vehicle) return true;
+        if (f.boat_year || f.boat_make || f.cart_year || f.cart_make) return true;
+        if (f.commercial_vehicle_summary) return true;
+        return !missingHas("at_least_one_vehicle") && !missingHas("commercial_vehicles") &&
+          !missingHas("boat_year_make") && !missingHas("cart_year_make");
+      }
+      if (/current carrier|current home carrier|current renters|current boat|current commercial|premium/.test(t)) {
+        return Boolean(f.carrier) || !missingHas("current_policy_or_coverage_preferences");
+      }
+      if (/preferred contact|contact phone|contact info|email/.test(t) && !/carrier/.test(t)) {
+        return Boolean(f.first_name && (f.email || f.phone)) || !missingHas("customer_contact");
+      }
+      if (/business name|type of operations|type of work/.test(t)) {
+        return Boolean(f.business_name) || !missingHas("business_name");
+      }
+      if (/payroll|employees by job/.test(t)) {
+        return Boolean(f.annual_payroll_estimate || f.employees_by_job_type) ||
+          (!missingHas("annual_payroll_estimate") && !missingHas("employees_by_job_type"));
+      }
+      if (/operations description|desired liability/.test(t)) {
+        return Boolean(f.operations_description) || !missingHas("operations_description");
+      }
+      if (/radius|cargo type/.test(t)) {
+        return Boolean(f.radius_of_operation && f.cargo_type) ||
+          (!missingHas("radius_of_operation") && !missingHas("cargo_type"));
+      }
+      if (/dot\/mc|dot\/mc number/.test(t)) {
+        return true; // optional
+      }
+      if (/year built|construction|contents value|property location/.test(t)) {
+        return Boolean(f.property_notes);
+      }
+      if (/revenue|employee count/.test(t)) {
+        return f.number_of_employees != null || Boolean(f.annual_revenue_range);
+      }
+      return false;
+    }
+    function renderChecklist(items, opts) {
+      opts = opts || {};
+      const onlyRemaining = !!opts.onlyRemaining;
+      const list = (items || []).map((c) => {
+        const text = typeof c === "string" ? c : (c.text || c.label || "");
+        const done = checklistItemDone(text);
+        return { text, done };
+      }).filter((c) => c.text && (!onlyRemaining || !c.done));
+      if (!list.length) {
+        return onlyRemaining
+          ? `<p class="muted">You have the basics covered for this request.</p>`
+          : "";
+      }
+      return `<ul class="checklist">${list.map((c) =>
+        `<li class="${c.done ? "done" : ""}"><span class="mark" aria-hidden="true">${c.done ? "✓" : ""}</span><span class="txt">${escapeHtml(c.text)}</span></li>`
+      ).join("")}</ul>`;
+    }
 
     let S = {
       phase: "consent", // consent | form | review | confirmation | unsupported
@@ -138,11 +170,18 @@
 
     function renderStepper() {
       const nav = $("stepper");
+      const wrap = $("progress-wrap");
       if (S.phase === "consent" || S.phase === "confirmation" || S.phase === "unsupported") {
-        nav.innerHTML = ""; nav.classList.add("is-hidden"); return;
+        nav.innerHTML = ""; nav.classList.add("is-hidden");
+        if (wrap) wrap.classList.add("is-hidden");
+        return;
       }
       nav.classList.remove("is-hidden");
+      if (wrap) wrap.classList.remove("is-hidden");
       const steps = stepsFor(S.product);
+      const pct = Math.round(((S.step + 1) / steps.length) * 100);
+      if ($("progress-fill")) $("progress-fill").style.width = pct + "%";
+      if ($("progress-label")) $("progress-label").textContent = `Step ${S.step + 1} of ${steps.length}`;
       nav.innerHTML = steps.map((s,i) => {
         const cls = i < S.step ? "done" : i === S.step ? "active" : "";
         return `<button type="button" class="step-pill ${cls}" data-i="${i}" aria-current="${i===S.step?"step":"false"}">${escapeHtml(s.label)}</button>`;
@@ -158,8 +197,12 @@
     function render() {
       renderStepper();
       const root = $("panels");
-      const productLabel = (S.product||"quote").replace(/_/g," ");
-      $("hdr-sub").textContent = S.product ? (productLabel + " · " + (S.state||"") + " " + (S.zip||"")) : "Quote request · licensed agency";
+      const loc = [S.state, S.zip].filter(Boolean).join(" ");
+      $("hdr-sub").textContent = S.product
+        ? (productLabel(S.product) + (loc ? " · " + loc : ""))
+        : "Quote request · licensed agency";
+      const badge = $("phase-badge");
+      if (badge) badge.className = "hero-badge";
 
       if (S.phase === "unsupported") {
         $("phase-badge").textContent = "Unavailable";
@@ -175,7 +218,7 @@
           <p>Asshield will use the details you share to prepare an insurance quote request for a licensed agent.</p>
           <div class="callout"><strong>What’s shared with Asshield:</strong> product, location, contact preferences, and the intake fields you provide. See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.</div>
           <p class="muted">ChatGPT’s own answers and explanations are generated by ChatGPT and are <strong>not</strong> Asshield’s advice or a quote.</p>
-          ${S.checklist?.length ? `<h2>What to have ready</h2><ul class="checklist">${S.checklist.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>` : ""}
+          ${S.checklist?.length ? `<h2>What to have ready</h2>${renderChecklist(S.checklist)}` : ""}
           <div class="actions"><button type="button" class="primary" id="btn-begin">I understand — continue</button></div>
         </div>`;
         $("btn-begin").onclick = () => { S.phase = "form"; S.step = 0; render(); setStatus("Continue the guided form — saves as you go."); };
@@ -184,11 +227,20 @@
 
       if (S.phase === "confirmation") {
         $("phase-badge").textContent = "Submitted";
+        $("phase-badge").className = "hero-badge";
         const ref = S.quote_id || "—";
         const cross = (S.cross_sell||[]).slice(0,3);
         root.innerHTML = `<div class="panel">
-          <h2>Request received</h2>
-          <p>Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you. <strong>No coverage is bound.</strong></p>
+          <div class="success-hero">
+            <div class="success-ring" aria-hidden="true">
+              <svg viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="20" stroke="#1a6b4a" stroke-width="2.5" opacity=".35"/>
+                <path class="check-draw" d="M14 24.5 21 31.5 34 17" stroke="#1a6b4a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2>Request received</h2>
+          </div>
+          <p style="text-align:center">Reference <strong>${escapeHtml(ref)}</strong>. An Asshield agent will contact you.<br/><strong>No coverage is bound.</strong></p>
           <ol class="timeline" aria-label="What happens next">
             <li class="done"><span class="dot" aria-hidden="true"></span><div><strong>Received</strong><div class="muted">Your quote request is in Asshield’s queue.</div></div></li>
             <li class="current"><span class="dot" aria-hidden="true"></span><div><strong>Agent review</strong><div class="muted">A licensed agent reviews your details.</div></div></li>
@@ -288,7 +340,7 @@
         // home / renters — checklist + optional notes into policy later
         return `<div class="panel"><h2>${S.product==="renters"?"Rental":"Property"} notes</h2>
           <p class="muted">Share what you can; an agent will confirm details. No SSN or payment info.</p>
-          <ul class="checklist">${(S.checklist||[]).map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>
+          ${renderChecklist(S.checklist)}
           <label for="property_notes">Notes for the agent (optional)</label><textarea id="property_notes" rows="3">${escapeHtml(f.property_notes||"")}</textarea>
           ${navButtons(false)}</div>`;
       }
@@ -314,17 +366,89 @@
       </div>`;
     }
 
+    function dlRows(rows) {
+      const filtered = rows.filter((r) => r[1] != null && String(r[1]).trim() !== "");
+      if (!filtered.length) return `<p class="muted">None yet</p>`;
+      return `<dl class="review">${filtered.map(([k,v]) =>
+        `<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`
+      ).join("")}</dl>`;
+    }
     function renderReview() {
-      const f = S.fields;
-      const rows = [
-        ["Product", S.product], ["State/ZIP", `${S.state||""} ${S.zip||""}`],
-        ["Name", `${f.first_name||""} ${f.last_name||""}`], ["Email", f.email], ["Phone", f.phone],
-        ["Business", f.business_name], ["Missing", (S.missing||[]).join(", ")||"None"]
-      ].filter(r => r[1]);
+      const f = S.fields || {};
+      const drivers = f.drivers || (f.driver_name ? [{ name: f.driver_name, dob: f.driver_dob, relationship: f.driver_rel }] : []);
+      const vehicles = f.vehicles || (f.vehicle ? [{ summary: f.vehicle }] : []);
+      const missingHuman = (S.missing || []).map((m) => m.replace(/_/g, " ")).join(", ") || "None";
+
+      let sections = "";
+      sections += `<div class="review-section"><h3>Quote</h3>${dlRows([
+        ["Product", productLabel(S.product)],
+        ["State / ZIP", [S.state, S.zip].filter(Boolean).join(" ")],
+        ["Reference", S.quote_id]
+      ])}</div>`;
+      sections += `<div class="review-section"><h3>Contact</h3>${dlRows([
+        ["Name", [f.first_name, f.last_name].filter(Boolean).join(" ")],
+        ["Email", f.email],
+        ["Phone", f.phone]
+      ])}</div>`;
+      if (COMMERCIAL.has(S.product) || f.business_name) {
+        sections += `<div class="review-section"><h3>Business</h3>${dlRows([
+          ["Business name", f.business_name],
+          ["Type / description", f.business_type_or_description],
+          ["Business address", [f.business_address_state, f.business_address_zip].filter(Boolean).join(" ")],
+          ["Years in business", f.years_in_business],
+          ["Employees", f.number_of_employees],
+          ["Revenue range", f.annual_revenue_range],
+          ["Radius", f.radius_of_operation],
+          ["Cargo", f.cargo_type],
+          ["Power units", f.power_unit_count],
+          ["Trailers", f.trailer_count],
+          ["DOT/MC", f.dot_mc_number],
+          ["Vehicle summary", f.commercial_vehicle_summary]
+        ])}</div>`;
+      }
+      if (DRIVER_VEHICLE.has(S.product) || drivers.length) {
+        const driverText = drivers.length
+          ? drivers.map((d) => [d.name || [d.first_name, d.last_name].filter(Boolean).join(" "), d.dob || d.date_of_birth, d.relationship].filter(Boolean).join(" · ")).join("; ")
+          : "";
+        sections += `<div class="review-section"><h3>Drivers / riders</h3>${dlRows([["Drivers", driverText || "Not added yet"]])}</div>`;
+      }
+      if (DRIVER_VEHICLE.has(S.product) || vehicles.length) {
+        const vehicleText = vehicles.length
+          ? vehicles.map((v) => v.summary || [v.year, v.make, v.model, v.ownership].filter(Boolean).join(" ")).join("; ")
+          : "";
+        sections += `<div class="review-section"><h3>Vehicles / units</h3>${dlRows([["Vehicles", vehicleText || "Not added yet"]])}</div>`;
+      }
+      if (LINE_DETAIL.has(S.product) || f.boat_make || f.cart_make || f.operations_description || f.annual_payroll_estimate || f.property_notes) {
+        sections += `<div class="review-section"><h3>Line details</h3>${dlRows([
+          ["Operations", f.operations_description],
+          ["Desired limits", f.desired_limits],
+          ["Payroll estimate", f.annual_payroll_estimate],
+          ["Employees by job type", f.employees_by_job_type],
+          ["Boat", [f.boat_year, f.boat_make, f.boat_length_ft != null ? f.boat_length_ft + " ft" : "", f.motor_hp != null ? f.motor_hp + " HP" : "", f.boat_storage_or_usage].filter(Boolean).join(" · ")],
+          ["Golf cart", [f.cart_year, f.cart_make, f.street_legal == null ? "" : (f.street_legal ? "street-legal" : "not street-legal"), f.cart_usage].filter(Boolean).join(" · ")],
+          ["Property notes", f.property_notes]
+        ])}</div>`;
+      }
+      sections += `<div class="review-section"><h3>Current policy</h3>${dlRows([
+        ["Carrier", f.carrier],
+        ["Premium", f.current_premium],
+        ["Frequency", f.premium_frequency],
+        ["BI limit preference", f.bodily_injury_limit]
+      ])}</div>`;
+      sections += `<div class="review-section"><h3>Consent</h3>${dlRows([
+        ["Quote authorization", f.auth_ok ? "Accepted" : (missingHas("quote_authorization") ? "Still needed" : "Recorded")]
+      ])}</div>`;
+
+      const remaining = renderChecklist(S.checklist, { onlyRemaining: true });
+      const remainingBlock = (S.checklist && S.checklist.length)
+        ? `<div class="review-section"><h3>Still needed / helpful</h3>${remaining}</div>`
+        : "";
+
       return `<div class="panel"><h2>Review & submit</h2>
         <p class="muted">Confirm everything looks right. Submitting sends a quote request only — <strong>no coverage is bound</strong>.</p>
-        <dl class="review">${rows.map(([k,v])=>`<dt>${escapeHtml(k)}</dt><dd>${escapeHtml(v)}</dd>`).join("")}</dl>
-        ${S.checklist?.length?`<h2>Still helpful to have</h2><ul class="checklist">${S.checklist.map(c=>`<li>${escapeHtml(c)}</li>`).join("")}</ul>`:""}
+        ${sections}
+        <div class="review-section"><h3>Completeness</h3>${dlRows([["Outstanding fields", missingHuman]])}</div>
+        ${remainingBlock}
         <div class="actions">
           <button type="button" class="secondary" id="btn-back">Edit</button>
           <button type="button" class="primary" id="btn-submit">Submit quote request</button>
@@ -380,6 +504,8 @@
             const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
             const rel=val("d_rel"); if(rel) args.relationship=rel;
             await callTool("add_driver", args);
+            S.fields.drivers = S.fields.drivers || [];
+            S.fields.drivers.push({ first_name, last_name, name: first_name+" "+last_name, date_of_birth: args.date_of_birth, relationship: args.relationship });
             S.fields.driver_name = first_name+" "+last_name;
           } else if (cur.id === "vehicles") {
             const year=Number(val("v_year")), make=val("v_make");
@@ -388,6 +514,8 @@
             const model=val("v_model"); if(model) args.model=model;
             const own=val("v_own"); if(own) args.ownership=own;
             await callTool("add_vehicle", args);
+            S.fields.vehicles = S.fields.vehicles || [];
+            S.fields.vehicles.push({ year, make, model: args.model, ownership: args.ownership, summary: [year, make, args.model].filter(Boolean).join(" ") });
             S.fields.vehicle = year+" "+make;
           } else if (cur.id === "details") {
             if (S.product==="home"||S.product==="renters") {
@@ -450,6 +578,7 @@
       if (sc.supported === false) { S.phase="unsupported"; S.message=sc.message||""; S.supported=false; render(); return; }
       if (w.quote_id || sc.quote_id || sc.quote?.id) S.quote_id = w.quote_id || sc.quote_id || sc.quote.id;
       if (w.product || sc.product || sc.quote?.product) S.product = w.product || sc.product || sc.quote.product;
+      if (w.product_label) S.product_label = w.product_label;
       if (w.state || sc.state || sc.quote?.state) S.state = w.state || sc.state || sc.quote.state;
       if (w.zip || sc.zip || sc.quote?.zip) S.zip = w.zip || sc.zip || sc.quote.zip;
       if (Array.isArray(w.missing) || Array.isArray(sc.missing)) S.missing = w.missing || sc.missing;
@@ -463,7 +592,7 @@
       else if (w.phase === "consent") S.phase = "consent";
       else if (w.phase === "progress" || sc.ready_to_submit != null) { if (S.phase==="consent") {/* keep until user continues */} else S.phase="form"; }
       if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product]) {
-        S.cross_sell = CROSS_DEFAULT[S.product].map(id => ({ id, label: id.replace(/_/g," ") }));
+        S.cross_sell = CROSS_DEFAULT[S.product].map(id => ({ id, label: productLabel(id) }));
       }
       render();
     }
@@ -487,16 +616,29 @@
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
       S.quote_id = "9936e32f-demo-quote"; S.product="auto"; S.state="KY"; S.zip="40505";
-      S.checklist = ["State and ZIP","Driver names and DOB","Year/make/model","Current carrier if any"];
-      S.fields = { first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", carrier:"Example Mutual", auth_ok:true };
+      S.checklist = [
+        "State and ZIP where the vehicles are principally garaged",
+        "Names and dates of birth for drivers (no driver's license number needed here)",
+        "Year, make, and model of each vehicle",
+        "Current carrier and approximate premium if you have a policy",
+        "Preferred contact phone or email"
+      ];
+      S.fields = {
+        first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", phone:"859-555-0100",
+        drivers:[{ name:"Jordan Test", date_of_birth:"1990-04-12", relationship:"self" }],
+        vehicles:[{ year:2020, make:"Toyota", model:"Camry", ownership:"owned", summary:"2020 Toyota Camry" }],
+        carrier:"Example Mutual", current_premium:"$145/mo", premium_frequency:"monthly",
+        bodily_injury_limit:"100/300", auth_ok:true
+      };
       S.callback_sla = "An agent will reach out soon";
-      S.cross_sell = [{id:"home",label:"Home"},{id:"auto_home",label:"Auto + Home"}];
+      S.cross_sell = [{id:"home",label:productLabel("home")},{id:"auto_home",label:productLabel("auto_home")}];
+      S.missing = [];
       if (mock==="consent") { S.phase="consent"; }
       else if (mock==="contact") { S.phase="form"; S.step=0; }
       else if (mock==="drivers") { S.phase="form"; S.step=1; }
       else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; S.missing=[]; }
       else if (mock==="confirmation") { S.phase="confirmation"; }
-      else if (mock==="progress") { S.phase="form"; S.step=0; S.missing=["quote_authorization"]; }
+      else if (mock==="progress") { S.phase="form"; S.step=0; S.missing=["quote_authorization"]; S.fields.auth_ok=false; }
       else { S.phase="consent"; }
       render();
     } else render();
