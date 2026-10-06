@@ -4,6 +4,8 @@ import { memoryStore } from "./memory-store.js";
 import { notifyLeadSubmitted, type LeadSnapshot } from "./notify.js";
 import {
   buildDetailsSummary,
+  SMS_CONSENT_TEXT,
+  SMS_CONSENT_VERSION,
   isCommercialProduct,
   legacyDbProduct,
   usesDriversAndVehicles,
@@ -265,6 +267,39 @@ export async function startQuote(input: {
   };
 }
 
+function contactExtrasFromInput(input: {
+  street?: string;
+  unit?: string;
+  city?: string;
+  address_state?: string;
+  address_zip?: string;
+  residence_status?: "own" | "rent" | "other";
+  residence_other?: string;
+  sms_consent?: boolean;
+  callback_preference?: "morning" | "afternoon" | "evening";
+  intake_notes?: string;
+}): LineDetails {
+  const extras: LineDetails = {};
+  if (input.street) extras.contact_street = input.street.trim();
+  if (input.unit) extras.contact_unit = input.unit.trim();
+  if (input.city) extras.contact_city = input.city.trim();
+  if (input.address_state) extras.contact_state = input.address_state.toUpperCase();
+  if (input.address_zip) extras.contact_zip = input.address_zip;
+  if (input.residence_status) extras.residence_status = input.residence_status;
+  if (input.residence_other) extras.residence_other = input.residence_other.trim();
+  if (input.callback_preference) extras.callback_preference = input.callback_preference;
+  if (input.intake_notes) extras.intake_notes = input.intake_notes;
+  if (input.sms_consent != null) {
+    extras.sms_consent = Boolean(input.sms_consent);
+    if (input.sms_consent) {
+      extras.sms_consent_at = new Date().toISOString();
+      extras.sms_consent_version = SMS_CONSENT_VERSION;
+      extras.sms_consent_text = SMS_CONSENT_TEXT;
+    }
+  }
+  return extras;
+}
+
 export async function saveContact(input: {
   quote_id: string;
   first_name: string;
@@ -274,6 +309,14 @@ export async function saveContact(input: {
   preferred_contact_method?: "call" | "text" | "email";
   callback_preference?: "morning" | "afternoon" | "evening";
   intake_notes?: string;
+  street?: string;
+  unit?: string;
+  city?: string;
+  address_state?: string;
+  address_zip?: string;
+  residence_status?: "own" | "rent" | "other";
+  residence_other?: string;
+  sms_consent?: boolean;
 }) {
   const customerPayload = {
     first_name: input.first_name,
@@ -303,11 +346,10 @@ export async function saveContact(input: {
       input.quote_id,
       String(quoteRow?.product ?? "")
     );
-    if (input.callback_preference || input.intake_notes) {
-      await mergeLineDetails(input.quote_id, {
-        ...(input.callback_preference ? { callback_preference: input.callback_preference } : {}),
-        ...(input.intake_notes ? { intake_notes: input.intake_notes } : {})
-      } as LineDetails);
+    const extras = contactExtrasFromInput(input);
+    if (Object.keys(extras).length) await mergeLineDetails(input.quote_id, extras);
+    if (input.sms_consent) {
+      await saveConsent({ quote_id: input.quote_id, consent_type: "sms", accepted: true });
     }
     return {
       quote_id: input.quote_id,
@@ -318,6 +360,16 @@ export async function saveContact(input: {
         email: customer.email,
         preferred_contact_method: customer.preferred_contact_method
       },
+      address: {
+        street: extras.contact_street,
+        unit: extras.contact_unit,
+        city: extras.contact_city,
+        state: extras.contact_state,
+        zip: extras.contact_zip
+      },
+      residence_status: extras.residence_status,
+      residence_other: extras.residence_other,
+      sms_consent: extras.sms_consent ?? false,
       callback_preference: input.callback_preference,
       intake_notes: input.intake_notes,
       next_step: nextStepAfterContact(product)
@@ -351,11 +403,10 @@ export async function saveContact(input: {
     String(quoteMeta?.product ?? "")
   );
 
-  if (input.callback_preference || input.intake_notes) {
-    await mergeLineDetails(input.quote_id, {
-      ...(input.callback_preference ? { callback_preference: input.callback_preference } : {}),
-      ...(input.intake_notes ? { intake_notes: input.intake_notes } : {})
-    } as LineDetails);
+  const extras = contactExtrasFromInput(input);
+  if (Object.keys(extras).length) await mergeLineDetails(input.quote_id, extras);
+  if (input.sms_consent) {
+    await saveConsent({ quote_id: input.quote_id, consent_type: "sms", accepted: true });
   }
 
   return {
@@ -367,6 +418,16 @@ export async function saveContact(input: {
       email: customer.email,
       preferred_contact_method: customer.preferred_contact_method
     },
+    address: {
+      street: extras.contact_street,
+      unit: extras.contact_unit,
+      city: extras.contact_city,
+      state: extras.contact_state,
+      zip: extras.contact_zip
+    },
+    residence_status: extras.residence_status,
+    residence_other: extras.residence_other,
+    sms_consent: extras.sms_consent ?? false,
     callback_preference: input.callback_preference,
     intake_notes: input.intake_notes,
     next_step: nextStepAfterContact(product)
@@ -548,6 +609,16 @@ export async function addDriver(input: {
   return { driver: data, next_step: "vehicles" };
 }
 
+/** Soft VIN normalize: uppercase, strip spaces; keep only valid 17-char (no I/O/Q). */
+function normalizeVin(raw?: string | null): string | null {
+  if (!raw) return null;
+  const v = String(raw).toUpperCase().replace(/\s+/g, "");
+  if (v.length !== 17) return null;
+  if (/[IOQ]/.test(v)) return null;
+  if (!/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return null;
+  return v;
+}
+
 export async function addVehicle(input: {
   quote_id: string;
   year: number;
@@ -558,12 +629,13 @@ export async function addVehicle(input: {
   usage?: "pleasure" | "commute" | "business";
   annual_mileage?: number;
 }) {
+  const vin = normalizeVin(input.vin);
   const payload = {
     quote_id: input.quote_id,
     year: input.year,
     make: input.make,
     model: input.model,
-    vin: input.vin ?? null,
+    vin,
     ownership: input.ownership ?? null,
     usage: input.usage ?? null,
     annual_mileage: input.annual_mileage ?? null
@@ -574,6 +646,7 @@ export async function addVehicle(input: {
     "year",
     "make",
     "model",
+    "vin",
     "ownership",
     "usage",
     "annual_mileage"
@@ -582,13 +655,13 @@ export async function addVehicle(input: {
   if (config.useMemoryStore) {
     const data = memoryStore.insert("vehicles", payload, selectFields);
     memoryStore.update("quotes", input.quote_id, { completion_percentage: 60 });
-    return { vehicle: data, next_step: "current_policy_or_coverages" };
+    return { vehicle: data, next_step: "current_policy_or_coverages", vin_accepted: Boolean(vin) };
   }
 
   const { data, error } = await requireDb()
     .from("vehicles")
     .insert(payload)
-    .select("id, quote_id, year, make, model, ownership, usage, annual_mileage")
+    .select("id, quote_id, year, make, model, vin, ownership, usage, annual_mileage")
     .single();
   if (error) throw error;
 
@@ -597,7 +670,7 @@ export async function addVehicle(input: {
     .update({ completion_percentage: 60 })
     .eq("id", input.quote_id);
 
-  return { vehicle: data, next_step: "current_policy_or_coverages" };
+  return { vehicle: data, next_step: "current_policy_or_coverages", vin_accepted: Boolean(vin) };
 }
 
 export async function saveCurrentPolicy(input: {
@@ -704,6 +777,32 @@ function collectMissing(
 ): string[] {
   const missing: string[] = [];
   if (!opts.hasCustomer) missing.push("customer_contact");
+
+  const needsAddress =
+    product === "auto" ||
+    product === "home" ||
+    product === "auto_home" ||
+    product === "renters" ||
+    product === "motorcycle" ||
+    product === "boat" ||
+    product === "golf_cart" ||
+    isCommercialProduct(product);
+  if (needsAddress) {
+    if (!opts.details.contact_street) missing.push("contact_street");
+    if (!opts.details.contact_city) missing.push("contact_city");
+    if (!opts.details.contact_state) missing.push("contact_state");
+    if (!opts.details.contact_zip) missing.push("contact_zip");
+  }
+
+  const needsResidence =
+    product === "auto" ||
+    product === "home" ||
+    product === "auto_home" ||
+    product === "renters" ||
+    product === "motorcycle";
+  if (needsResidence && !opts.details.residence_status) {
+    missing.push("residence_status");
+  }
 
   if (isCommercialProduct(product)) {
     if (!opts.details.business_name) missing.push("business_name");

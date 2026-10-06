@@ -290,13 +290,36 @@
 
     function renderStep(cur) {
       const f = S.fields;
-      if (cur.id === "contact") return `<div class="panel"><div class="stripe"></div>
+      if (cur.id === "contact") {
+        const res = f.residence_status || "";
+        const rentNote = (S.product === "auto" && res === "rent")
+          ? `<p class="note" id="rent-bundle-note">Ask about bundling renters coverage with your auto quote.</p>`
+          : `<p class="note is-hidden" id="rent-bundle-note">Ask about bundling renters coverage with your auto quote.</p>`;
+        return `<div class="panel"><div class="stripe"></div>
         <div class="row2"><div><label for="first_name">First name</label><input id="first_name" value="${escapeHtml(f.first_name||"")}" autocomplete="given-name"/></div>
         <div><label for="last_name">Last name</label><input id="last_name" value="${escapeHtml(f.last_name||"")}" autocomplete="family-name"/></div></div>
         <label for="email">Email</label><input id="email" type="email" value="${escapeHtml(f.email||"")}"/>
         <label for="phone">Phone</label><input id="phone" type="tel" value="${escapeHtml(f.phone||"")}"/>
         <label>Preferred contact</label>${seg("pref-contact",[["call","Call"],["text","Text"],["email","Email"]], f.preferred_contact_method||"email")}
+        <h3>Address</h3>
+        <label for="street">Street</label><input id="street" value="${escapeHtml(f.contact_street||f.street||"")}" autocomplete="street-address" placeholder="123 Main St"/>
+        <label for="unit">Unit (optional)</label><input id="unit" value="${escapeHtml(f.contact_unit||f.unit||"")}" placeholder="Apt / Suite"/>
+        <div class="row2"><div><label for="city">City</label><input id="city" value="${escapeHtml(f.contact_city||f.city||"")}" autocomplete="address-level2"/></div>
+        <div><label for="address_state">State</label><input id="address_state" maxlength="2" value="${escapeHtml(f.contact_state||f.address_state||S.state||"")}" autocomplete="address-level1"/></div></div>
+        <label for="address_zip">ZIP</label><input id="address_zip" inputmode="numeric" maxlength="10" value="${escapeHtml(f.contact_zip||f.address_zip||S.zip||"")}" autocomplete="postal-code"/>
+        <label>Do you own or rent your home?</label>
+        ${seg("residence",[["own","Own"],["rent","Rent"],["other","Other"]], res||"")}
+        <div id="residence-other-wrap" class="${res==="other"?"":"is-hidden"}">
+          <label for="residence_other">Please describe (optional)</label>
+          <input id="residence_other" value="${escapeHtml(f.residence_other||"")}" placeholder="e.g. live with family"/>
+        </div>
+        ${rentNote}
+        <label class="toggle" style="margin-top:14px;align-items:flex-start">
+          <input type="checkbox" id="sms_consent" ${f.sms_consent?"checked":""}/>
+          <span style="font-weight:600;font-size:.82rem;line-height:1.35;color:var(--ink)">Yes, Asshield Insurance may text me about my quote at the number provided. Msg &amp; data rates may apply. Msg frequency varies. Reply STOP to opt out, HELP for help. Consent is not a condition of purchase.</span>
+        </label>
         ${navButtons("Save & continue")}</div>`;
+      }
 
       if (cur.id === "drivers") {
         const list = (f.drivers||[]).map((d,i) => `<div class="entity"><div><strong>${escapeHtml(d.name||((d.first_name||"")+" "+(d.last_name||"")))}</strong><div class="sub">${escapeHtml([d.date_of_birth,d.relationship].filter(Boolean).join(" · "))}</div></div>
@@ -314,8 +337,12 @@
       }
 
       if (cur.id === "vehicles") {
-        const list = (f.vehicles||[]).map((v,i) => `<div class="entity"><div><strong>${escapeHtml(v.summary||[v.year,v.make,v.model].filter(Boolean).join(" "))}</strong><div class="sub">${escapeHtml(v.usage||v.ownership||"")}</div></div>
-          <button type="button" class="linkish" data-rm="${i}">Remove</button></div>`).join("");
+        const list = (f.vehicles||[]).map((v,i) => {
+          const title = escapeHtml(v.summary||[v.year,v.make,v.model].filter(Boolean).join(" "));
+          const sub = [v.vin && `VIN ${v.vin}`, v.usage, v.ownership].filter(Boolean).join(" · ");
+          return `<div class="entity"><div><strong>${title}</strong><div class="sub">${escapeHtml(sub)}</div></div>
+          <button type="button" class="linkish" data-rm="${i}">Remove</button></div>`;
+        }).join("");
         const lastV = (f.vehicles && f.vehicles.length) ? f.vehicles[f.vehicles.length - 1] : null;
         const prefYear = lastV?.year ? Number(lastV.year) : "";
         const years = YEAR_OPTS.map(y => `<option value="${y}" ${prefYear===y?"selected":""}>${y}</option>`).join("");
@@ -325,6 +352,10 @@
           <label for="v_year">Year</label><select id="v_year"><option value="" ${yearPlaceholderSelected}>Select year</option>${years}</select>
           <label for="v_make">Make</label><input id="v_make" placeholder="Toyota" value="${escapeHtml(lastV?.make||"")}"/>
           <label for="v_model">Model</label><input id="v_model" placeholder="Camry" value="${escapeHtml(lastV?.model||"")}"/>
+          <label for="v_vin">VIN (optional)</label>
+          <input id="v_vin" inputmode="text" autocomplete="off" maxlength="17" placeholder="17 characters" value="${escapeHtml(lastV?.vin||"")}" aria-describedby="v_vin_help v_vin_warn" />
+          <p class="note" id="v_vin_help" style="margin:4px 0 0">If available, helps your agent quote faster</p>
+          <p class="note is-hidden" id="v_vin_warn" style="margin:4px 0 0;color:var(--danger)">VIN should be 17 characters (no I, O, or Q). We’ll skip an invalid VIN.</p>
           <label>Usage</label>${seg("v_usage",[["commute","Commute"],["pleasure","Pleasure"],["business","Business"]], lastV?.usage||"commute")}
           <label>Ownership</label>${seg("v_own",[["owned","Owned"],["financed","Financed"],["leased","Leased"]], lastV?.ownership||"owned")}
           <div class="actions">
@@ -405,8 +436,11 @@
         ["Name", [f.first_name,f.last_name].filter(Boolean).join(" "), "contact"],
         ["Email", f.email, "contact"],
         ["Phone", f.phone, "contact"],
+        ["Address", [f.contact_street||f.street, f.contact_unit||f.unit, [f.contact_city||f.city, f.contact_state||f.address_state, f.contact_zip||f.address_zip].filter(Boolean).join(" ")].filter(Boolean).join(", "), "contact"],
+        ["Residence", f.residence_status==="own"?"Own":f.residence_status==="rent"?"Rent":f.residence_status==="other"?(f.residence_other?("Other — "+f.residence_other):"Other"):"", "contact"],
+        ["Text OK", f.sms_consent===true?"Yes":f.sms_consent===false?"No":"", "contact"],
         ["Drivers", (f.drivers||[]).map(d=>d.name||d.first_name).join(", ") || "—", "drivers"],
-        ["Vehicles", (f.vehicles||[]).map(v=>v.summary).join(", ") || "—", "vehicles"],
+        ["Vehicles", (f.vehicles||[]).map(v=>[v.summary||[v.year,v.make,v.model].filter(Boolean).join(" "), v.vin&&("VIN "+v.vin)].filter(Boolean).join(" · ")).join("; ") || "—", "vehicles"],
         ["Business", f.business_name, "business"],
         ["Carrier", f.carrier, "policy"],
         ["Coverage pref", f.coverage_preference, "prefs"],
@@ -434,7 +468,16 @@
 
     function bindStep(cur) {
       $("btn-back") && ($("btn-back").onclick = () => { if (S.step>0){ S.step--; render(); }});
-      if (cur.id === "contact") bindSeg("pref-contact", v => { S.fields.preferred_contact_method = v; });
+      if (cur.id === "contact") {
+        bindSeg("pref-contact", v => { S.fields.preferred_contact_method = v; });
+        bindSeg("residence", v => {
+          S.fields.residence_status = v;
+          const wrap = $("residence-other-wrap");
+          if (wrap) wrap.classList.toggle("is-hidden", v !== "other");
+          const note = $("rent-bundle-note");
+          if (note) note.classList.toggle("is-hidden", !(S.product === "auto" && v === "rent"));
+        });
+      }
       if (cur.id === "drivers") {
         bindSeg("d_rel", v => { S.fields._d_rel = v; });
         $("btn-add-driver").onclick = async () => {
@@ -455,16 +498,42 @@
       if (cur.id === "vehicles") {
         bindSeg("v_usage", v => { S.fields._v_usage = v; });
         bindSeg("v_own", v => { S.fields._v_own = v; });
+        function softVin(raw) {
+          const v = String(raw||"").toUpperCase().replace(/\s+/g,"");
+          if (!v) return { ok: true, vin: undefined };
+          if (v.length !== 17 || /[IOQ]/.test(v) || !/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return { ok: false, vin: undefined };
+          return { ok: true, vin: v };
+        }
+        function updateVinWarn() {
+          const w = $("v_vin_warn"); if (!w) return;
+          const raw = val("v_vin");
+          const empty = !String(raw||"").trim();
+          const { ok } = softVin(raw);
+          w.classList.toggle("is-hidden", empty || ok);
+        }
+        $("v_vin")?.addEventListener("input", () => {
+          const el = $("v_vin");
+          const start = el.selectionStart;
+          el.value = el.value.toUpperCase().replace(/\s+/g,"");
+          try { el.setSelectionRange(start, start); } catch(_){}
+          updateVinWarn();
+        });
+        updateVinWarn();
         $("btn-add-vehicle").onclick = async () => {
           const year=Number(val("v_year")), make=val("v_make");
           if (!year||!make) return setStatus("Year and make required.");
-          const args={ quote_id:S.quote_id, year, make, model: val("v_model")||undefined, ownership: S.fields._v_own||"owned", usage: S.fields._v_usage||"commute" };
-          setStatus("Saving vehicle…");
+          const model = val("v_model") || "Unknown";
+          const checked = softVin(val("v_vin"));
+          updateVinWarn();
+          const args={ quote_id:S.quote_id, year, make, model, ownership: S.fields._v_own||"owned", usage: S.fields._v_usage||"commute" };
+          if (checked.vin) args.vin = checked.vin;
+          setStatus(checked.ok ? "Saving vehicle…" : "Saving vehicle (invalid VIN skipped)…");
           try {
             await callTool("add_vehicle", args);
             S.fields.vehicles = S.fields.vehicles||[];
-            S.fields.vehicles.push({ ...args, summary: [year, make, args.model].filter(Boolean).join(" ") });
-            await refreshMissing(); render(); setStatus("Vehicle added.");
+            S.fields.vehicles.push({ ...args, summary: [year, make, model].filter(Boolean).join(" ") });
+            await refreshMissing(); render();
+            setStatus(checked.ok || !val("v_vin").trim() ? "Vehicle added." : "Vehicle added (invalid VIN was not saved).");
           } catch(e){ setStatus(String(e?.message||e)); }
         };
         rootRm("vehicles");
@@ -490,10 +559,31 @@
         try {
           if (cur.id === "contact") {
             const first_name=val("first_name"), last_name=val("last_name"), email=val("email"), phone=val("phone");
+            const street=val("street"), unit=val("unit"), city=val("city");
+            const address_state=(val("address_state")||"").toUpperCase();
+            const address_zip=val("address_zip");
+            const residence_status=S.fields.residence_status;
+            const residence_other=val("residence_other");
+            const sms_consent=!!$("sms_consent")?.checked;
             if (!first_name||!last_name) return setStatus("Name required.");
             if (!email && !phone) return setStatus("Provide email or phone.");
-            await callTool("save_contact", { quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined, preferred_contact_method: S.fields.preferred_contact_method||"email" });
-            Object.assign(S.fields,{first_name,last_name,email,phone});
+            if (!street||!city||!address_state||!address_zip) return setStatus("Street, city, state, and ZIP are required.");
+            const needsRes = ["auto","home","auto_home","renters","motorcycle"].includes(S.product);
+            if (needsRes && !residence_status) return setStatus("Please tell us if you own or rent.");
+            await callTool("save_contact", {
+              quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined,
+              preferred_contact_method: S.fields.preferred_contact_method||"email",
+              street, unit: unit||undefined, city, address_state, address_zip,
+              residence_status: residence_status||undefined,
+              residence_other: residence_status==="other" ? (residence_other||undefined) : undefined,
+              sms_consent
+            });
+            Object.assign(S.fields,{
+              first_name,last_name,email,phone,sms_consent,
+              contact_street:street, contact_unit:unit, contact_city:city,
+              contact_state:address_state, contact_zip:address_zip,
+              residence_status, residence_other: residence_status==="other"?residence_other:""
+            });
           } else if (cur.id === "business") {
             const args={ quote_id:S.quote_id, business_name:val("business_name"), business_type_or_description:val("business_type_or_description")||undefined,
               business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined,
@@ -638,8 +728,10 @@
       S.fields = {
         first_name:"Jordan", last_name:"Test", email:"jordan.test@example.com", phone:"859-555-0100",
         preferred_contact_method:"email",
+        contact_street:"123 Test St", contact_unit:"", contact_city:"Lexington", contact_state:"KY", contact_zip:"40505",
+        residence_status:"own", sms_consent:true,
         drivers:[{ name:"Jordan Test", date_of_birth:"1990-04-12", relationship:"self" }],
-        vehicles:[{ year:2020, make:"Toyota", model:"Camry", ownership:"owned", usage:"commute", summary:"2020 Toyota Camry" }],
+        vehicles:[{ year:2020, make:"Toyota", model:"Camry", vin:"1HGBH41JXMN109186", ownership:"owned", usage:"commute", summary:"2020 Toyota Camry" }],
         carrier:"Example Mutual", current_premium:"$145/mo", premium_frequency:"monthly",
         coverage_preference:"medium", deductible_preference:"medium", auth_ok:true
       };

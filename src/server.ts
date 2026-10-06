@@ -74,7 +74,7 @@ function createMcpServer(): McpServer {
     {
       title: "Save quote contact",
       description:
-        "Save the customer's name and preferred contact details for an active Asshield quote. Collect only name plus at least one reachable phone or email. Do not collect SSN, FEIN, driver's license numbers, payment cards, or passwords.",
+        "Save the customer's name, preferred contact, garaging/property address (street, optional unit, city, state, ZIP), optional residence status (own/rent/other), and optional SMS texting opt-in for an active Asshield quote. Collect name plus at least one reachable phone or email. Do not collect SSN, FEIN, driver's license numbers, payment cards, or passwords.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
       inputSchema: {
         quote_id: z.string().uuid(),
@@ -84,7 +84,15 @@ function createMcpServer(): McpServer {
         email: z.string().email().optional(),
         preferred_contact_method: z.enum(["call", "text", "email"]).optional(),
         callback_preference: z.enum(["morning", "afternoon", "evening"]).optional(),
-        intake_notes: z.string().max(500).optional()
+        intake_notes: z.string().max(500).optional(),
+        street: z.string().min(1).max(200).optional(),
+        unit: z.string().max(50).optional(),
+        city: z.string().min(1).max(100).optional(),
+        address_state: z.string().length(2).optional(),
+        address_zip: z.string().regex(/^\d{5}(-\d{4})?$/).optional(),
+        residence_status: z.enum(["own", "rent", "other"]).optional(),
+        residence_other: z.string().max(200).optional(),
+        sms_consent: z.boolean().optional()
       }
     },
     async (input) => {
@@ -188,7 +196,7 @@ function createMcpServer(): McpServer {
         year: z.number().int().min(1900).max(2100),
         make: z.string().min(1),
         model: z.string().min(1),
-        vin: z.string().min(11).max(17).optional(),
+        vin: z.string().max(32).optional(), // optional; server soft-normalizes to 17-char VIN or drops
         ownership: z.enum(["owned", "financed", "leased"]).optional(),
         usage: z.enum(["pleasure", "commute", "business"]).optional(),
         annual_mileage: z.number().int().min(0).max(250000).optional()

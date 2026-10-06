@@ -83,7 +83,26 @@ export type LineDetails = {
   deductible_preference?: "low" | "medium" | "high";
   selected_coverages?: string[];
   bundle_lines?: string[];
+  // Contact / garaging address
+  contact_street?: string;
+  contact_unit?: string;
+  contact_city?: string;
+  contact_state?: string;
+  contact_zip?: string;
+  // Residence
+  residence_status?: "own" | "rent" | "other";
+  residence_other?: string;
+  // SMS TCPA opt-in (optional)
+  sms_consent?: boolean;
+  sms_consent_at?: string;
+  sms_consent_version?: string;
+  sms_consent_text?: string;
 };
+
+export const SMS_CONSENT_VERSION = "tcpa_v1_2026_10";
+export const SMS_CONSENT_TEXT =
+  "Yes, Asshield Insurance may text me about my quote at the number provided. Msg & data rates may apply. Msg frequency varies. Reply STOP to opt out, HELP for help. Consent is not a condition of purchase.";
+
 
 export function isCommercialProduct(product: string): boolean {
   return (
@@ -210,10 +229,38 @@ export function buildDetailsSummary(
     parts.push(
       `Units (${extras.vehicles.length}): ` +
         extras.vehicles
-          .map((x) => `${x.year ?? ""} ${x.make ?? ""} ${x.model ?? ""}`.trim())
+          .map((x) => {
+            const base = `${x.year ?? ""} ${x.make ?? ""} ${x.model ?? ""}`.trim();
+            return x.vin ? `${base} VIN ${x.vin}` : base;
+          })
           .filter(Boolean)
           .join(", ")
     );
+  }
+
+  const addr = [
+    d.contact_street,
+    d.contact_unit,
+    [d.contact_city, d.contact_state, d.contact_zip].filter(Boolean).join(" ")
+  ]
+    .filter(Boolean)
+    .join(", ");
+  if (addr) parts.push(`Address: ${addr}`);
+
+  if (d.residence_status) {
+    const res =
+      d.residence_status === "other" && d.residence_other
+        ? `Other (${d.residence_other})`
+        : d.residence_status === "own"
+          ? "Own"
+          : d.residence_status === "rent"
+            ? "Rent"
+            : "Other";
+    parts.push(`Residence: ${res}`);
+  }
+
+  if (d.sms_consent != null) {
+    parts.push(`Text OK: ${d.sms_consent ? "Yes" : "No"}`);
   }
 
   return parts.filter((p) => p && p !== "Product: ").length
