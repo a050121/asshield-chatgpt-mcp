@@ -4,9 +4,9 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.3.0):** `review.demo_recording_url` is set to the Unlisted YouTube demo `https://youtu.be/MujQJvlc9DE`. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.4.0):** `review.demo_recording_url` is the v3 Unlisted YouTube demo `https://youtu.be/6BFu7ziuLKc` (replaces MujQJvlc9DE). Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.3.0.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.4.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -17,7 +17,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.3.0 |
+| **Version** | 1.4.0 |
 | **Short description (≤30 chars)** | Start an insurance quote |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -262,11 +262,11 @@ Optional internal walkthrough checklist (not required in the ZIP):
 4. Out-of-state CA polite decline  
 5. Consent + submit + “not covered / not bound” wording + agent contact  
 
-**Demo recording URL (done):** Unlisted YouTube `https://youtu.be/MujQJvlc9DE` — set in `plugin.json` `review.demo_recording_url` for **1.3.0**.
+**Demo recording URL (done):** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` (replaces `MujQJvlc9DE`) — set in `plugin.json` `review.demo_recording_url` for **1.4.0**.
 ## 7. Release notes
 
 ```
-1.3.0 — Demo recording URL (YouTube unlisted), contact address + residence (own/rent) + optional SMS TCPA opt-in, optional vehicle VIN, agency-centric agent card (multi-office), options auto+home bundling, brand hero refresh. Quote intake only — does not bind coverage.
+1.4.0 — Demo recording URL updated to v3 Unlisted YouTube (https://youtu.be/6BFu7ziuLKc); server-side restricted_data_refused guard (SSN/FEIN/DL numbers/payment/passwords). Builds on 1.3.0 intake UX (address, residence, SMS opt-in, VIN, agency card, bundling).
 ```
 
 ---
@@ -279,7 +279,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 - [ ] No restricted data collection (SSN, DL numbers, PCI, PHI, credentials)
 - [ ] Tool annotations accurate on production `tools/list`
 - [ ] Domain verification challenge configured
-- [x] Demo video URL provided (`https://youtu.be/MujQJvlc9DE`)
+- [x] Demo video URL provided (`https://youtu.be/6BFu7ziuLKc`)
 - [ ] No comparative / pricing / “MCP” / “Plugin” suffix in the display name
 
 ---
@@ -294,7 +294,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 1. Confirm licensed-state list with counsel (already encoded from published terms).
 2. Confirm 7-year retention + limitation-of-liability language (draft banners removed from live pages; substance still needs counsel sign-off).
 3. Approve icons in `assets/`.
-4. [x] Record demo video URL (`https://youtu.be/MujQJvlc9DE`).
+4. [x] Record demo video URL (`https://youtu.be/6BFu7ziuLKc`).
 5. Set `OPENAI_APPS_CHALLENGE_TOKEN` on Render when the portal shows the token.
 6. Keep Supabase + lead email/webhook configured so reviewer submits reach ops (mark any live test **TEST**).
 
@@ -304,9 +304,9 @@ Optional internal walkthrough checklist (not required in the ZIP):
 These must be done before a successful Submit for Review / publish path:
 
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
-2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube `https://youtu.be/MujQJvlc9DE` is set on `review.demo_recording_url` in plugin **1.3.0**; ZIP rebuilt without placeholder.
+2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v3 `https://youtu.be/6BFu7ziuLKc` is set on `review.demo_recording_url` in plugin **1.4.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the **1.3.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.4.0** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 
