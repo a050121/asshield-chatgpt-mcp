@@ -248,7 +248,7 @@ function createMcpServer(): McpServer {
     {
       title: "Save current policy",
       description:
-        "Save the customer's current carrier, premium, renewal date, and main coverage limits/deductibles for comparison. Optional fields only; skip anything the customer does not know.",
+        "Save details from the customer's current policy to help with their insurance quote request.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
       inputSchema: {
         quote_id: z.string().uuid(),
