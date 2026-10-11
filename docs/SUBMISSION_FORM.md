@@ -4,7 +4,7 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.5.1):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.5.2):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
 Package ZIP (repo): `dist/asshield-insurance-plugin-1.5.0.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
@@ -357,7 +357,7 @@ These must be done before a successful Submit for Review / publish path:
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
 2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v7 `https://youtu.be/FjTaBkdc-4U` is set on `review.demo_recording_url` in plugin **1.5.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the **1.5.1** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.5.2** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 
