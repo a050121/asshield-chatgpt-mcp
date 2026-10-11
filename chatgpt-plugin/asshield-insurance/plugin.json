@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.5.3",
-  "description": "Start auto, home, renters, motorcycle, boat, golf cart, commercial, and trucking insurance quote requests with Asshield Insurance, a licensed independent agency in AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, and TX. Quote requests only: no coverage is bound, and any estimated starting price shown after submit is an estimate, not a quote.",
+  "version": "1.5.4",
+  "description": "ChatGPT starts an insurance quote request with Asshield Insurance, a licensed independent agency in AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, and TX. You provide the details, Asshield reviews your request, and a licensed agent helps with coverage options from the carriers we represent. No coverage is bound, and any estimated starting price is an estimate, not a quote.",
   "author": {
     "name": "Asshield Insurance",
     "email": "quote@asshield.com",
@@ -41,7 +41,7 @@
       "interface": {
         "displayName": "Asshield Insurance",
         "shortDescription": "Auto, home & business quotes",
-        "longDescription": "Asshield Insurance is an independent insurance agency licensed in Alabama, Arkansas, Florida, Georgia, Indiana, Kentucky, North Carolina, Ohio, Pennsylvania, South Carolina, Tennessee, and Texas (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Use this app to start an insurance quote request in a few steps, right in the conversation.\n\nInsurance you can ask about:\n- Personal: auto insurance, home insurance, auto and home bundle, renters insurance, motorcycle insurance\n- Commercial: commercial auto, commercial general liability, workers compensation, commercial truck and trucking insurance\n- Recreational: boat insurance, golf cart insurance\n\nHow it works:\n- Tell us the type of insurance, your state, and your ZIP code.\n- Share your contact details, address, and the drivers, vehicles, or business details that apply.\n- Review your request and confirm that Asshield may use your details to prepare a quote. You give this consent yourself on the quote card.\n- Send the request to a licensed Asshield agent, who reviews it and follows up. During business hours the typical response is within about 1 hour.\n\nGood to know:\n- Asshield is directly appointed with carriers including Progressive, Travelers, GEICO, and Liberty Mutual. Carrier names are shown as text only. Availability varies by state, product, and eligibility, and your agent decides which carriers fit your request.\n- After you send a request, Asshield may show an estimated starting price marked with an asterisk, for example for auto or homeowners. These are Asshield estimates only. They are not carrier quotes or offers of insurance, may be higher or lower than the price you are offered, and no coverage is bound.\n- Coverage starts only when a licensed Asshield agent confirms in writing that a carrier has bound a policy.\n- You can also browse insurance types, read general coverage information (not advice), and see Asshield agent contact details and office hours.\n- Requests outside the 12 licensed states are not submitted. Asshield does not collect Social Security numbers, FEIN or EIN, driver license numbers, payment card details, or passwords.",
+        "longDescription": "Asshield Insurance is an independent insurance agency licensed in Alabama, Arkansas, Florida, Georgia, Indiana, Kentucky, North Carolina, Ohio, Pennsylvania, South Carolina, Tennessee, and Texas (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). ChatGPT helps you start an insurance quote request in a few steps. You provide the information, Asshield reviews it, and a licensed Asshield agent helps you with coverage options from the carriers we represent.\n\nInsurance you can ask about:\n- Personal: auto insurance, home insurance, auto and home bundle, renters insurance, motorcycle insurance\n- Commercial: commercial auto, commercial general liability, workers compensation, commercial truck and trucking insurance\n- Recreational: boat insurance, golf cart insurance\n\nHow it works:\n- ChatGPT starts a quote request. Tell us the type of insurance, your state, and your ZIP code.\n- You provide your contact details, address, and the drivers, vehicles, or business details that apply.\n- You review your request and confirm that Asshield may use your details to prepare a quote. You give this consent yourself on the quote card.\n- You send the request. Asshield reviews it, and a licensed agent follows up to help with the actual coverage options. During business hours the typical response is within about 1 hour.\n\nGood to know:\n- Asshield is directly appointed with carriers including Progressive, Travelers, GEICO, and Liberty Mutual. Carrier names are shown as text only. Availability varies by state, product, and eligibility, and your agent decides which carriers fit your request.\n- After you send a request, Asshield may show an estimated starting price marked with an asterisk, for example for auto or homeowners. These are Asshield estimates only. They are not carrier quotes or offers of insurance, may be higher or lower than the price you are offered, and no coverage is bound.\n- Coverage starts only when a licensed Asshield agent confirms in writing that a carrier has bound a policy.\n- You can also browse insurance types, read general coverage information (not advice), and see Asshield agent contact details and office hours.\n- Requests outside the 12 licensed states are not submitted. Asshield does not collect Social Security numbers, FEIN or EIN, driver license numbers, payment card details, or passwords.",
         "developerName": "Asshield Insurance",
         "category": "Finance",
         "capabilities": [
@@ -60,9 +60,9 @@
         "privacyPolicyURL": "https://www.asshield.com/privacy",
         "termsOfServiceURL": "https://www.asshield.com/terms",
         "defaultPrompt": [
-          "I need an auto insurance quote in Kentucky, ZIP 40505.",
-          "I want a home insurance quote in Tennessee.",
-          "I need commercial truck insurance for my small fleet in Texas."
+          "Get me an auto insurance quote",
+          "Help me get a homeowners quote",
+          "Get a quote for my business"
         ],
         "brandColor": "#1A7FBF",
         "brandColorDark": "#1A9FE0",
@@ -130,7 +130,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "1.5.3: discovery copy refresh: plain-language short and long descriptions, starter prompts, keywords, and clearer tool descriptions for routing. Estimates stay asterisked and are not quotes; no coverage is bound; direct appointments with Progressive, Travelers, GEICO, and Liberty Mutual shown as text only. Removed the old no-rates-in-chat line. Demo URL unchanged (https://youtu.be/FjTaBkdc-4U)."
+        "release_notes": "1.5.4: starter prompts simplified (auto, homeowners, business) with no states; descriptions now say ChatGPT starts a quote request, the customer provides the information, Asshield reviews it, and a licensed agent helps with coverage options from the carriers we represent. Estimates stay asterisked and are not quotes; no coverage is bound. Demo URL unchanged (https://youtu.be/FjTaBkdc-4U)."
       }
     }
   }

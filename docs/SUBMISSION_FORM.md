@@ -4,9 +4,9 @@ Copy-paste-ready answers for the Plugins directory upload + review form.
 This listing is **the Asshield Insurance plugin**; it contains an MCP app (remote tools at the MCP URL below).
 MCP exposes **13 tools**. Prepared: **October 6, 2026 (ET)**. MCP: `https://mcp.asshield.com/mcp`. Auth: **none**.
 
-> **Ready for ZIP upload (1.5.3):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
+> **Ready for ZIP upload (1.5.4):** `review.demo_recording_url` is the v7 Unlisted YouTube demo `https://youtu.be/FjTaBkdc-4U` (replaces prior v3 demo URL). Includes Asshield professional proposal + estimate, confirmation banner, and carrier network. Remaining blockers: business verification approval, portal domain challenge token, Scan Tools.
 
-Package ZIP (repo): `dist/asshield-insurance-plugin-1.5.3.zip`  
+Package ZIP (repo): `dist/asshield-insurance-plugin-1.5.4.zip`  
 Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 
 ---
@@ -17,7 +17,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 |---|---|
 | **Plugin display name (displayName)** | Asshield Insurance |
 | **Package name** | asshield-insurance |
-| **Version** | 1.5.3 |
+| **Version** | 1.5.4 |
 | **Short description (≤30 chars)** | Auto, home & business quotes |
 | **Developer / publisher name** | Asshield Insurance |
 | **Category** | Finance |
@@ -28,7 +28,7 @@ Manifest: `chatgpt-plugin/asshield-insurance/plugin.json`
 ### Long description
 
 ```
-Asshield Insurance is an independent insurance agency licensed in Alabama, Arkansas, Florida, Georgia, Indiana, Kentucky, North Carolina, Ohio, Pennsylvania, South Carolina, Tennessee, and Texas (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Use this app to start an insurance quote request in a few steps, right in the conversation.
+Asshield Insurance is an independent insurance agency licensed in Alabama, Arkansas, Florida, Georgia, Indiana, Kentucky, North Carolina, Ohio, Pennsylvania, South Carolina, Tennessee, and Texas (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). ChatGPT helps you start an insurance quote request in a few steps. You provide the information, Asshield reviews it, and a licensed Asshield agent helps you with coverage options from the carriers we represent.
 
 Insurance you can ask about:
 - Personal: auto insurance, home insurance, auto and home bundle, renters insurance, motorcycle insurance
@@ -36,10 +36,10 @@ Insurance you can ask about:
 - Recreational: boat insurance, golf cart insurance
 
 How it works:
-- Tell us the type of insurance, your state, and your ZIP code.
-- Share your contact details, address, and the drivers, vehicles, or business details that apply.
-- Review your request and confirm that Asshield may use your details to prepare a quote. You give this consent yourself on the quote card.
-- Send the request to a licensed Asshield agent, who reviews it and follows up. During business hours the typical response is within about 1 hour.
+- ChatGPT starts a quote request. Tell us the type of insurance, your state, and your ZIP code.
+- You provide your contact details, address, and the drivers, vehicles, or business details that apply.
+- You review your request and confirm that Asshield may use your details to prepare a quote. You give this consent yourself on the quote card.
+- You send the request. Asshield reviews it, and a licensed agent follows up to help with the actual coverage options. During business hours the typical response is within about 1 hour.
 
 Good to know:
 - Asshield is directly appointed with carriers including Progressive, Travelers, GEICO, and Liberty Mutual. Carrier names are shown as text only. Availability varies by state, product, and eligibility, and your agent decides which carriers fit your request.
@@ -63,11 +63,11 @@ Good to know:
 
 ### Starter prompts (defaultPrompt)
 
-1. I need an auto insurance quote in Kentucky, ZIP 40505.
-2. I want a home insurance quote in Tennessee.
-3. I need commercial truck insurance for my small fleet in Texas.
+1. Get me an auto insurance quote
+2. Help me get a homeowners quote
+3. Get a quote for my business
 
-The manifest allows at most 3 starter prompts (128 characters each) and short descriptions of at most 30 characters, so six drafted prompts were cut to three.
+No states in the prompts on purpose: ChatGPT asks for state and ZIP next. The manifest allows at most 3 starter prompts (128 characters each), and the short description stays within 30 characters.
 
 ### Branding
 
@@ -165,7 +165,7 @@ Live `tools/list` on `https://mcp.asshield.com/mcp` returns **13 tools**. Every 
 
 #### save_current_policy
 - **readOnlyHint false:** Persists current-carrier and coverage preference fields.
-- **destructiveHint false:** Additive policy snapshot for comparison.
+- **destructiveHint false:** Additive policy snapshot for agent review.
 - **openWorldHint false:** Private Asshield current_policies data only.
 
 #### save_consent
@@ -227,7 +227,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 
 **Address ≠ device location:** Garaging / property address fields are typed by the customer for rating and servicing. The plugin does **not** request device GPS/location permission and does not infer address from ChatGPT location.
 
-**Legal name / licenses:** Display name is **Asshield Insurance** (no “Plugin” / “MCP” / comparative pricing suffix). Licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX — verify via NAIC state lookup. Agent contact card links office hours and office addresses.
+**Legal name / licenses:** Display name is **Asshield Insurance** (no “Plugin” / “MCP” suffix and no pricing claims). Licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX — verify via NAIC state lookup. Agent contact card links office hours and office addresses.
 
 **Restricted data (SSN / FEIN / DL / cards / passwords):** If a restricted identifier appears in free-text fields, the tool returns a **success-style** structured result (`ok: true`, `collected: false`, `code: restricted_data_not_collected`) explaining Asshield does not collect that category. The value is **not stored**. Prefer this over `isError` so ChatGPT can continue the quote gracefully.
 
@@ -246,7 +246,7 @@ Never collect: SSN, FEIN/EIN, driver’s license **numbers**, payment cards, pas
 | SMS opt-in (optional, default off) | TCPA-style consent before Asshield may text about the quote. |
 | Drivers (name, DOB, relationship) | Auto rating inputs; **no driver’s license numbers**. |
 | Vehicles (year/make/model, optional VIN) | Auto rating; VIN optional to speed quoting. |
-| Current carrier / premium | Comparison shopping baseline. |
+| Current carrier / premium | Baseline so the agent can review current coverage. |
 | Coverage / deductible preferences | Soft preference only — not a quote. |
 | Quote authorization consent | Explicit permission to prepare the request and contact the customer. |
 
@@ -309,6 +309,7 @@ Optional internal walkthrough checklist (not required in the ZIP):
 ## 7. Release notes
 
 ```
+1.5.4 — Starter prompts simplified (no states: auto, homeowners, business); descriptions tell the story ChatGPT starts the request, the customer provides the info, Asshield reviews, a licensed agent helps with coverage options from carriers we represent. No server change.
 1.5.3 — Discovery copy refresh: short and long descriptions, 3 starter prompts, keywords, manifest description, and tool description routing tweaks (start_quote, submit_quote, show_insurance_options, explain_coverage, get_agent_contact). Names and annotations unchanged. Estimates stay asterisked and are not quotes; no coverage is bound; direct appointments with Progressive, Travelers, GEICO, and Liberty Mutual shown as text only.
 1.5.2 — Skill guidance names all 13 tools and matches 1.5.1 behavior; no server changes.
 1.5.1 — Review-form polish: removed old no-prices copy; submit_quote destructiveHint false; save_consent widget-only with consent_nonce; success-style restricted-data responses; OpenAI TEST lead tagging; SMS opt-in default off; submit gated on authorization; dark-mode CSS.
@@ -339,7 +340,7 @@ See also `docs/PRIVACY_GAP_REPORT_1.5.1.md` for residual gaps (Zapier template f
 - [ ] Tool annotations accurate on production `tools/list`
 - [ ] Domain verification challenge configured
 - [x] Demo video URL provided (`https://youtu.be/FjTaBkdc-4U`)
-- [ ] No comparative / pricing / “MCP” / “Plugin” suffix in the display name
+- [ ] No pricing / “MCP” / “Plugin” suffix in the display name
 
 ---
 
@@ -365,7 +366,7 @@ These must be done before a successful Submit for Review / publish path:
 1. **Business verification approval** — OpenAI Platform org verified as Asshield Insurance (or grant Apps Management Write). *(still pending)*
 2. ~~**Real demo URL**~~ — **Done.** Unlisted YouTube v7 `https://youtu.be/FjTaBkdc-4U` is set on `review.demo_recording_url` in plugin **1.5.0**; ZIP rebuilt without placeholder.
 3. **Portal-issued domain challenge token** — Set Render env `OPENAI_APPS_CHALLENGE_TOKEN` to the exact token from the Plugins portal; confirm `https://mcp.asshield.com/.well-known/openai-apps-challenge` returns only that token.
-4. **Successful final Scan Tools** — Upload the **1.5.3** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
+4. **Successful final Scan Tools** — Upload the **1.5.4** ZIP, connect MCP (`https://mcp.asshield.com/mcp`, auth none), run Scan Tools, fix any findings, then Submit for Review. After approval, choose **Publish plugin**.
 
 ### Operational safeguards (recommended, not required by OpenAI unless the portal says so)
 
