@@ -12,7 +12,7 @@
 
 **Who we are.** Asshield Insurance is an independent insurance agency (FL Agency License #L120146, KY Agency License #867084), licensed in [list states].
 
-**What the app does.** The Asshield Insurance app in ChatGPT and Codex collects information to start an insurance quote request. It does not provide rates in the conversation and does not bind, issue, renew, change, or cancel any policy.
+**What the app does.** The Asshield Insurance app in ChatGPT and Codex collects information to start an insurance quote request. After submit it may show asterisked Asshield estimated starting prices that are estimates only, not quotes. It does not bind, issue, renew, change, or cancel any policy.
 
 **No coverage until confirmed.** Submitting a quote request does not create insurance coverage. Coverage begins only when a licensed Asshield agent confirms in writing that a carrier has bound a policy and any required payment is made.
 

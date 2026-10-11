@@ -64,7 +64,7 @@ function createMcpServer(): McpServer {
     {
       title: "Start an Asshield quote",
       description:
-        "Start a new insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking in a licensed state (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Out-of-area states get a polite unsupported message and no quote is created. Does not bind coverage. Asshield may later show estimated starting prices only; final pricing comes from a licensed agent. Renders the Asshield guided quote card (consent, multi-step form, review). Includes a what-to-have-ready checklist for the line.",
+        "Use when the user wants to get, request, or start an insurance quote: auto or car, home or homeowners, auto and home bundle, renters, motorcycle, boat, golf cart, commercial auto, commercial general liability, workers compensation, or commercial truck and trucking insurance. Needs the product, a two-letter state, and ZIP. Asshield is licensed in AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, and TX; other states get a polite unsupported message and no quote is created. Starts a quote request only: it does not bind coverage or give a price. After submit, Asshield may show an estimated starting price (an estimate, not a quote); a licensed agent confirms real pricing. Renders the guided quote card with a what-to-have-ready checklist. Do not use for claims, billing, cancellations, or policy changes.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
       _meta: quoteCardMeta(),
       inputSchema: {
@@ -328,7 +328,7 @@ function createMcpServer(): McpServer {
     {
       title: "Submit quote request",
       description:
-        "Send a completed quote intake to Asshield Insurance for a licensed agent to review via Asshield's lead webhook/email. Call get_missing_quote_fields first and confirm with the user before submitting. Submitting is a one-time outbound send; it does not bind, issue, or guarantee coverage or a price. Renders the Asshield quote confirmation card with Asshield estimated starting prices + proposal (estimates are not quotes), reference number, agent will contact, no coverage bound, and agent contact details.",
+        "Use only after get_missing_quote_fields shows nothing missing and the user has confirmed they want to send the request. Sends the completed quote request to a licensed Asshield agent for review via Asshield's lead webhook/email (a one-time outbound send). It does not bind, issue, or guarantee coverage or a price. The confirmation card shows a reference number, what happens next, the Asshield proposal with estimated starting prices marked with an asterisk (estimates only, not quotes or offers), no coverage is bound, and agent contact details. Do not describe the customer as covered.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       _meta: quoteCardMeta(),
       inputSchema: {
@@ -360,7 +360,7 @@ function createMcpServer(): McpServer {
     {
       title: "Show insurance options",
       description:
-        "Read-only branded line picker for Asshield's 11 personal, commercial, and recreational insurance lines. Use when the user is unsure which product to start. Does not create a quote or bind coverage.",
+        "Read-only. Use when the user asks what insurance Asshield offers or is unsure which type to start (auto, home, renters, motorcycle, boat, golf cart, commercial auto, general liability, workers compensation, trucking). Shows a picker of 11 insurance lines and the 12 licensed states. Creates no quote and binds no coverage.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: optionsCardMeta(),
       inputSchema: {}
@@ -381,7 +381,7 @@ function createMcpServer(): McpServer {
     {
       title: "Explain coverage (general info)",
       description:
-        "Read-only general coverage overview from Asshield's curated knowledge base for a product line: what it typically covers, common add-ons, what to have ready, and high-level state notes. Always general information — not advice or a quote. Asshield estimated starting prices (when shown after submit) are illustrations only — not quotes; final pricing comes from a licensed agent. Offer to start a quote afterward. Does not invent specific state statutes.",
+        "Read-only. Use for general questions about what a type of insurance usually covers, common add-ons, or what to have ready for a quote (for example, what does workers compensation cover). Returns curated general information, not advice, not a quote, and no state statutes are invented. Any Asshield estimated starting price shown later is an estimate, not a quote. Offer to start a quote request afterward. Binds no coverage.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: coverageCardMeta(),
       inputSchema: {
@@ -405,7 +405,7 @@ function createMcpServer(): McpServer {
     {
       title: "Get Asshield agent contact",
       description:
-        "Read-only Asshield Insurance agent contact card: agency name, Asshield licensed agents team, primary Lexington KY office phone/email/address, Fort Walton Beach FL office, agency licenses (KY/FL), office hours, website, licensed states, and NAIC license verification link. Optional booking URL appears only when configured. Does not book appointments or bind coverage.",
+        "Read-only. Use when the user wants to talk to a person, call or email an agent, find an office, or check office hours or license details (Lexington KY and Fort Walton Beach FL offices). Shows phone, email, address, hours, licensed states, and a license lookup link. Does not book appointments or bind coverage.",
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
       _meta: agentCardMeta(),
       inputSchema: {}

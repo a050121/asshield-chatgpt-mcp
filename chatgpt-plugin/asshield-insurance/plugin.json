@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.5.2",
-  "description": "The Asshield Insurance plugin (with an MCP app) starts insurance quote requests for personal, commercial, and specialty lines using 13 tools with Apps SDK widgets (options picker, coverage Q&A, guided quote card, agent contact). Quote intake only: it does not bind, issue, or guarantee coverage or pricing.",
+  "version": "1.5.3",
+  "description": "Start auto, home, renters, motorcycle, boat, golf cart, commercial, and trucking insurance quote requests with Asshield Insurance, a licensed independent agency in AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, and TX. Quote requests only: no coverage is bound, and any estimated starting price shown after submit is an estimate, not a quote.",
   "author": {
     "name": "Asshield Insurance",
     "email": "quote@asshield.com",
@@ -11,18 +11,37 @@
   "homepage": "https://www.asshield.com",
   "repository": "https://github.com/a050121/asshield-chatgpt-mcp",
   "keywords": [
-    "insurance",
-    "quote",
+    "insurance quote",
+    "insurance agency",
+    "independent insurance agent",
     "auto insurance",
+    "car insurance",
     "home insurance",
-    "renters insurance"
+    "homeowners insurance",
+    "renters insurance",
+    "bundle home and auto",
+    "motorcycle insurance",
+    "boat insurance",
+    "golf cart insurance",
+    "commercial insurance",
+    "commercial auto insurance",
+    "commercial truck insurance",
+    "trucking insurance",
+    "general liability insurance",
+    "workers compensation insurance",
+    "small business insurance",
+    "insurance quote Kentucky",
+    "insurance quote Tennessee",
+    "insurance quote Florida",
+    "insurance quote Texas",
+    "licensed insurance agent"
   ],
   "extensions": {
     "com.openai": {
       "interface": {
         "displayName": "Asshield Insurance",
-        "shortDescription": "Start an insurance quote",
-        "longDescription": "Asshield Insurance is an independent insurance agency. The Asshield Insurance plugin helps you start a quote request for auto, home, auto + home, renters, commercial auto, commercial general liability, workers' compensation, boat, golf cart, motorcycle, or trucking insurance right in the conversation.\n\nWhat it does:\n- Starts a quote request for your state and ZIP code (licensed states: AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX)\n- Saves your name and how you prefer to be contacted\n- For commercial lines, records business profile details (never FEIN/SSN)\n- Adds drivers/riders and vehicles/bikes/units where needed\n- Records boat, golf cart, GL, and workers' comp specialty details\n- Records your current carrier and coverages so an agent can compare options\n- Records your explicit consent before anything is sent\n- Checks what is still missing, then sends the completed request to an Asshield licensed agent\n- Shows Asshield agent contact details and branded widgets (options picker, coverage Q&A, guided quote card)\n\nWho it is for: people and small businesses who want an Asshield agent to prepare an insurance quote.\n\nLimitations: this plugin collects quote information only. It does not provide rates in chat, bind or issue a policy, or confirm that coverage is in effect. Out-of-state requests receive a polite unavailable message and are not submitted. The plugin never asks for Social Security numbers, FEIN/EIN, driver's license numbers, payment card details, or passwords.",
+        "shortDescription": "Auto, home & business quotes",
+        "longDescription": "Asshield Insurance is an independent insurance agency licensed in Alabama, Arkansas, Florida, Georgia, Indiana, Kentucky, North Carolina, Ohio, Pennsylvania, South Carolina, Tennessee, and Texas (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Use this app to start an insurance quote request in a few steps, right in the conversation.\n\nInsurance you can ask about:\n- Personal: auto insurance, home insurance, auto and home bundle, renters insurance, motorcycle insurance\n- Commercial: commercial auto, commercial general liability, workers compensation, commercial truck and trucking insurance\n- Recreational: boat insurance, golf cart insurance\n\nHow it works:\n- Tell us the type of insurance, your state, and your ZIP code.\n- Share your contact details, address, and the drivers, vehicles, or business details that apply.\n- Review your request and confirm that Asshield may use your details to prepare a quote. You give this consent yourself on the quote card.\n- Send the request to a licensed Asshield agent, who reviews it and follows up. During business hours the typical response is within about 1 hour.\n\nGood to know:\n- Asshield is directly appointed with carriers including Progressive, Travelers, GEICO, and Liberty Mutual. Carrier names are shown as text only. Availability varies by state, product, and eligibility, and your agent decides which carriers fit your request.\n- After you send a request, Asshield may show an estimated starting price marked with an asterisk, for example for auto or homeowners. These are Asshield estimates only. They are not carrier quotes or offers of insurance, may be higher or lower than the price you are offered, and no coverage is bound.\n- Coverage starts only when a licensed Asshield agent confirms in writing that a carrier has bound a policy.\n- You can also browse insurance types, read general coverage information (not advice), and see Asshield agent contact details and office hours.\n- Requests outside the 12 licensed states are not submitted. Asshield does not collect Social Security numbers, FEIN or EIN, driver license numbers, payment card details, or passwords.",
         "developerName": "Asshield Insurance",
         "category": "Finance",
         "capabilities": [
@@ -41,9 +60,9 @@
         "privacyPolicyURL": "https://www.asshield.com/privacy",
         "termsOfServiceURL": "https://www.asshield.com/terms",
         "defaultPrompt": [
-          "What insurance options can Asshield help me with?",
-          "Start an auto insurance quote for me in Kentucky, ZIP 40505.",
-          "What does commercial general liability usually cover?"
+          "I need an auto insurance quote in Kentucky, ZIP 40505.",
+          "I want a home insurance quote in Tennessee.",
+          "I need commercial truck insurance for my small fleet in Texas."
         ],
         "brandColor": "#1A7FBF",
         "brandColorDark": "#1A9FE0",
@@ -111,7 +130,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "1.5.2: skill guidance now names all 13 tools (adds show_insurance_options, explain_coverage, get_agent_contact) and matches 1.5.1 behavior (estimates with disclaimer, widget-only consent, restricted data not collected). No server changes. Demo URL unchanged (https://youtu.be/FjTaBkdc-4U)."
+        "release_notes": "1.5.3: discovery copy refresh: plain-language short and long descriptions, starter prompts, keywords, and clearer tool descriptions for routing. Estimates stay asterisked and are not quotes; no coverage is bound; direct appointments with Progressive, Travelers, GEICO, and Liberty Mutual shown as text only. Removed the old no-rates-in-chat line. Demo URL unchanged (https://youtu.be/FjTaBkdc-4U)."
       }
     }
   }
