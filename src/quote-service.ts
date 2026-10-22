@@ -24,7 +24,7 @@ import { buildAsshieldEstimate } from "./asshield-estimates.js";
 import { buildConfirmationMessaging } from "./confirmation-copy.js";
 
 function requireDb() {
-  if (!db) throw new Error("Supabase client is not configured");
+  if (!db) throw new Error("Quote storage is temporarily unavailable. Please try again shortly or contact Asshield at 859-368-0162.");
   return db;
 }
 

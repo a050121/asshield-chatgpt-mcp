@@ -59,7 +59,25 @@ test -d "$PKG/assets"
 test -f "$PKG/assets/logo.png"
 test -f "$PKG/assets/icon.png"
 
-(cd "$PKG" && zip -qr -X "$OUT" plugin.json mcp.json skills assets)
+if command -v zip >/dev/null 2>&1; then
+  (cd "$PKG" && zip -qr -X "$OUT" plugin.json mcp.json skills assets)
+else
+  python3 - "$PKG" "$OUT" <<'PYZ'
+import os, sys, zipfile
+pkg, out = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+  for top in ["plugin.json", "mcp.json", "skills", "assets"]:
+    path = os.path.join(pkg, top)
+    if os.path.isfile(path):
+      z.write(path, top); continue
+    for root, dirs, files in os.walk(path):
+      dirs.sort()
+      for f in sorted(files):
+        if f.startswith("."): continue
+        full = os.path.join(root, f)
+        z.write(full, os.path.relpath(full, pkg))
+PYZ
+fi
 echo "Built $OUT"
 
 python3 - "$OUT" <<'PY'

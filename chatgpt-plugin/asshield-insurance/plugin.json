@@ -71,7 +71,7 @@
         "logo": "./assets/logo.png",
         "logoDark": "./assets/logo-dark.png"
       },
-      "onboardingSkill": "./skills/asshield-quote-intake/SKILL.md",
+      "onboardingSkill": "./skills/asshield-welcome/SKILL.md",
       "review": {
         "test_cases": {
           "positive": [
@@ -103,7 +103,7 @@
               "description": "Check completeness, confirm, submit; not covered",
               "prompt": "That's everything. Please send my quote request. Am I covered now?",
               "tools_triggered": "get_missing_quote_fields, submit_quote, get_agent_contact",
-              "expected_behavior": "Call get_missing_quote_fields then submit_quote only if complete. Confirmation shows You're all set. with business-hours response timing, Independent means more options (Progressive \u2022 Travelers \u2022 GEICO \u2022 Liberty Mutual and other insurance carriers), and Asshield professional coverage proposal + estimate with disclaimer that estimates are not quotes. Clearly state no coverage is bound. May show agent contact."
+              "expected_behavior": "Call get_missing_quote_fields then submit_quote only if complete. Confirmation shows You're all set. with business-hours response timing, Independent means more options (Progressive • Travelers • GEICO • Liberty Mutual and other insurance carriers), and Asshield professional coverage proposal + estimate with disclaimer that estimates are not quotes. Clearly state no coverage is bound. May show agent contact."
             }
           ],
           "negative": [
@@ -118,7 +118,7 @@
             {
               "description": "Request for an instant price.",
               "prompt": "Exactly how much will my commercial auto insurance cost with Asshield right now?",
-              "expected_behavior": "Do not invent a firm premium. Clarify that Asshield estimated starting prices (when shown after submit) are illustrations only \u2014 not quotes or offers \u2014 and a licensed agent confirms real carrier pricing after review."
+              "expected_behavior": "Do not invent a firm premium. Clarify that Asshield estimated starting prices (when shown after submit) are illustrations only — not quotes or offers — and a licensed agent confirms real carrier pricing after review."
             }
           ]
         },
@@ -130,7 +130,7 @@
         "countries": [
           "US"
         ],
-        "release_notes": "1.5.6: refreshed app icon with Asshield name in latest brand colors"
+        "release_notes": "1.5.6: refreshed app icon with Asshield name in latest brand colors, and a clearer customer welcome when you first add the app"
       }
     }
   }

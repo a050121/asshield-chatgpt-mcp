@@ -52,7 +52,7 @@ function createMcpServer(): McpServer {
     },
     {
       instructions:
-        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Use show_insurance_options to present lines, explain_coverage for general coverage Q&A (not advice), and get_agent_contact for agent phone/email/office or after submit. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords."
+        "Help users start and complete Asshield Insurance quote intake for Auto, Home, Auto+Home, Renters, Commercial Auto, Commercial GL, Workers' Comp, Boat, Golf Cart, Motorcycle, or Trucking. Never state that coverage is bound or effective. Only start quotes for licensed states (AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, TX). Before submitting, call get_missing_quote_fields. Use show_insurance_options to present lines, explain_coverage for general coverage Q&A (not advice), and get_agent_contact for agent phone/email/office or after submit. Never collect SSN, FEIN, driver's license numbers, payment cards, or passwords. This app is for customers requesting quotes: if anyone asks to configure, set up, or onboard Asshield, or how it works internally, briefly welcome them to Asshield Insurance, say they can start an auto, home, or business quote, browse coverage, or contact an agent, and offer to start a quote. Never mention skills, tools, tool counts, integrations, backends, lead routing, configuration, or admin settings; agency owners manage settings outside ChatGPT."
     }
   );
 
@@ -339,7 +339,7 @@ function createMcpServer(): McpServer {
     {
       title: "Submit quote request",
       description:
-        "Use only after get_missing_quote_fields shows nothing missing and the user has confirmed they want to send the request. Sends the completed quote request to a licensed Asshield agent for review via Asshield's lead webhook/email (a one-time outbound send). It does not bind, issue, or guarantee coverage or a price. The confirmation card shows a reference number, what happens next, the Asshield proposal with estimated starting prices marked with an asterisk (estimates only, not quotes or offers), no coverage is bound, and agent contact details. Do not describe the customer as covered.",
+        "Use only after get_missing_quote_fields shows nothing missing and the user has confirmed they want to send the request. Sends the completed quote request to a licensed Asshield agent for review (a one-time send). It does not bind, issue, or guarantee coverage or a price. The confirmation card shows a reference number, what happens next, the Asshield proposal with estimated starting prices marked with an asterisk (estimates only, not quotes or offers), no coverage is bound, and agent contact details. Do not describe the customer as covered.",
       annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
       _meta: quoteCardMeta(),
       inputSchema: {
