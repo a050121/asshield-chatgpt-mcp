@@ -614,3 +614,17 @@ html.theme-dark input, html.theme-dark textarea, html.theme-dark select {
 html.theme-dark .pref-card { background: var(--tile); color: var(--ink); border-color: var(--line); }
 html.theme-dark .edit-row { border-color: var(--line); }
 html.theme-dark .entity { background: var(--tile); border-color: var(--line); }
+
+/* Ask a question (secondary, all cards) */
+#ask-slot { margin: 14px 0 2px; }
+.ask-toggle { display: inline-flex; align-items: center; gap: 8px; background: transparent; border: 1px solid var(--line); color: var(--ink); border-radius: 999px; padding: 7px 14px; font-size: .84rem; font-weight: 600; cursor: pointer; box-shadow: none; }
+.ask-toggle:hover { border-color: var(--accent); }
+.ask-ico { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: rgba(26,159,224,.14); color: var(--accent); font-size: .74rem; font-weight: 800; }
+.ask-panel { margin-top: 10px; }
+.ask-row { display: flex; gap: 8px; align-items: stretch; }
+.ask-row input { flex: 1; min-width: 0; margin: 0; }
+.ask-send { flex: none; border-radius: 12px; padding: 0 16px; font-weight: 700; border: 0; background: var(--navy, #0f2149); color: #fff; cursor: pointer; }
+.ask-send:disabled { opacity: .6; }
+.ask-hint { margin: 6px 2px 0; font-size: .76rem; color: var(--muted); }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+html.theme-dark .ask-send { background: var(--accent); color: #071521; }

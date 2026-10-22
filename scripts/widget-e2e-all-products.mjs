@@ -36,7 +36,7 @@ async function mount(uri, toolOutput, rec) {
   }, JSON.stringify(toolOutput));
   await page.route("http://widget.test/**", r => r.fulfill({ status: 200, contentType: "text/html", body: html }));
   await page.goto("http://widget.test/card.html");
-  await page.evaluate(() => { window.__mut = 0; new MutationObserver(m => window.__mut += m.length).observe(document.body, { childList: true, subtree: true, characterData: true }); });
+  await page.evaluate(() => { window.__mut = 0; new MutationObserver(m => { window.__mut += m.filter(x => { const t = x.target.nodeType === 1 ? x.target : x.target.parentElement; return !(t && t.closest && t.closest("#ask-slot")); }).length; }).observe(document.body, { childList: true, subtree: true, characterData: true }); });
   return page;
 }
 async function idle(page, ms) { await page.evaluate(() => { window.__mut = 0; }); await sleep(ms); return page.evaluate(() => window.__mut); }
@@ -57,6 +57,14 @@ async function clickWait(page, sel) {
   await sleep(300);
   return page.$eval("#status", e => e.textContent);
 }
+async function askCheck(page, q) {
+  await page.evaluate(() => { window.__follow = null; });
+  if (!(await page.$("#ask-toggle"))) return "FAIL no ask button";
+  if (await page.$eval("#ask-panel", e => e.classList.contains("is-hidden"))) await page.click("#ask-toggle");
+  await page.fill("#ask-input", q); await page.click("#ask-send"); await sleep(300);
+  const pr = await page.evaluate(() => window.__follow?.prompt || null);
+  return pr && pr.endsWith(q) ? "pass: " + pr : "FAIL prompt=" + pr;
+}
 const all = { tools, products: [] };
 for (const [product, state, zip] of PRODUCTS) {
   const rec = { product, state, zip, checks: {}, steps: [], calls: [], pageErrors: [] };
@@ -72,6 +80,9 @@ for (const [product, state, zip] of PRODUCTS) {
     rec.checks.no_redraw_consent_8s = m === 0 ? "pass" : `FAIL ${m} DOM changes`;
     rec.checks.no_strikethrough = (await page.evaluate(() => [...document.querySelectorAll(".checklist .txt")].some(e => getComputedStyle(e).textDecorationLine.includes("line-through")))) ? "FAIL" : "pass";
     await page.screenshot({ path: `${OUT}-${product}-1-consent.png`, fullPage: true });
+    rec.checks.ask_on_consent = await askCheck(page, "Do I need my declarations page?");
+    await page.evaluate(() => { window.__follow = null; }); await page.fill("#ask-input", "my ssn is 123-45-6789"); await page.click("#ask-send"); await sleep(200);
+    rec.checks.ask_blocks_ssn = (await page.evaluate(() => window.__follow)) === null ? "pass" : "FAIL sent";
     await page.click("#btn-begin"); await sleep(1500);
     rec.checks.tap_opens_contact = (await stepId(page)) === "contact" ? "pass" : "FAIL on " + await stepId(page);
     await page.fill("#first_name", "TEST"); await page.fill("#last_name", "Grok Bot");
@@ -80,6 +91,7 @@ for (const [product, state, zip] of PRODUCTS) {
     await page.click('#residence button[data-v="own"]');
     const m2 = await idle(page, 5000);
     rec.checks.typed_input_persists = (await page.inputValue("#first_name")) === "TEST" && m2 === 0 ? "pass" : `FAIL value=${await page.inputValue("#first_name")} changes=${m2}`;
+    rec.checks.ask_on_contact_keeps_form = (await askCheck(page, "Can I use my work email?")) + ((await page.inputValue("#first_name")) === "TEST" ? "" : " FAIL form reset");
     for (let guard = 0; guard < 14; guard++) {
       const sid = await stepId(page);
       if (sid === "review") break;
@@ -109,6 +121,7 @@ for (const [product, state, zip] of PRODUCTS) {
     const fin = await stepId(page);
     rec.checks.reached_review = fin === "review" ? "pass" : "FAIL stuck at " + fin;
     rec.checks.submit_enabled_after_consent = fin === "review" && await page.$eval("#btn-submit", b => !b.disabled) ? "pass" : "FAIL";
+    rec.checks.ask_on_review = fin === "review" ? await askCheck(page, "What happens after I submit?") : "n/a";
     rec.checks.no_redraw_review_5s = fin === "review" ? ((await idle(page, 5000)) === 0 ? "pass" : "FAIL") : "n/a";
     rec.checks.widget_tool_calls = rec.calls.some(c => c.includes("FAIL")) ? "FAIL" : "pass";
     await page.screenshot({ path: `${OUT}-${product}-2-end.png`, fullPage: true });
@@ -126,10 +139,11 @@ for (const [tool, args, uri] of [["show_insurance_options", {}, "ui://widget/ass
   if (r.error || r.result?.isError) { all.otherCards[key] = "FAIL tool error"; continue; }
   const p = await mount(uri, r.result.structuredContent, rec); await sleep(500);
   const m = await idle(p, 6000);
-  let nav = "";
+  const askRes = await askCheck(p, "Which line fits a home business?");
+  let nav = " ask:" + askRes.slice(0, 120);
   const btn = tool === "show_insurance_options" ? null : tool === "explain_coverage" ? "#btn-options" : null;
-  if (tool === "show_insurance_options") { await p.fill("#zip", "40509"); await p.dispatchEvent("#zip", "input"); await sleep(300); const tile = await p.$("button.line-tile, .grid button, [data-id]"); if (tile) await tile.click(); await sleep(300); if (await p.$eval("#btn-start", b => !b.disabled).catch(() => false)) { await p.click("#btn-start"); await sleep(800); nav = " startButton->" + JSON.stringify(await p.evaluate(() => window.__follow?.prompt || null)); } else nav = " startButton disabled/untested"; }
-  if (btn && await p.$(btn)) { await p.click(btn); await sleep(800); nav = " navButton->" + JSON.stringify(await p.evaluate(() => window.__follow?.prompt || null)); }
+  if (tool === "show_insurance_options") { await p.fill("#zip", "40509"); await p.dispatchEvent("#zip", "input"); await sleep(300); const tile = await p.$("button.line-tile, .grid button, [data-id]"); if (tile) await tile.click(); await sleep(300); if (await p.$eval("#btn-start", b => !b.disabled).catch(() => false)) { await p.click("#btn-start"); await sleep(800); nav += " startButton->" + JSON.stringify(await p.evaluate(() => window.__follow?.prompt || null)); } else nav += " startButton disabled/untested"; }
+  if (btn && await p.$(btn)) { await p.click(btn); await sleep(800); nav += " navButton->" + JSON.stringify(await p.evaluate(() => window.__follow?.prompt || null)); }
   all.otherCards[key] = (m === 0 ? "pass" : `FAIL ${m} DOM changes`) + nav + (rec.pageErrors.length ? " pageErrors:" + rec.pageErrors.join("|") : "");
   await p.screenshot({ path: `${OUT}-card-${key.replace(":", "-")}.png`, fullPage: true }); await p.close();
 }

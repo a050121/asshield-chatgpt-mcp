@@ -39,6 +39,7 @@
         <button type="button" class="secondary" id="btn-explain">Explore coverage</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div id="ask-slot"></div>
       <p class="agency-line">One request, and a licensed agent shops multiple carriers for you.</p>
       <p class="note">Quote request only. No coverage is bound in ChatGPT. After submit, Asshield may show estimated starting prices* for illustration — not carrier quotes.</p>
     </div>
@@ -179,6 +180,7 @@
     function __changed(v){ let k=""; try { k = JSON.stringify(v); } catch(_) { return false; } if (!k || k === __lastHostKey) return false; __lastHostKey = k; return true; }
     // Navigation buttons ask ChatGPT to continue, so the next Asshield card actually renders in chat.
     // A widget-side callTool returns data to this card only and shows nothing new to the customer.
+    window.asshieldAskContext = function () { return "Question about Asshield insurance options: "; };
     async function askChat(prompt, tool, args) {
       if (window.openai?.sendFollowUpMessage) { await window.openai.sendFollowUpMessage({ prompt }); return "asked"; }
       await callTool(tool, args || {}); return "called";

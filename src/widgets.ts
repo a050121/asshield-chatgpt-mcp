@@ -46,10 +46,11 @@ function logoDataUri(): string {
 function loadHtml(name: string): string {
   const theme = readFileSync(join(publicDir, "asshield-widget-theme.css"), "utf8");
   const icons = readFileSync(join(publicDir, "asshield-line-icons.js"), "utf8");
+  const ask = readFileSync(join(publicDir, "asshield-ask.js"), "utf8");
   return readFileSync(join(publicDir, name), "utf8")
     .replaceAll("LOGO_SRC", logoDataUri())
     .replace("/*__ASSHIELD_THEME__*/", theme)
-    .replace("/*__ASSHIELD_ICONS__*/", icons);
+    .replace("/*__ASSHIELD_ICONS__*/", icons + "\n" + ask);
 }
 
 const uiCsp = {

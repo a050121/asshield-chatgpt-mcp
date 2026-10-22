@@ -37,6 +37,7 @@
       <nav class="stepper is-hidden" id="stepper" aria-label="Quote steps"></nav>
       <div id="panels"></div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div id="ask-slot"></div>
     </div>
     <footer class="foot">
       <div class="foot-main is-hidden" id="foot-main">
@@ -111,6 +112,15 @@
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 25000);
       });
     }
+    window.asshieldAskContext = function () {
+      const prod = S.product ? productLabel(S.product) : "insurance";
+      let step = "Quote";
+      if (S.phase === "consent") step = "Before we continue";
+      else if (S.phase === "confirmation") step = "Request received";
+      else if (S.phase === "unsupported") step = "Outside licensed area";
+      else { const st = stepsFor(S.product)[S.step]; if (st) step = st.label; }
+      return `Question about my Asshield ${prod} quote request (step: ${step}): `;
+    };
     let lastPersistKey = "";
     // Navigation buttons ask ChatGPT to continue, so the next Asshield card actually renders in chat.
     // A widget-side callTool returns data to this card only and shows nothing new to the customer.

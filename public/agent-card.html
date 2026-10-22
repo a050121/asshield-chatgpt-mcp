@@ -69,6 +69,7 @@
         <button type="button" class="cta" id="btn-callback">Save callback preference</button>
       </div>
       <p class="status" id="status" role="status" aria-live="polite"></p>
+      <div id="ask-slot"></div>
       <p class="note">This card shares Asshield contact information only. It does not bind coverage or confirm a policy is in effect.</p>
     </div>
     <footer class="foot">
@@ -80,6 +81,7 @@
     </footer>
   </div>
   <div class="toast is-hidden" id="toast" role="status"></div>
+  <script>/*__ASSHIELD_ICONS__*/</script>
   <script>
   (function () {
     let callbackPref = null;
@@ -222,6 +224,7 @@
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive: true });
+    window.asshieldAskContext = function () { return "Question about contacting Asshield Insurance: "; };
     let __lastHostKey = "", __lastTheme = "";
     function __changed(v){ let k=""; try { k = JSON.stringify(v); } catch(_) { return false; } if (!k || k === __lastHostKey) return false; __lastHostKey = k; return true; }
     function sync() {
