@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "asshield-insurance",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "ChatGPT starts an insurance quote request with Asshield Insurance, a licensed independent agency in AL, AR, FL, GA, IN, KY, NC, OH, PA, SC, TN, and TX. You provide the details, Asshield reviews your request, and a licensed agent helps with coverage options from the carriers we represent. No coverage is bound, and any estimated starting price is an estimate, not a quote.",
   "author": {
     "name": "Asshield Insurance",
