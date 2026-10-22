@@ -771,6 +771,8 @@
                 await callTool("save_current_policy", {
                   quote_id: S.quote_id,
                   carrier: S.fields.carrier || "Preference only",
+                  current_premium: typeof S.fields.current_premium === "number" && S.fields.current_premium > 0 ? S.fields.current_premium : undefined,
+                  premium_frequency: ["monthly","6_month","annual"].includes(S.fields.premium_frequency) ? S.fields.premium_frequency : undefined,
                   bodily_injury_limit: `coverage:${S.fields.coverage_preference||"medium"};deductible:${S.fields.deductible_preference||"medium"}`
                 });
               } catch(_){}
