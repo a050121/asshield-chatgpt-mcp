@@ -468,7 +468,7 @@ h3 { margin: 12px 0 6px; font-size: .72rem; font-weight: 800; letter-spacing: .0
   display: grid; place-items: center; flex-shrink: 0; font-size: .7rem; background: var(--card);
 }
 .checklist li.done .mark { background: var(--ok); border-color: var(--ok); color: #fff; }
-.checklist li.done .txt { color: var(--muted); text-decoration: line-through; }
+.checklist li.done .txt { color: var(--ink, inherit); text-decoration: none; }
 .timeline { list-style: none; padding: 0; margin: 12px 0; }
 .timeline li { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .88rem; }
 .dot { width: 12px; height: 12px; border-radius: 50%; margin-top: 4px; background: var(--line-strong); flex-shrink: 0; }

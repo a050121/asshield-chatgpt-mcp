@@ -153,12 +153,15 @@
         const p = pending.get(message.id); pending.delete(message.id);
         if (message.error) p.reject(message.error); else p.resolve(message.result); return;
       }
-      if (message.method === "ui/notifications/tool-result") fill(message.params?.structuredContent || message.params);
+      if (message.method === "ui/notifications/tool-result") { const sc = message.params?.structuredContent || message.params; if (__changed(sc)) fill(sc); }
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive:true });
-    function sync(){ try { if (window.openai?.toolOutput) fill(window.openai.toolOutput); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
-    setInterval(sync, 800); sync();
+    let __lastHostKey = "", __lastTheme = "";
+    function __changed(v){ let k=""; try { k = JSON.stringify(v); } catch(_) { return false; } if (!k || k === __lastHostKey) return false; __lastHostKey = k; return true; }
+    function sync(){ try { const o = window.openai?.toolOutput; if (o && __changed(o)) fill(o); const t = window.openai?.theme; if (t && t !== __lastTheme) { __lastTheme = t; applyTheme(t); } } catch(_){} }
+    window.addEventListener("openai:set_globals", sync, { passive: true });
+    setInterval(sync, 1500); sync();
     $("btn-quote").onclick = async () => {
       if (!state.product) return setStatus("No product selected.");
       const st = $("state").value.trim().toUpperCase();

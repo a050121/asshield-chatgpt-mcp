@@ -85,7 +85,18 @@ function createMcpServer(): McpServer {
       if (result.consent_nonce && enriched.widget && typeof enriched.widget === "object") {
         (enriched.widget as Record<string, unknown>).consent_nonce = result.consent_nonce;
       }
-      return toolTextResult(enriched);
+      const out = toolTextResult(enriched);
+      if (result.supported !== false && qid) {
+        const label = String(enriched.product_label || input.product);
+        out.content.unshift({
+          type: "text" as const,
+          text:
+            `${label} quote request started for ${String(input.state).toUpperCase()} ${input.zip}. ` +
+            "The Asshield quote card is on screen; the customer taps the gold button to continue in the card. " +
+            "Reply in one or two plain sentences. Do not use tildes, strikethrough, or approximate symbols."
+        });
+      }
+      return out;
     }
   );
 

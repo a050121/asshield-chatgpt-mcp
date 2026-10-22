@@ -96,7 +96,7 @@
       opts = opts || {};
       const list = (items||[]).map(c => {
         const text = typeof c === "string" ? c : (c.text||"");
-        return { text, done: checklistItemDone(text) };
+        return { text, done: opts.neutral ? false : checklistItemDone(text) };
       }).filter(c => c.text && (!opts.onlyRemaining || !c.done));
       if (!list.length) return opts.onlyRemaining ? `<p class="muted">You have the basics covered for this request.</p>` : "";
       return `<ul class="checklist">${list.map(c => `<li class="${c.done?"done":""}"><span class="mark">${c.done?"✓":""}</span><span class="txt">${escapeHtml(c.text)}</span></li>`).join("")}</ul>`;
@@ -111,15 +111,33 @@
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 25000);
       });
     }
+    let lastPersistKey = "";
     function persistWidget() {
       try {
-        window.openai?.setWidgetState?.({
+        if (!window.openai?.setWidgetState) return;
+        const snap = {
+          phase: S.phase, step: S.step, auth_ok: !!S.fields.auth_ok,
           quote_id: S.quote_id, product: S.product, state: S.state, zip: S.zip,
           first_name: S.fields.first_name, last_name: S.fields.last_name,
           email: S.fields.email, phone: S.fields.phone,
           coverage_preference: S.fields.coverage_preference,
           deductible_preference: S.fields.deductible_preference,
           drivers: S.fields.drivers, vehicles: S.fields.vehicles
+        };
+        const k = JSON.stringify(snap);
+        if (k === lastPersistKey) return;
+        lastPersistKey = k;
+        window.openai.setWidgetState(snap);
+      } catch(_){}
+    }
+    let lastHeight = 0;
+    function reportHeight() {
+      try {
+        if (!window.openai?.notifyIntrinsicHeight) return;
+        requestAnimationFrame(() => {
+          const h = Math.ceil(document.documentElement.scrollHeight);
+          if (Math.abs(h - lastHeight) < 4) return;
+          lastHeight = h; window.openai.notifyIntrinsicHeight(h);
         });
       } catch(_){}
     }
@@ -219,6 +237,7 @@
 
     function render() {
       updateFoot();
+      Promise.resolve().then(reportHeight);
 
       renderStepper(); updateRing(); persistWidget();
       const root = $("panels");
@@ -245,10 +264,24 @@
             See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.
           </div>
           <p class="muted">ChatGPT’s own answers are <strong>not</strong> Asshield’s advice or a quote.</p>
-          ${S.checklist?.length ? `<h3>What to have ready</h3>${renderChecklist(S.checklist)}` : ""}
+          ${S.checklist?.length ? `<h3>What to have ready</h3>${renderChecklist(S.checklist,{neutral:true})}` : ""}
           <div class="actions"><button type="button" class="cta" id="btn-begin">I understand — continue</button></div>
         </div>`;
-        $("btn-begin").onclick = () => { S.phase = "form"; S.step = 0; render(); };
+        $("btn-begin").onclick = () => {
+          const btn = $("btn-begin");
+          if (!S.quote_id) {
+            setStatus("This quote card is missing its reference. Asking ChatGPT to restart the quote request.");
+            try {
+              window.openai?.sendFollowUpMessage?.({ prompt: "Please restart my Asshield " + productLabel(S.product||"") + " quote request" + (S.state && S.zip ? " for " + S.state + " " + S.zip : "") + "." });
+            } catch(_){}
+            return;
+          }
+          if (btn) { btn.disabled = true; btn.textContent = "Opening your quote form…"; }
+          S.phase = "form"; S.step = 0; S.userAdvanced = true;
+          render(); setStatus("Got it. Start with your contact details below.");
+          try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch(_){}
+        };
+        reportHeight();
         return;
       }
 
@@ -798,9 +831,12 @@
       const o=$("btn-options"); if(o) o.onclick = async () => { try { await callTool("show_insurance_options",{}); } catch(e){ setStatus(String(e?.message||e)); } };
     }
 
-    function ingest(payload) {
+    function ingest(payload, opts) {
+      opts = opts || {};
       const sc = payload?.structuredContent || payload || {};
       const w = sc.widget || {};
+      const incomingQid = w.quote_id || sc.quote_id || sc.quote?.id || null;
+      const sameQuote = !!(incomingQid && S.quote_id && incomingQid === S.quote_id);
       if (sc.supported === false) { S.phase="unsupported"; S.message=sc.message||""; render(); return; }
       if (w.quote_id || sc.quote_id || sc.quote?.id) S.quote_id = w.quote_id || sc.quote_id || sc.quote.id;
       if (w.product || sc.product || sc.quote?.product) S.product = w.product || sc.product || sc.quote.product;
@@ -818,7 +854,10 @@
         S.independent_section = w.independent_section || sc.independent_section || sc.confirmation.independent;
       if (w.consent_nonce || sc.consent_nonce) S.consent_nonce = w.consent_nonce || sc.consent_nonce;
       if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
-      else if (w.phase === "consent") S.phase = "consent";
+      else if (w.phase === "consent") {
+        // Only a brand-new quote starts at consent. Never pull the customer back once they moved on.
+        if (!(sameQuote && (S.userAdvanced || S.phase === "form"))) S.phase = "consent";
+      } else if (w.phase === "progress" && S.phase === "consent" && opts.host) S.phase = "form";
       if (!S.cross_sell?.length && S.product && CROSS_DEFAULT[S.product])
         S.cross_sell = CROSS_DEFAULT[S.product].map(id => ({ id, label: productLabel(id) }));
       render();
@@ -832,12 +871,39 @@
         const p = pending.get(message.id); pending.delete(message.id);
         if (message.error) p.reject(message.error); else p.resolve(message.result); return;
       }
-      if (message.method === "ui/notifications/tool-result") ingest(message.params||{});
+      if (message.method === "ui/notifications/tool-result") ingestHost(message.params?.structuredContent || message.params || {});
       const theme = message.params?.theme || message.params?.colorScheme;
       if (theme) applyTheme(theme);
     }, { passive:true });
-    function sync(){ try { if (window.openai?.toolOutput) ingest({ structuredContent: window.openai.toolOutput }); if (window.openai?.theme) applyTheme(window.openai.theme); } catch(_){} }
-    setInterval(sync, 800); sync();
+    // Host output (window.openai.toolOutput or tool-result notifications) only re-renders when it actually changes.
+    // Re-rendering the same output on a timer made the card blink and reset the consent step.
+    let lastHostKey = ""; let restored = false; let lastTheme = "";
+    function ingestHost(sc) {
+      let k = ""; try { k = JSON.stringify(sc); } catch(_) { return; }
+      if (!k || k === lastHostKey) return;
+      lastHostKey = k;
+      if (!restored) {
+        restored = true;
+        try {
+          const ws = window.openai?.widgetState;
+          const qid = sc?.widget?.quote_id || sc?.quote_id || sc?.quote?.id;
+          if (ws && qid && ws.quote_id === qid && ws.phase && ws.phase !== "consent") {
+            S.quote_id = qid; S.phase = ws.phase; S.step = Number(ws.step)||0; S.userAdvanced = true;
+            ["first_name","last_name","email","phone","coverage_preference","deductible_preference","drivers","vehicles"].forEach(f => { if (ws[f] != null) S.fields[f] = ws[f]; });
+            if (ws.auth_ok) S.fields.auth_ok = true;
+          }
+        } catch(_){}
+      }
+      ingest({ structuredContent: sc }, { host: true });
+    }
+    function sync(){
+      try {
+        if (window.openai?.toolOutput) ingestHost(window.openai.toolOutput);
+        const t = window.openai?.theme; if (t && t !== lastTheme) { lastTheme = t; applyTheme(t); }
+      } catch(_){}
+    }
+    window.addEventListener("openai:set_globals", sync, { passive: true });
+    setInterval(sync, 1500); sync();
 
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
