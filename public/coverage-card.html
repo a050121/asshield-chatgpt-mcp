@@ -159,6 +159,13 @@
     }, { passive:true });
     let __lastHostKey = "", __lastTheme = "";
     function __changed(v){ let k=""; try { k = JSON.stringify(v); } catch(_) { return false; } if (!k || k === __lastHostKey) return false; __lastHostKey = k; return true; }
+    // Navigation buttons ask ChatGPT to continue, so the next Asshield card actually renders in chat.
+    // A widget-side callTool returns data to this card only and shows nothing new to the customer.
+    async function askChat(prompt, tool, args) {
+      if (window.openai?.sendFollowUpMessage) { await window.openai.sendFollowUpMessage({ prompt }); return "asked"; }
+      await callTool(tool, args || {}); return "called";
+    }
+    function lineName(id){ return String(id||"").replace(/_/g," "); }
     function sync(){ try { const o = window.openai?.toolOutput; if (o && __changed(o)) fill(o); const t = window.openai?.theme; if (t && t !== __lastTheme) { __lastTheme = t; applyTheme(t); } } catch(_){} }
     window.addEventListener("openai:set_globals", sync, { passive: true });
     setInterval(sync, 1500); sync();
@@ -169,13 +176,13 @@
       if (!/^[A-Z]{2}$/.test(st) || !/^\d{5}(-\d{4})?$/.test(zip)) return setStatus("Enter state and ZIP to start.");
       setStatus("Starting quote…");
       try {
-        await callTool("start_quote", { product: state.product, state: st, zip });
+        await askChat(`Start an Asshield ${lineName(state.product)} quote request for ${st} ${zip}.`, "start_quote", { product: state.product, state: st, zip });
         syncState();
-        setStatus("Quote started. Preference: " + state.pref + ".");
+        setStatus("Starting your quote request in chat.");
       } catch(e){ setStatus("Could not start: " + (e?.message||e)); }
     };
     $("btn-options").onclick = async () => {
-      try { await callTool("show_insurance_options", {}); } catch(e){ setStatus(String(e?.message||e)); }
+      try { await askChat("Show me the Asshield insurance options.", "show_insurance_options", {}); } catch(e){ setStatus(String(e?.message||e)); }
     };
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {

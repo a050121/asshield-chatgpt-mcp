@@ -177,6 +177,13 @@
     }, { passive:true });
     let __lastHostKey = "", __lastTheme = "";
     function __changed(v){ let k=""; try { k = JSON.stringify(v); } catch(_) { return false; } if (!k || k === __lastHostKey) return false; __lastHostKey = k; return true; }
+    // Navigation buttons ask ChatGPT to continue, so the next Asshield card actually renders in chat.
+    // A widget-side callTool returns data to this card only and shows nothing new to the customer.
+    async function askChat(prompt, tool, args) {
+      if (window.openai?.sendFollowUpMessage) { await window.openai.sendFollowUpMessage({ prompt }); return "asked"; }
+      await callTool(tool, args || {}); return "called";
+    }
+    function lineName(id){ return String(id||"").replace(/_/g," "); }
     function sync(){ try { const o = window.openai?.toolOutput; if (o && __changed(o)) ingest({ structuredContent: o }); const t = window.openai?.theme; if (t && t !== __lastTheme) { __lastTheme = t; applyTheme(t); } } catch(_){} }
     window.addEventListener("openai:set_globals", sync, { passive: true });
     setInterval(sync, 1500); sync();
@@ -189,18 +196,18 @@
       if (!primary) return;
       setStatus("Starting quote request…");
       try {
-        await callTool("start_quote", { product: primary, state: detectedState, zip });
+        await askChat(`Start an Asshield ${lineName(primary)} quote request for ${detectedState} ${zip}.`, "start_quote", { product: primary, state: detectedState, zip });
         try { window.openai?.setWidgetState?.({ selected_lines: lines, bundle_lines: lines, zip, state: detectedState, product: primary }); } catch(_){}
-        setStatus("Quote started for " + primary.replace(/_/g," ") + (lines.length>1 ? ` (+${lines.length-1} more)` : "") + ".");
+        setStatus("Starting your " + lineName(primary) + " quote request in chat" + (lines.length>1 ? ` (+${lines.length-1} more lines to discuss with your agent)` : "") + ".");
       } catch (e) { setStatus("Could not start: " + (e?.message || e)); }
     };
     $("btn-explain").onclick = async () => {
       const id = [...selected][0] || "auto";
-      try { await callTool("explain_coverage", { product: id }); setStatus("Opening coverage explorer…"); }
+      try { await askChat(`Explain Asshield ${lineName(id)} coverage.`, "explain_coverage", { product: id }); setStatus("Opening coverage explorer…"); }
       catch(e){ setStatus(String(e?.message||e)); }
     };
-    $("btn-agent").onclick = async () => {
-      try { await callTool("get_agent_contact", {}); } catch(e){ setStatus(String(e?.message||e)); }
+    if ($("btn-agent")) $("btn-agent").onclick = async () => {
+      try { await askChat("Show me Asshield agent contact info.", "get_agent_contact", {}); } catch(e){ setStatus(String(e?.message||e)); }
     };
     const mock = new URLSearchParams(location.search).get("mock");
     if (mock) {
