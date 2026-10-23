@@ -149,7 +149,8 @@ for (const [product, state, zip] of PRODUCTS) {
       }
       if (sid === "drivers") { await page.fill("#d_first", "TEST"); await page.fill("#d_last", "Grok Bot"); await page.fill("#d_dob", "1990-01-01"); await clickWait(page, "#btn-add-driver"); }
       if (sid === "vehicles") { await page.selectOption("#v_year", "2020"); await page.fill("#v_make", "Toyota"); await page.fill("#v_model", "TEST Camry"); await clickWait(page, "#btn-add-vehicle"); }
-      if (sid === "business") { await page.fill("#business_name", "TEST Grok Bot LLC automated test ignore"); await page.fill("#business_type_or_description", "Test only"); }
+      if (sid === "business") { await page.fill("#business_name", "TEST Grok Bot LLC automated test ignore"); await page.fill("#business_type_or_description", "Test only");
+        if (await page.$("#cargo_type")) { await page.tap('#radius button[data-v="local"]'); await page.fill("#cargo_type", "TEST freight"); await page.fill("#power_unit_count", "2"); } }
       if (sid === "details") {
         if (await page.$("#boat_year")) { await page.selectOption("#boat_year", "2018"); await page.fill("#boat_make", "TEST Bayliner"); }
         if (await page.$("#cart_year")) { await page.selectOption("#cart_year", "2021"); await page.fill("#cart_make", "TEST Club Car"); }
