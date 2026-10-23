@@ -763,3 +763,12 @@ html.is-fullscreen .send-sticky {
 }
 html.is-fullscreen.kb-open .send-sticky { display: none; }
 html.is-fullscreen:not(.kb-open) body:has(.send-sticky) { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+/* Dark mode: confirmation independent-markets box text was navy on navy */
+html.theme-dark .independent-title, html.theme-dark .independent-body { color: var(--ink); }
+html.theme-dark .independent-fine { color: var(--muted); }
+html.theme-dark .carrier-network { color: var(--brand-bright, #3bb5f0); }
+@media (prefers-color-scheme: dark) {
+  html:not(.theme-light) .independent-title, html:not(.theme-light) .independent-body { color: var(--ink); }
+  html:not(.theme-light) .independent-fine { color: var(--muted); }
+  html:not(.theme-light) .carrier-network { color: var(--brand-bright, #3bb5f0); }
+}

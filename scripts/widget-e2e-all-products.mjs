@@ -32,12 +32,12 @@ async function mount(uri, toolOutput, rec) {
   });
   await page.addInitScript((j) => {
     let ws = null; try { ws = JSON.parse(sessionStorage.getItem("ws") || "null"); } catch (_) {} window.__setWS = 0;
-    window.openai = { get toolOutput() { return JSON.parse(j); }, theme: "light", get widgetState() { return ws; },
+    window.openai = { get toolOutput() { return JSON.parse(j); }, theme: (new URLSearchParams(location.search).get("theme") || "light"), get widgetState() { return ws; },
       setWidgetState(s) { ws = s; try { sessionStorage.setItem("ws", JSON.stringify(s)); } catch (_) {} window.__setWS++; setTimeout(() => window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { widgetState: s } } })), 0); },
       notifyIntrinsicHeight() {}, callTool: (n, a) => { const f = (window.__fault && window.__fault[n]) || null; if (f) delete window.__fault[n]; return window.__callTool(n, a, f); }, sendFollowUpMessage(p) { window.__follow = p; } };
   }, JSON.stringify(toolOutput));
   await page.route("http://widget.test/**", r => r.fulfill({ status: 200, contentType: "text/html", body: html }));
-  await page.goto("http://widget.test/card.html");
+  await page.goto("http://widget.test/card.html" + (process.env.THEME ? "?theme=" + process.env.THEME : ""));
   await page.evaluate(() => { window.__mut = 0; new MutationObserver(m => { window.__mut += m.filter(x => { const t = x.target.nodeType === 1 ? x.target : x.target.parentElement; return !(t && t.closest && t.closest("#ask-slot")); }).length; }).observe(document.body, { childList: true, subtree: true, characterData: true }); });
   return page;
 }
