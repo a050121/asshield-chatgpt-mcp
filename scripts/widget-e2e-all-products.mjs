@@ -19,20 +19,22 @@ async function mount(uri, toolOutput, rec) {
   const html = (await rpc("resources/read", { uri })).result.contents[0].text;
   const page = await browser.newPage({ viewport: { width: 390, height: 900 } });
   page.on("pageerror", e => rec.pageErrors.push(String(e)));
-  await page.exposeFunction("__callTool", async (name, args) => {
+  await page.exposeFunction("__callTool", async (name, args, fault) => {
+    // Fault injection mimics the ChatGPT host: a failed tool call RESOLVES with isError (it does not throw).
+    if (fault === "error") { rec.calls.push(`${name}: injected error`); return { isError: true, content: [{ type: "text", text: "Injected failure" }] }; }
+    if (fault === "not_ready") { rec.calls.push(`${name}: injected not-ready`); return { structuredContent: { submitted: false, ready_to_submit: false, missing: ["at_least_one_vehicle"] } }; }
     const x = await rpc("tools/call", { name, arguments: args });
     const sc = x.result?.structuredContent;
     const bad = x.error?.message || (x.result?.isError ? String(x.result.content?.[0]?.text).slice(0, 300) : null) || (sc && sc.ok === false ? sc.message : null);
     rec.calls.push(bad ? `${name}: FAIL ${bad}` : `${name}: ok`);
     if (x.error) throw new Error(x.error.message);
-    if (x.result?.isError) throw new Error(String(x.result.content?.[0]?.text).slice(0, 200));
     return x.result;
   });
   await page.addInitScript((j) => {
     let ws = null; window.__setWS = 0;
     window.openai = { get toolOutput() { return JSON.parse(j); }, theme: "light", get widgetState() { return ws; },
       setWidgetState(s) { ws = s; window.__setWS++; setTimeout(() => window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { widgetState: s } } })), 0); },
-      notifyIntrinsicHeight() {}, callTool: (n, a) => window.__callTool(n, a), sendFollowUpMessage(p) { window.__follow = p; } };
+      notifyIntrinsicHeight() {}, callTool: (n, a) => { const f = (window.__fault && window.__fault[n]) || null; if (f) delete window.__fault[n]; return window.__callTool(n, a, f); }, sendFollowUpMessage(p) { window.__follow = p; } };
   }, JSON.stringify(toolOutput));
   await page.route("http://widget.test/**", r => r.fulfill({ status: 200, contentType: "text/html", body: html }));
   await page.goto("http://widget.test/card.html");
@@ -110,9 +112,24 @@ for (const [product, state, zip] of PRODUCTS) {
       }
       if (sid === "vehicles") {
         await page.selectOption("#v_year", "2020"); await page.fill("#v_make", "Toyota"); await page.fill("#v_model", "TEST Camry");
+        if (!rec.checks.failed_vehicle_save_shows_error) {
+          await page.evaluate(() => { window.__fault = { add_vehicle: "error" }; });
+          await clickWait(page, "#btn-add-vehicle");
+          const st = await page.$eval("#status", e => e.textContent).catch(() => "");
+          const listed = await page.$$eval(".entity", l => l.length);
+          // With nothing saved and the form emptied, Continue must refuse (server says no vehicle).
+          await page.fill("#v_make", "");
+          await page.click("#btn-next"); await sleep(1500);
+          const stillVehicles = (await stepId(page)) === "vehicles";
+          const st2 = await page.$eval("#status", e => e.textContent).catch(() => "");
+          rec.checks.failed_vehicle_save_shows_error = /did not save/i.test(st) && listed === 0 && stillVehicles && /no vehicle is saved/i.test(st2) ? "pass" : `FAIL status=${st} listed=${listed} advanced=${!stillVehicles} st2=${st2}`;
+          if (!stillVehicles) { rec.stuckAt = "advanced past vehicles without a saved vehicle"; break; }
+          await page.selectOption("#v_year", "2020"); await page.fill("#v_make", "Toyota"); await page.fill("#v_model", "TEST Camry");
+        }
         rec.steps.push({ step: "add_vehicle", status: await clickWait(page, "#btn-add-vehicle") });
       }
-      if (sid === "business") { await page.fill("#business_name", "TEST Grok Bot LLC automated test ignore"); await page.fill("#business_type_or_description", "Test only"); }
+      if (sid === "business") { await page.fill("#business_name", "TEST Grok Bot LLC automated test ignore"); await page.fill("#business_type_or_description", "Test only");
+        if (await page.$("#cargo_type")) { await page.click('#radius button[data-v="local"]'); await page.fill("#cargo_type", "TEST general freight"); await page.fill("#power_unit_count", "2"); } }
       if (sid === "details") {
         if (await page.$("#boat_year")) { await page.selectOption("#boat_year", "2018"); await page.fill("#boat_make", "TEST Bayliner"); }
         if (await page.$("#cart_year")) { await page.selectOption("#cart_year", "2021"); await page.fill("#cart_make", "TEST Club Car"); }
@@ -130,6 +147,25 @@ for (const [product, state, zip] of PRODUCTS) {
     const fin = await stepId(page);
     rec.checks.reached_review = fin === "review" ? "pass" : "FAIL stuck at " + fin;
     rec.checks.submit_enabled_after_consent = fin === "review" && await page.$eval("#btn-submit", b => !b.disabled) ? "pass" : "FAIL";
+    { const rm = await rpc("tools/call", { name: "get_missing_quote_fields", arguments: { quote_id: rec.quote_id } });
+      const sc = rm.result?.structuredContent || {}; const miss = sc.missing || sc.widget?.missing;
+      rec.checks.server_ready_to_submit = sc.ready_to_submit === true || (Array.isArray(miss) && miss.length === 0) ? "pass" : "FAIL missing=" + JSON.stringify(miss); }
+    if (fin === "review" && product === "auto") {
+      await page.evaluate(() => { window.__fault = { submit_quote: "not_ready" }; });
+      await page.click("#btn-submit"); await sleep(2500);
+      const st = await page.$eval("#status", e => e.textContent).catch(() => "");
+      const stillReview = (await stepId(page)) === "review";
+      const fix = await page.$(".missing-fix");
+      rec.checks.refused_submit_no_fake_success = stillReview && /not sent/i.test(st) && /vehicle/i.test(st) && fix ? "pass" : `FAIL review=${stillReview} status=${st} fixLink=${!!fix}`;
+      if (fix) { await fix.click(); await sleep(400); rec.checks.missing_link_goes_to_step = (await stepId(page)) === "vehicles" ? "pass" : "FAIL on " + await stepId(page); }
+      // back to review (server says nothing missing again)
+      for (let g = 0; g < 8 && (await stepId(page)) !== "review"; g++) { if ((await stepId(page)) === "consent" && !(await page.isChecked("#auth_ok"))) await page.check("#auth_ok"); await clickWait(page, "#btn-next"); }
+    }
+    if (process.env.SUBMIT === "1" && (await stepId(page)) === "review") {
+      await page.click("#btn-submit"); await sleep(6000);
+      const conf = await page.evaluate(() => document.body.innerText);
+      rec.checks.real_submit = /received|reference/i.test(conf) && !(await page.$("#btn-submit")) ? "pass" : "FAIL " + conf.slice(0, 200);
+    }
     rec.checks.ask_on_review = fin === "review" ? await askCheck(page, "What happens after I submit?") : "n/a";
     rec.checks.no_redraw_review_5s = fin === "review" ? ((await idle(page, 5000)) === 0 ? "pass" : "FAIL") : "n/a";
     rec.checks.widget_tool_calls = rec.calls.some(c => c.includes("FAIL")) ? "FAIL" : "pass";

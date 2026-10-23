@@ -721,19 +721,35 @@ export async function saveCurrentPolicy(input: {
     "collision_deductible"
   ];
 
+  // One current-policy row per quote: a later save updates it (only the fields provided) instead of adding a duplicate row.
+  const provided: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(payload)) if (k !== "quote_id" && v !== null && v !== undefined) provided[k] = v;
+
   if (config.useMemoryStore) {
-    const data = memoryStore.insert("current_policies", payload, policySelect);
+    const existing = memoryStore.listByQuoteId("current_policies", input.quote_id, ["id"]) as Array<{ id: string }>;
+    const data = existing.length && Object.keys(provided).length
+      ? memoryStore.update("current_policies", existing[0].id, provided, policySelect)
+      : existing.length ? memoryStore.getById("current_policies", existing[0].id, policySelect)
+      : memoryStore.insert("current_policies", payload, policySelect);
     memoryStore.update("quotes", input.quote_id, { completion_percentage: 75 });
     return { current_policy: data, next_step: "consent" };
   }
 
-  const { data, error } = await requireDb()
+  const policyCols =
+    "quote_id, carrier, current_premium, premium_frequency, renewal_date, bodily_injury_limit, property_damage_limit, comp_deductible, collision_deductible";
+  const { data: existingRows, error: existingErr } = await requireDb()
     .from("current_policies")
-    .insert(payload)
-    .select(
-      "quote_id, carrier, current_premium, premium_frequency, renewal_date, bodily_injury_limit, property_damage_limit, comp_deductible, collision_deductible"
-    )
-    .single();
+    .select("id")
+    .eq("quote_id", input.quote_id)
+    .order("created_at", { ascending: true })
+    .limit(1);
+  if (existingErr) throw existingErr;
+  const existingId = existingRows?.[0]?.id as string | undefined;
+  const { data, error } = existingId
+    ? (Object.keys(provided).length
+        ? await requireDb().from("current_policies").update(provided).eq("id", existingId).select(policyCols).single()
+        : await requireDb().from("current_policies").select(policyCols).eq("id", existingId).single())
+    : await requireDb().from("current_policies").insert(payload).select(policyCols).single();
   if (error) throw error;
 
   await requireDb()

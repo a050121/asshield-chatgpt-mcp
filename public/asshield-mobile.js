@@ -112,7 +112,30 @@
     var g = e && e.detail && e.detail.globals;
     if (g && (g.maxHeight !== undefined || g.displayMode !== undefined || g.safeArea !== undefined)) onViewport();
   }, { passive: true });
+  // Accessible selection state for every chip, segmented button and option card, kept in sync with the .on class.
+  // Only sets attributes (never touches content), so it cannot cause redraw loops.
+  function syncSel(el) {
+    if (!el || el.nodeType !== 1) return;
+    var group = el.parentElement;
+    var single = group && (group.classList.contains("seg") || group.classList.contains("pref-grid"));
+    var on = el.classList.contains("on");
+    if (single) {
+      if (el.getAttribute("role") !== "radio") el.setAttribute("role", "radio");
+      if (el.getAttribute("aria-checked") !== String(on)) el.setAttribute("aria-checked", String(on));
+      if (group.getAttribute("role") !== "radiogroup") group.setAttribute("role", "radiogroup");
+    } else if (el.getAttribute("aria-pressed") !== String(on)) el.setAttribute("aria-pressed", String(on));
+  }
+  var SEL = ".seg > button, .pref-grid > .pref-card, .chips > .chip";
+  function syncAll(rootEl) { try { (rootEl || document).querySelectorAll(SEL).forEach(syncSel); } catch (_) {} }
   function start() {
+    syncAll();
+    if (window.MutationObserver) new MutationObserver(function (muts) {
+      for (var i = 0; i < muts.length; i++) {
+        var m = muts[i];
+        if (m.type === "attributes") { if (m.target.matches && m.target.matches(SEL)) syncSel(m.target); }
+        else if (m.addedNodes && m.addedNodes.length) { syncAll(m.target.nodeType === 1 ? m.target : document); }
+      }
+    }).observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ["class"] });
     var card = document.querySelector(".card");
     if (card && window.ResizeObserver) new ResizeObserver(function () { report(); }).observe(card);
     report();

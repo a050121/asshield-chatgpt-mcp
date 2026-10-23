@@ -127,6 +127,56 @@
         setTimeout(() => { if(pending.has(id)){ pending.delete(id); reject(new Error("timeout")); } }, 25000);
       });
     }
+    // The ChatGPT host resolves (does not reject) a tool call that failed: it returns { isError: true }.
+    // Every save goes through callToolChecked so a failed save is shown as an error, never as success.
+    function toolErrorText(res) {
+      if (!res) return "No response";
+      if (res.isError) { try { return String(res.content?.[0]?.text || "error"); } catch(_) { return "error"; } }
+      const sc = res.structuredContent;
+      if (sc && typeof sc === "object" && (sc.ok === false || sc.error)) return String(sc.message || sc.error || "error");
+      return null;
+    }
+    async function callToolChecked(name, args) {
+      let res;
+      try { res = await callTool(name, args); }
+      catch (e) { const err = new Error("We could not reach Asshield. Check your connection and try again."); err.cause = e; throw err; }
+      const bad = toolErrorText(res);
+      if (bad) {
+        const err = new Error(/restricted|ssn|social security|license number|payment/i.test(bad)
+          ? "Please remove Social Security, license, or payment numbers and try again."
+          : "That did not save. Please check the fields and try again.");
+        err.detail = bad; throw err;
+      }
+      return res;
+    }
+    const MISSING_INFO = {
+      customer_contact: ["Your name and email or phone", "contact"],
+      contact_street: ["Street address", "contact"], contact_city: ["City", "contact"],
+      contact_state: ["State", "contact"], contact_zip: ["ZIP code", "contact"],
+      residence_status: ["Own or rent", "contact"],
+      business_name: ["Business name", "business"], business_type_or_description: ["Business type", "business"],
+      business_address_state_zip: ["Business state and ZIP", "business"],
+      radius_of_operation: ["Radius of operation", "business"], cargo_type: ["Cargo type", "business"],
+      power_unit_count: ["Number of power units", "business"],
+      operations_description: ["Description of operations", "details"],
+      annual_payroll_estimate: ["Payroll estimate", "details"], employees_by_job_type: ["Employees by job type", "details"],
+      boat_year_make: ["Boat year and make", "details"], boat_length_ft: ["Boat length", "details"],
+      cart_year_make: ["Golf cart year and make", "details"], street_legal: ["Street legal or not", "details"],
+      commercial_vehicles: ["At least one vehicle", "vehicles"],
+      at_least_one_driver: ["At least one driver", "drivers"], at_least_one_vehicle: ["At least one vehicle", "vehicles"],
+      current_policy_or_coverage_preferences: ["Current coverage", "policy"],
+      quote_authorization: ["Authorization", "consent"]
+    };
+    function missingItems() {
+      const steps = stepsFor(S.product);
+      return (S.missing || []).map(k => {
+        const info = MISSING_INFO[k] || [String(k).replace(/_/g, " "), null];
+        let idx = info[1] ? steps.findIndex(s => s.id === info[1]) : -1;
+        if (idx < 0 && info[1] === "business") idx = steps.findIndex(s => s.id === "details");
+        if (idx < 0 && info[1] === "details") idx = steps.findIndex(s => s.id === "business");
+        return { key: k, label: info[0], step: idx };
+      });
+    }
     window.asshieldAskContext = function () {
       const prod = S.product ? productLabel(S.product) : "insurance";
       let step = "Quote";
@@ -547,6 +597,9 @@
         <div class="row2"><div><label for="business_address_state">State</label><input id="business_address_state" maxlength="2" value="${escapeHtml(f.business_address_state||S.state||"")}"/></div>
         <div><label for="business_address_zip">ZIP</label><input id="business_address_zip" value="${escapeHtml(f.business_address_zip||S.zip||"")}"/></div></div>
         <label>Employees</label>${seg("emp",[["1-5","1–5"],["6-20","6–20"],["21-50","21–50"],["51+","51+"]], f.emp_range||"1-5")}
+        ${S.product==="trucking" ? `<label>Radius of operation</label>${seg("radius",[["local","Local"],["intermediate","Intermediate"],["long_haul","Long haul"]], f.radius_of_operation||"")}
+        <label for="cargo_type">Cargo type</label><input id="cargo_type" value="${escapeHtml(f.cargo_type||"")}" placeholder="e.g. general freight"/>
+        <label for="power_unit_count">Number of power units</label><input id="power_unit_count" inputmode="numeric" value="${escapeHtml(f.power_unit_count!=null?String(f.power_unit_count):"")}" placeholder="e.g. 2"/>` : ""}
         ${navButtons()}</div>`;
 
       if (cur.id === "details") {
@@ -626,10 +679,13 @@
       return `<div class="panel"><div class="stripe"></div>
         <p class="muted">Tap a row to edit. Submitting sends a request only — <strong>no coverage is bound</strong>. Asshield may then show estimated starting prices* for illustration.</p>
         ${rows.map(([k,v,step]) => `<div class="edit-row" data-step="${step}"><div><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div><span class="hint">Edit</span></div>`).join("")}
-        <h3>Still needed</h3>${renderChecklist(S.checklist,{onlyRemaining:true})}
+        ${(() => { const items = missingItems().filter(m => m.key !== "quote_authorization" || !S.fields.auth_ok);
+          return items.length ? `<div class="missing-box" role="alert"><strong>Before you can send this, please add:</strong>
+            ${items.map(m => `<div class="missing-row"><span>${escapeHtml(m.label)}</span>${m.step >= 0 ? `<button type="button" class="missing-fix secondary" data-i="${m.step}">Go to ${escapeHtml(stepsFor(S.product)[m.step].label)}</button>` : ""}</div>`).join("")}</div>` : ""; })()}
+        <h3>Helpful to have</h3>${renderChecklist(S.checklist,{onlyRemaining:true})}
         <div class="actions">
           <button type="button" class="secondary" id="btn-back">Back</button>
-          <button type="button" class="cta" id="btn-submit"${S.fields.auth_ok?"":" disabled"} title="${S.fields.auth_ok?"":"Accept authorization on the Consent step first"}">Submit quote request</button>
+          ${(() => { const blocked = !S.fields.auth_ok || missingItems().some(m => m.key !== "quote_authorization"); return `<button type="button" class="cta" id="btn-submit"${blocked?" disabled":""} title="${blocked?"Complete the items above first":""}">Submit quote request</button>`; })()}
           <button type="button" class="secondary" id="btn-agent">Agent contact</button>
         </div></div>`;
     }
@@ -637,9 +693,57 @@
     async function refreshMissing() {
       if (!S.quote_id) return;
       try {
-        const res = await callTool("get_missing_quote_fields", { quote_id: S.quote_id });
-        ingest({ structuredContent: res?.structuredContent || res });
-      } catch(e){ setStatus("Refresh failed: "+(e?.message||e)); }
+        const res = await callToolChecked("get_missing_quote_fields", { quote_id: S.quote_id });
+        const sc = res?.structuredContent || res;
+        S.missingKnown = Array.isArray(sc?.missing) || Array.isArray(sc?.widget?.missing);
+        ingest({ structuredContent: sc });
+      } catch(e){ S.missingKnown = false; setStatus("Could not check your progress: "+(e?.message||e)); }
+    }
+
+    function softVin(raw) {
+      const v = String(raw||"").toUpperCase().replace(/\s+/g,"");
+      if (!v) return { ok: true, vin: undefined };
+      if (v.length !== 17 || /[IOQ]/.test(v) || !/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return { ok: false, vin: undefined };
+      return { ok: true, vin: v };
+    }
+    function driverFormFilled() { return !!(val("d_first") || val("d_last")); }
+    function vehicleFormFilled() { return !!(val("v_year") && val("v_make")) && !S._vehicleFormSaved; }
+    // Saves the driver typed in the form. Only reports success when the server returns the saved row.
+    async function addDriverFromForm() {
+      const first_name=val("d_first"), last_name=val("d_last");
+      if (!first_name||!last_name) { setStatus("Please enter the driver's first and last name."); return false; }
+      const args={ quote_id:S.quote_id, first_name, last_name, relationship: S.fields._d_rel||"self" };
+      const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
+      setStatus("Saving driver…");
+      try {
+        const res = await callToolChecked("add_driver", args);
+        const row = (res?.structuredContent || {}).driver;
+        if (!row || !row.id) throw new Error("That driver did not save. Please try again.");
+        S.fields.drivers = S.fields.drivers||[];
+        S.fields.drivers.push({ id: row.id, first_name, last_name, name: first_name+" "+last_name, date_of_birth: dob, relationship: args.relationship });
+        await refreshMissing(); render(); setStatus("Driver saved.");
+        return true;
+      } catch(e){ setStatus(String(e?.message||e)); return false; }
+    }
+    async function addVehicleFromForm() {
+      const year=Number(val("v_year")), make=val("v_make");
+      if (!year||!make) { setStatus("Please choose the vehicle year and enter the make."); return false; }
+      const model = val("v_model") || "Unknown";
+      const checked = softVin(val("v_vin"));
+      const args={ quote_id:S.quote_id, year, make, model, ownership: S.fields._v_own||"owned", usage: S.fields._v_usage||"commute" };
+      if (checked.vin) args.vin = checked.vin;
+      setStatus(checked.ok ? "Saving vehicle…" : "Saving vehicle (invalid VIN skipped)…");
+      try {
+        const res = await callToolChecked("add_vehicle", args);
+        const row = (res?.structuredContent || {}).vehicle;
+        if (!row || !row.id) throw new Error("That vehicle did not save. Please try again.");
+        S.fields.vehicles = S.fields.vehicles||[];
+        S.fields.vehicles.push({ ...args, id: row.id, summary: [year, make, model].filter(Boolean).join(" ") });
+        S._vehicleFormSaved = true;
+        await refreshMissing(); render();
+        setStatus(checked.ok || !val("v_vin").trim() ? "Vehicle saved." : "Vehicle saved (invalid VIN was not saved).");
+        return true;
+      } catch(e){ setStatus(String(e?.message||e)); return false; }
     }
 
     function bindStep(cur) {
@@ -656,30 +760,14 @@
       }
       if (cur.id === "drivers") {
         bindSeg("d_rel", v => { S.fields._d_rel = v; });
-        $("btn-add-driver").onclick = async () => {
-          const first_name=val("d_first"), last_name=val("d_last");
-          if (!first_name||!last_name) return setStatus("Driver name required.");
-          const args={ quote_id:S.quote_id, first_name, last_name, relationship: S.fields._d_rel||"self" };
-          const dob=val("d_dob"); if(dob) args.date_of_birth=dob;
-          setStatus("Saving driver…");
-          try {
-            await callTool("add_driver", args);
-            S.fields.drivers = S.fields.drivers||[];
-            S.fields.drivers.push({ first_name, last_name, name: first_name+" "+last_name, date_of_birth: dob, relationship: args.relationship });
-            await refreshMissing(); render(); setStatus("Driver added.");
-          } catch(e){ setStatus(String(e?.message||e)); }
-        };
+        $("btn-add-driver").onclick = async () => { await addDriverFromForm(); };
         rootRm("drivers");
       }
       if (cur.id === "vehicles") {
-        bindSeg("v_usage", v => { S.fields._v_usage = v; });
-        bindSeg("v_own", v => { S.fields._v_own = v; });
-        function softVin(raw) {
-          const v = String(raw||"").toUpperCase().replace(/\s+/g,"");
-          if (!v) return { ok: true, vin: undefined };
-          if (v.length !== 17 || /[IOQ]/.test(v) || !/^[A-HJ-NPR-Z0-9]{17}$/.test(v)) return { ok: false, vin: undefined };
-          return { ok: true, vin: v };
-        }
+        bindSeg("v_usage", v => { S.fields._v_usage = v; S._vehicleFormSaved = false; });
+        bindSeg("v_own", v => { S.fields._v_own = v; S._vehicleFormSaved = false; });
+        S._vehicleFormSaved = !!(S.fields.vehicles||[]).length;
+        ["v_year","v_make","v_model","v_vin"].forEach(id => { const el=$(id); if (el) { el.addEventListener("input", () => { S._vehicleFormSaved = false; }); el.addEventListener("change", () => { S._vehicleFormSaved = false; }); } });
         function updateVinWarn() {
           const w = $("v_vin_warn"); if (!w) return;
           const raw = val("v_vin");
@@ -695,25 +783,10 @@
           updateVinWarn();
         });
         updateVinWarn();
-        $("btn-add-vehicle").onclick = async () => {
-          const year=Number(val("v_year")), make=val("v_make");
-          if (!year||!make) return setStatus("Year and make required.");
-          const model = val("v_model") || "Unknown";
-          const checked = softVin(val("v_vin"));
-          updateVinWarn();
-          const args={ quote_id:S.quote_id, year, make, model, ownership: S.fields._v_own||"owned", usage: S.fields._v_usage||"commute" };
-          if (checked.vin) args.vin = checked.vin;
-          setStatus(checked.ok ? "Saving vehicle…" : "Saving vehicle (invalid VIN skipped)…");
-          try {
-            await callTool("add_vehicle", args);
-            S.fields.vehicles = S.fields.vehicles||[];
-            S.fields.vehicles.push({ ...args, summary: [year, make, model].filter(Boolean).join(" ") });
-            await refreshMissing(); render();
-            setStatus(checked.ok || !val("v_vin").trim() ? "Vehicle added." : "Vehicle added (invalid VIN was not saved).");
-          } catch(e){ setStatus(String(e?.message||e)); }
-        };
+        $("btn-add-vehicle").onclick = async () => { await addVehicleFromForm(); };
         rootRm("vehicles");
       }
+      if (cur.id === "business" && S.product === "trucking") bindSeg("radius", v => { S.fields.radius_of_operation = v; });
       if (cur.id === "business") bindSeg("emp", v => { S.fields.emp_range = v; S.fields.number_of_employees = ({"1-5":3,"6-20":12,"21-50":30,"51+":60})[v]; });
       if (cur.id === "details" && S.product==="boat") bindSeg("boat_len", v => { S.fields.boat_length_ft = Number(v); });
       if (cur.id === "details" && S.product==="golf_cart") bindSeg("street", v => { S.fields.street_legal = v==="true"; });
@@ -747,7 +820,7 @@
             if (!street||!city||!address_state||!address_zip) return setStatus("Street, city, state, and ZIP are required.");
             const needsRes = ["auto","home","auto_home","renters","motorcycle"].includes(S.product);
             if (needsRes && !residence_status) return setStatus("Please tell us if you own or rent.");
-            await callTool("save_contact", {
+            await callToolChecked("save_contact", {
               quote_id:S.quote_id, first_name, last_name, email:email||undefined, phone:phone||undefined,
               preferred_contact_method: S.fields.preferred_contact_method||"email",
               street, unit: unit||undefined, city, address_state, address_zip,
@@ -766,10 +839,28 @@
               business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined,
               number_of_employees: S.fields.number_of_employees };
             if (!args.business_name) return setStatus("Business name required.");
-            await callTool("save_business_details", args); Object.assign(S.fields, args);
+            if (!args.business_type_or_description) return setStatus("Please describe the type of business.");
+            if (!args.business_address_state || !args.business_address_zip) return setStatus("Business state and ZIP are required.");
+            if (S.product === "trucking") {
+              const pu = Number(String(val("power_unit_count")||"").replace(/[^0-9]/g,""));
+              args.radius_of_operation = S.fields.radius_of_operation || undefined;
+              args.cargo_type = val("cargo_type") || undefined;
+              args.power_unit_count = val("power_unit_count") && Number.isFinite(pu) ? pu : undefined;
+              if (!args.radius_of_operation) return setStatus("Please choose a radius of operation.");
+              if (!args.cargo_type) return setStatus("Please enter the cargo type.");
+              if (args.power_unit_count == null) return setStatus("Please enter the number of power units.");
+            }
+            await callToolChecked("save_business_details", args); Object.assign(S.fields, args);
           } else if (cur.id === "drivers" || cur.id === "vehicles") {
-            if (cur.id==="drivers" && !(S.fields.drivers||[]).length) return setStatus("Add at least one driver.");
-            if (cur.id==="vehicles" && !(S.fields.vehicles||[]).length) return setStatus("Add at least one vehicle.");
+            // A filled-in form that was not added yet is saved now, so nothing typed is lost.
+            if (cur.id==="drivers" && driverFormFilled()) { if (!(await addDriverFromForm())) return; }
+            if (cur.id==="vehicles" && vehicleFormFilled()) { if (!(await addVehicleFromForm())) return; }
+            await refreshMissing();
+            const need = cur.id==="drivers" ? "at_least_one_driver" : "at_least_one_vehicle";
+            if ((S.missing||[]).includes(need) || (cur.id==="vehicles" && (S.missing||[]).includes("commercial_vehicles"))) {
+              return setStatus(cur.id==="drivers" ? "No driver is saved yet. Enter a driver and tap Add driver." : "No vehicle is saved yet. Enter the year and make, then tap Add vehicle.");
+            }
+            if (!S.missingKnown && !(S.fields[cur.id]||[]).length) return setStatus(cur.id==="drivers" ? "Add at least one driver." : "Add at least one vehicle.");
           } else if (cur.id === "details") {
             if (S.product==="home"||S.product==="renters") S.fields.property_notes = val("property_notes");
             else {
@@ -779,32 +870,26 @@
               const cy=val("cart_year"); if(cy) args.cart_year=Number(cy);
               if (S.fields.boat_length_ft) args.boat_length_ft = S.fields.boat_length_ft;
               if (S.fields.street_legal!=null) args.street_legal = S.fields.street_legal;
-              await callTool("save_line_details", args); Object.assign(S.fields, args);
+              await callToolChecked("save_line_details", args); Object.assign(S.fields, args);
             }
           } else if (cur.id === "policy") {
             const carrier=val("carrier")||"None provided";
             const premRaw = val("current_premium").replace(/[^0-9.]/g, "");
             const premNum = premRaw ? Number(premRaw) : NaN;
             const freq = ({ semi_annual:"6_month", "6_month":"6_month", annual:"annual", monthly:"monthly" })[S.fields.premium_frequency] || "monthly";
-            const args={ quote_id:S.quote_id, carrier, current_premium: Number.isFinite(premNum) && premNum > 0 ? premNum : undefined, premium_frequency: freq,
-              bodily_injury_limit: S.fields.coverage_preference || "medium" };
-            await callTool("save_current_policy", args); Object.assign(S.fields, args);
+            const args={ quote_id:S.quote_id, carrier, current_premium: Number.isFinite(premNum) && premNum > 0 ? premNum : undefined, premium_frequency: freq };
+            await callToolChecked("save_current_policy", args); Object.assign(S.fields, args);
           } else if (cur.id === "prefs") {
-            // persist preferences into policy snapshot as limit preference text
+            // Preferences are saved as the quote's desired limits (quote details), not as a current policy row.
             if (S.quote_id) {
-              try {
-                await callTool("save_current_policy", {
-                  quote_id: S.quote_id,
-                  carrier: S.fields.carrier || "Preference only",
-                  current_premium: typeof S.fields.current_premium === "number" && S.fields.current_premium > 0 ? S.fields.current_premium : undefined,
-                  premium_frequency: ["monthly","6_month","annual"].includes(S.fields.premium_frequency) ? S.fields.premium_frequency : undefined,
-                  bodily_injury_limit: `coverage:${S.fields.coverage_preference||"medium"};deductible:${S.fields.deductible_preference||"medium"}`
-                });
-              } catch(_){}
+              const covL = ({low:"Essential",medium:"Balanced",high:"Enhanced"})[S.fields.coverage_preference||"medium"];
+              const dedL = ({low:"Lower deductible",medium:"Medium deductible",high:"Higher deductible"})[S.fields.deductible_preference||"medium"];
+              await callToolChecked("save_line_details", { quote_id: S.quote_id, desired_limits: `Coverage level: ${covL}; Deductible preference: ${dedL}` });
+              S.fields.desired_limits = `Coverage level: ${covL}; Deductible preference: ${dedL}`;
             }
           } else if (cur.id === "consent") {
             if (!$("auth_ok")?.checked) return setStatus("Please check the authorization box.");
-            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
+            await callToolChecked("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
             S.fields.auth_ok = true;
           }
           await refreshMissing();
@@ -837,8 +922,11 @@
           if (idx >= 0) { S.step = idx; render(); }
         };
       });
+      document.querySelectorAll(".missing-fix").forEach(b => {
+        b.onclick = () => { const i = Number(b.dataset.i); if (i >= 0) { S.step = i; render(); } };
+      });
       $("btn-submit").onclick = async () => {
-        if (!S.quote_id) return;
+        if (!S.quote_id || S.submitting) return;
         if (!S.fields.auth_ok) {
           setStatus("Please accept authorization on the Consent step before submitting.");
           const steps = stepsFor(S.product);
@@ -846,20 +934,43 @@
           if (ci >= 0) { S.step = ci; render(); }
           return;
         }
-        setStatus("Submitting…");
+        S.submitting = true;
+        const btn = $("btn-submit"); if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+        setStatus("Sending your request…");
         try {
+          await refreshMissing();
           if ((S.missing||[]).includes("quote_authorization")) {
-            await callTool("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
+            await callToolChecked("save_consent", { quote_id:S.quote_id, consent_type:"quote_authorization", accepted:true, consent_nonce: S.consent_nonce || undefined });
+            await refreshMissing();
+          }
+          const blocking = (S.missing||[]).filter(k => k !== "quote_authorization");
+          if (blocking.length) {
+            S.submitting = false; render();
+            setStatus("Not sent yet. Please complete: " + missingItems().map(m => m.label).join(", ") + ".");
+            return;
           }
           const notes = [
             S.fields.property_notes,
             S.fields.coverage_preference && `coverage_pref=${S.fields.coverage_preference}`,
             S.fields.deductible_preference && `deductible_pref=${S.fields.deductible_preference}`
           ].filter(Boolean).join("; ") || "Submitted from Asshield guided quote card";
-          const res = await callTool("submit_quote", { quote_id: S.quote_id, notes });
-          ingest({ structuredContent: res?.structuredContent || res });
-          S.phase = "confirmation"; render(); setStatus("Submitted. No coverage is bound.");
-        } catch(e){ setStatus("Submit failed: "+(e?.message||e)); }
+          const res = await callToolChecked("submit_quote", { quote_id: S.quote_id, notes });
+          const sc = res?.structuredContent || res || {};
+          if (sc.submitted !== true) {
+            // Server refused (something still missing). Never show a confirmation for a request that was not sent.
+            if (Array.isArray(sc.missing)) S.missing = sc.missing;
+            S.submitting = false; render();
+            const items = missingItems().map(m => m.label);
+            setStatus(items.length ? "Not sent yet. Please complete: " + items.join(", ") + "." : "Not sent yet. Please try again in a moment.");
+            return;
+          }
+          S.submitting = false;
+          ingest({ structuredContent: sc });
+          S.phase = "confirmation"; render(); setStatus("Sent to an Asshield licensed agent. No coverage is bound.");
+        } catch(e){
+          S.submitting = false; render();
+          setStatus("Your request was not sent. " + (e?.message||e));
+        }
       };
       bindCommon();
     }

@@ -673,3 +673,66 @@ button, label, a { touch-action: manipulation; }
 html.theme-dark .ready-item input, html.theme-dark label.toggle input[type=checkbox] { border-color: #8fa3b8; }
 html.theme-dark .ready-item input:checked, html.theme-dark label.toggle input[type=checkbox]:checked { background: #0f2149; border-color: #f2c14e; }
 label.toggle { min-height: 44px; cursor: pointer; -webkit-tap-highlight-color: rgba(26,159,224,.15); }
+
+/* ===== Selectable controls: unmistakable selected state (light + dark) ===== */
+:root {
+  --sel-gold: #d6b24a;           /* selected fill */
+  --sel-gold-edge: #8a6a12;      /* selected boundary on light surfaces (>= 3:1 vs white) */
+  --sel-ink: #0b1622;            /* bold dark text on gold */
+  --sel-tint: rgba(214,178,74,.16);
+  --unsel-edge: rgba(7,21,33,.42);   /* unselected boundary (>= 3:1 on white) */
+  --unsel-ink: #4a5a6a;
+}
+html.theme-dark {
+  --sel-gold-edge: #d6b24a;
+  --sel-tint: rgba(214,178,74,.20);
+  --unsel-edge: rgba(255,255,255,.46);
+  --unsel-ink: #b4c2cf;
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.theme-light) { --sel-gold-edge: #d6b24a; --sel-tint: rgba(214,178,74,.20); --unsel-edge: rgba(255,255,255,.46); --unsel-ink: #b4c2cf; }
+}
+.card, .panel, #panels { max-width: 100%; min-width: 0; }
+.panel * { min-width: 0; }
+.chips, .seg { display: flex; flex-wrap: wrap; gap: 8px; max-width: 100%; }
+.chip, .seg button, html.theme-dark .chip, html.theme-dark .seg button {
+  min-height: 44px; display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--unsel-ink); border: 1.5px solid var(--unsel-edge);
+  font-weight: 600; max-width: 100%; white-space: normal; text-align: left;
+}
+.chip.on, .seg button.on, html.theme-dark .chip.on, html.theme-dark .seg button.on {
+  background: var(--sel-gold); color: var(--sel-ink); border: 2px solid var(--sel-gold-edge);
+  font-weight: 800; box-shadow: 0 1px 0 rgba(0,0,0,.08);
+}
+.chip.on::before, .seg button.on::before {
+  content: ""; flex: none; width: 6px; height: 11px; margin: -3px 2px 0 0;
+  border: solid var(--sel-ink); border-width: 0 2.5px 2.5px 0; transform: rotate(45deg);
+}
+/* Option cards: always one per row, full width, title left and description right; never overflow. */
+.pref-grid, html.theme-dark .pref-grid { display: flex; flex-direction: column; gap: 8px; grid-template-columns: none; max-width: 100%; }
+.pref-card, html.theme-dark .pref-card {
+  width: 100%; max-width: 100%; box-sizing: border-box; min-height: 56px;
+  display: grid; grid-template-columns: minmax(84px, auto) 1fr 26px; align-items: center; gap: 4px 12px;
+  padding: 12px 14px; background: transparent; color: var(--ink); border: 1.5px solid var(--unsel-edge);
+}
+.pref-card strong, html.theme-dark .pref-card strong { margin: 0; font-size: 1rem; font-weight: 700; color: var(--ink); }
+.pref-card span, html.theme-dark .pref-card span { font-size: .86rem; color: var(--unsel-ink); line-height: 1.35; overflow-wrap: anywhere; }
+.pref-card::after {
+  content: ""; width: 22px; height: 22px; border-radius: 50%; box-sizing: border-box;
+  border: 2px solid var(--unsel-edge); justify-self: end;
+}
+.pref-card.on, html.theme-dark .pref-card.on {
+  border: 2px solid var(--sel-gold-edge); background: var(--sel-tint); box-shadow: inset 5px 0 0 var(--sel-gold);
+}
+.pref-card.on strong { font-weight: 800; }
+.pref-card.on span { color: var(--ink); }
+.pref-card.on::after {
+  border-color: var(--sel-gold); background: var(--sel-gold)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5 12.5l4.2 4.2L19 7' fill='none' stroke='%230b1622' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat;
+}
+@media (max-width: 340px) { .pref-card, html.theme-dark .pref-card { grid-template-columns: 1fr 26px; } .pref-card span { grid-column: 1; } .pref-card::after { grid-row: 1; grid-column: 2; } }
+/* Missing items on review */
+.missing-box { border: 2px solid var(--danger); border-radius: 14px; padding: 12px 14px; margin: 12px 0; background: rgba(180,35,24,.07); }
+html.theme-dark .missing-box { border-color: #f08a7e; background: rgba(240,138,126,.10); }
+.missing-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
+.missing-row .missing-fix { min-height: 44px; }

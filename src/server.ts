@@ -511,7 +511,33 @@ const httpServer = createServer(async (req, res) => {
       });
 
       await server.connect(transport);
-      await transport.handleRequest(req, res);
+      // Read the body ourselves so each tool call can be logged (tool name, short quote ref, outcome; no customer data).
+      const chunks: Buffer[] = [];
+      for await (const c of req) chunks.push(c as Buffer);
+      const raw = Buffer.concat(chunks).toString("utf8");
+      let parsed: unknown = undefined;
+      try { parsed = raw ? JSON.parse(raw) : undefined; } catch { parsed = undefined; }
+      const calls = (Array.isArray(parsed) ? parsed : [parsed]).filter(
+        (m): m is { method: string; params?: { name?: string; arguments?: Record<string, unknown> } } =>
+          !!m && typeof m === "object" && (m as { method?: unknown }).method === "tools/call"
+      );
+      if (calls.length) {
+        const started = Date.now();
+        const tag = calls.map((m) => `${m.params?.name}${m.params?.arguments?.quote_id ? " q=" + String(m.params.arguments.quote_id).slice(0, 8) : ""}`).join(",");
+        let sniff = "";
+        const origWrite = res.write.bind(res) as (...a: unknown[]) => boolean;
+        const origEnd = res.end.bind(res) as (...a: unknown[]) => unknown;
+        const grab = (chunk: unknown) => { if (sniff.length < 8000 && chunk) sniff += typeof chunk === "string" ? chunk : Buffer.isBuffer(chunk) ? chunk.toString("utf8") : ""; };
+        (res as unknown as { write: (...a: unknown[]) => boolean }).write = (...a: unknown[]) => { grab(a[0]); return origWrite(...a); };
+        (res as unknown as { end: (...a: unknown[]) => unknown }).end = (...a: unknown[]) => {
+          grab(a[0]);
+          const isErr = /"isError"\s*:\s*true/.test(sniff) || /"error"\s*:\s*\{"code"/.test(sniff);
+          const m = isErr ? sniff.match(/"text"\s*:\s*"((?:[^"\\]|\\.){0,240})/) || sniff.match(/"message"\s*:\s*"((?:[^"\\]|\\.){0,240})/) : null;
+          console.log(`[tool] ${tag} ${isErr ? "ERROR " + (m ? m[1] : "") : "ok"} ${Date.now() - started}ms`);
+          return origEnd(...a);
+        };
+      }
+      await transport.handleRequest(req, res, parsed);
     } catch (error) {
       console.error("Error handling MCP request:", error);
       writeJsonRpcError(res, 500, -32603, "Internal server error");
