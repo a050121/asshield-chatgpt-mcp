@@ -736,3 +736,30 @@ html.theme-dark {
 html.theme-dark .missing-box { border-color: #f08a7e; background: rgba(240,138,126,.10); }
 .missing-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; flex-wrap: wrap; }
 .missing-row .missing-fix { min-height: 44px; }
+
+/* ===== Review step: unmistakable send button, not-sent / sent badges ===== */
+.hero-badge.badge-amber { background: #f0b429; color: #1f1400; border-color: #f0b429; font-weight: 800; letter-spacing: .06em; }
+.hero-badge.badge-green { background: #1f9d63; color: #ffffff; border-color: #1f9d63; font-weight: 800; letter-spacing: .06em; }
+.hero-note { margin: 6px 0 0; font-size: .92rem; font-weight: 700; line-height: 1.35; }
+.hero-note.note-amber { color: #ffd479; }
+.hero-note.note-green { color: #7be0ad; }
+.send-top, .send-bottom { margin: 6px 0 14px; }
+.send-btn, button.cta.send-btn {
+  display: block; width: 100%; min-height: 54px; font-size: 1.06rem; font-weight: 800;
+  background: var(--sel-gold, #d6b24a); color: #0b1622; border: 2px solid var(--sel-gold-edge, #8a6a12); border-radius: 14px;
+}
+.send-btn:disabled, button.cta.send-btn:disabled {
+  opacity: 1; background: transparent; color: var(--muted); border: 2px dashed var(--unsel-edge, rgba(7,21,33,.56)); cursor: not-allowed;
+}
+.send-why { margin: 6px 2px 0; font-size: .86rem; color: var(--muted); }
+.send-why.is-blocked { color: #9a5b00; font-weight: 700; }
+html.theme-dark .send-why.is-blocked { color: #ffd479; }
+@media (prefers-color-scheme: dark) { html:not(.theme-light) .send-why.is-blocked { color: #ffd479; } }
+.send-sticky { display: none; }
+html.is-fullscreen .send-sticky {
+  display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--card); border-top: 1px solid var(--line); box-shadow: 0 -8px 20px rgba(0,0,0,.18);
+}
+html.is-fullscreen.kb-open .send-sticky { display: none; }
+html.is-fullscreen:not(.kb-open) body:has(.send-sticky) { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }

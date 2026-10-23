@@ -138,7 +138,7 @@ for (const [product, state, zip] of PRODUCTS) {
         await first.scrollIntoViewIfNeeded(); await sleep(100);
         await page.screenshot({ path: `${OUT}/${product}-${sid}.png` });
       }
-      if (sid === "review") break;
+      if (sid === "review") { await page.evaluate(() => scrollTo(0, 0)); await sleep(200); await page.screenshot({ path: `${OUT}/${product}-review-top.png` }); break; }
       if (sid === "consent") await page.tap("label[for=auth_ok]");
       await page.tap("#btn-next");
       for (let w = 0; w < 50 && (await stepId(page)) === sid; w++) await sleep(250); // live server: wait up to ~12s

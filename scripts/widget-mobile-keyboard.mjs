@@ -167,7 +167,8 @@ for (const [product, state, zip] of PRODUCTS) {
       if ((await stepId(page)) === sid) { rec.checks.stuck = "FAIL stuck at " + sid; break; }
     }
     rec.checks.reached_review = (await stepId(page)) === "review" ? "pass" : "FAIL";
-    await page.screenshot({ path: `${OUT}/mobile-${product}-review.png` });
+    await page.evaluate(() => scrollTo(0, 0)); await sleep(200);
+    await page.screenshot({ path: `${OUT}/mobile-${product}-review${process.env.THEME ? "-" + process.env.THEME : ""}.png` });
     await ctx.close();
   } catch (e) { rec.error = String(e).slice(0, 300); }
   const bad = rec.fields.filter(f => !f.pass);

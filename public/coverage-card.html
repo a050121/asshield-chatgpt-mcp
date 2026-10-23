@@ -143,7 +143,7 @@
         state.pref = p.dataset.v;
         document.querySelectorAll(".pref-card").forEach(x => x.classList.toggle("on", x === p));
         syncState();
-        setStatus("Preference saved as “" + state.pref + "” — an agent confirms coverage and pricing.");
+        setStatus("Preference saved: " + ({low:"Essential",medium:"Balanced",high:"Enhanced"}[state.pref] || state.pref) + ". An agent confirms coverage and pricing.");
       };
     });
     window.addEventListener("message", (event) => {

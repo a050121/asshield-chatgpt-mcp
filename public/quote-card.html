@@ -22,6 +22,7 @@
         </div>
         <h1 class="hero-title" id="hero-title">Get covered <span class="accent">your way</span>.</h1>
         <p class="hero-sub" id="hdr-sub">Quote request · licensed agency</p>
+        <p class="hero-note is-hidden" id="hero-note"></p>
         <span class="hero-badge" id="phase-badge">Quote</span>
         <div class="progress-track is-hidden" id="progress-wrap" aria-hidden="true">
           <div class="progress-fill" id="progress-fill" style="width:0%"></div>
@@ -281,8 +282,8 @@
         policy: ['Current <span class="accent">coverage</span>.', "Carrier and rough premium if you have one."],
         prefs: ['Coverage <span class="accent">preferences</span>.', "Tell us how you’d like to approach limits — an agent confirms pricing."],
         consent_auth: ['Almost <span class="accent">done</span>.', "Authorize Asshield to prepare a quote request."],
-        review: ['Review & <span class="accent">submit</span>.', "Tap any field to edit. No coverage is bound."],
-        confirmation: ['Request <span class="accent">received</span>.', "An Asshield agent will contact you."]
+        review: ['Review your <span class="accent">request</span>.', "Not sent yet. Check your details, then tap Send my quote request below."],
+        confirmation: ['<span class="accent">Sent</span>.', "An Asshield licensed agent will contact you."]
       };
       return titles[cur] || titles.contact;
     }
@@ -309,7 +310,28 @@
       main.classList.toggle("is-hidden", !show);
     }
 
+    function setBadge(text, tone) {
+      const b = $("phase-badge"); if (!b) return;
+      b.textContent = text;
+      b.classList.toggle("badge-amber", tone === "amber");
+      b.classList.toggle("badge-green", tone === "green");
+    }
+    function setHeroNote(text, tone) {
+      const n = $("hero-note"); if (!n) return;
+      n.textContent = text || ""; n.classList.toggle("is-hidden", !text);
+      n.classList.toggle("note-amber", tone === "amber"); n.classList.toggle("note-green", tone === "green");
+    }
+    // A confirmation is shown only when the server said this exact quote was submitted
+    // (submit_quote returned submitted, or the database shows submitted_at). Stored widget state alone never counts.
+    function confirmedByServer() { return !!(S.quote_id && S.serverConfirmedFor === S.quote_id); }
+    function verifySubmittedOnServer() {
+      if (S._verifying || !S.quote_id) return; S._verifying = true;
+      refreshMissing().finally(() => { S._verifying = false; });
+    }
     function render() {
+      if (S.phase === "confirmation" && !confirmedByServer()) {
+        S.phase = "form"; S.step = stepsFor(S.product).length - 1; verifySubmittedOnServer();
+      }
       updateFoot();
       try {
         const cardEl = document.querySelector(".card");
@@ -324,7 +346,7 @@
       $("hdr-sub").textContent = S.product ? (productLabel(S.product) + (loc ? " · " + loc : "")) : "Quote request · licensed agency";
 
       if (S.phase === "unsupported") {
-        $("phase-badge").textContent = "Unavailable";
+        setBadge("Unavailable"); setHeroNote("");
         const [t,s] = heroForStep("consent");
         $("hero-title").innerHTML = t; 
         root.innerHTML = `<div class="panel"><h2>Outside licensed area</h2><p>${escapeHtml(S.message||"")}</p>
@@ -333,7 +355,7 @@
       }
 
       if (S.phase === "consent") {
-        $("phase-badge").textContent = "Consent";
+        setBadge("Consent"); setHeroNote("");
         const [t] = heroForStep("consent"); $("hero-title").innerHTML = t;
         root.innerHTML = `<div class="panel">
           <div class="stripe"></div>
@@ -367,9 +389,10 @@
       }
 
       if (S.phase === "confirmation") {
-        $("phase-badge").textContent = "Submitted";
+        setBadge("Sent", "green");
         const [t] = heroForStep("confirmation"); $("hero-title").innerHTML = t;
         const ref = S.quote_id || "—";
+        setHeroNote("Reference " + String(ref).slice(0, 8).toUpperCase() + " · An Asshield licensed agent will contact you.", "green");
         const cross = (S.cross_sell||[]).slice(0,3);
         const est = S.asshield_estimate;
         const discLead = (est && est.disclaimer_lead) || "*Estimate only. Not a quote or offer of insurance. No coverage is bound.";
@@ -497,11 +520,12 @@
       }
 
       // form
-      $("phase-badge").textContent = "In progress";
       const steps = stepsFor(S.product);
       const cur = steps[S.step] || steps[0];
-      const [ht] = heroForStep(cur.id === "consent" ? "consent_auth" : cur.id);
+      const [ht, hs] = heroForStep(cur.id === "consent" ? "consent_auth" : cur.id);
       $("hero-title").innerHTML = ht;
+      if (cur.id === "review") { setBadge("Not sent yet", "amber"); setHeroNote(hs, "amber"); }
+      else { setBadge("In progress"); setHeroNote(""); }
       if (cur.id === "review") { root.innerHTML = renderReview(); bindReview(); return; }
       root.innerHTML = renderStep(cur);
       bindStep(cur);
@@ -676,18 +700,32 @@
         ["Deductible pref", f.deductible_preference, "prefs"],
         ["Authorization", f.auth_ok ? "Accepted" : "Needed", "consent"]
       ].filter(r => r[1]);
+      const items = missingItems().filter(m => m.key !== "quote_authorization" || !S.fields.auth_ok);
+      if (!S.fields.auth_ok && !items.some(m => m.key === "quote_authorization")) items.push({ key: "quote_authorization", label: "Authorization", step: stepsFor(S.product).findIndex(s => s.id === "consent") });
+      const blocked = items.length > 0;
+      const why = blocked ? "Cannot send yet. Please add: " + items.map(m => m.label).join(", ") + "." : "Sends your details to an Asshield licensed agent. No coverage is bound.";
+      const sendBtn = (id) => `<button type="button" class="cta send-btn" id="${id}"${blocked ? " disabled aria-disabled=\"true\"" : ""} aria-describedby="send-why">Send my quote request</button>`;
+      const missingBox = blocked ? `<div class="missing-box" role="alert"><strong>Before you can send this, please add:</strong>
+            ${items.map(m => `<div class="missing-row"><span>${escapeHtml(m.label)}</span>${m.step >= 0 ? `<button type="button" class="missing-fix secondary" data-i="${m.step}">Go to ${escapeHtml(stepsFor(S.product)[m.step].label)}</button>` : ""}</div>`).join("")}</div>` : "";
       return `<div class="panel"><div class="stripe"></div>
-        <p class="muted">Tap a row to edit. Submitting sends a request only — <strong>no coverage is bound</strong>. Asshield may then show estimated starting prices* for illustration.</p>
+        <div class="send-top">
+          ${sendBtn("btn-submit-top")}
+          <p class="send-why${blocked ? " is-blocked" : ""}" id="send-why">${escapeHtml(why)}</p>
+        </div>
+        ${missingBox}
+        <p class="muted">Not sent yet. Tap a row to edit. Sending is a request only, <strong>no coverage is bound</strong>. Asshield may then show estimated starting prices* for illustration.</p>
         ${rows.map(([k,v,step]) => `<div class="edit-row" data-step="${step}"><div><div class="k">${escapeHtml(k)}</div><div class="v">${escapeHtml(v)}</div></div><span class="hint">Edit</span></div>`).join("")}
-        ${(() => { const items = missingItems().filter(m => m.key !== "quote_authorization" || !S.fields.auth_ok);
-          return items.length ? `<div class="missing-box" role="alert"><strong>Before you can send this, please add:</strong>
-            ${items.map(m => `<div class="missing-row"><span>${escapeHtml(m.label)}</span>${m.step >= 0 ? `<button type="button" class="missing-fix secondary" data-i="${m.step}">Go to ${escapeHtml(stepsFor(S.product)[m.step].label)}</button>` : ""}</div>`).join("")}</div>` : ""; })()}
         <h3>Helpful to have</h3>${renderChecklist(S.checklist,{onlyRemaining:true})}
+        <div class="send-bottom">
+          ${sendBtn("btn-submit")}
+          <p class="send-why${blocked ? " is-blocked" : ""}">${escapeHtml(why)}</p>
+        </div>
         <div class="actions">
           <button type="button" class="secondary" id="btn-back">Back</button>
-          ${(() => { const blocked = !S.fields.auth_ok || missingItems().some(m => m.key !== "quote_authorization"); return `<button type="button" class="cta" id="btn-submit"${blocked?" disabled":""} title="${blocked?"Complete the items above first":""}">Submit quote request</button>`; })()}
           <button type="button" class="secondary" id="btn-agent">Agent contact</button>
-        </div></div>`;
+        </div>
+        <div class="send-sticky" id="send-sticky">${sendBtn("btn-submit-sticky")}</div>
+      </div>`;
     }
 
     async function refreshMissing() {
@@ -927,7 +965,7 @@
       document.querySelectorAll(".missing-fix").forEach(b => {
         b.onclick = () => { const i = Number(b.dataset.i); if (i >= 0) { S.step = i; render(); } };
       });
-      $("btn-submit").onclick = async () => {
+      const doSubmit = async () => {
         if (!S.quote_id || S.submitting) return;
         if (!S.fields.auth_ok) {
           setStatus("Please accept authorization on the Consent step before submitting.");
@@ -937,7 +975,7 @@
           return;
         }
         S.submitting = true;
-        const btn = $("btn-submit"); if (btn) { btn.disabled = true; btn.textContent = "Sending…"; }
+        document.querySelectorAll(".send-btn").forEach(b => { b.disabled = true; b.textContent = "Sending…"; });
         setStatus("Sending your request…");
         try {
           await refreshMissing();
@@ -967,6 +1005,7 @@
             return;
           }
           S.submitting = false;
+          S.serverConfirmedFor = S.quote_id;
           ingest({ structuredContent: sc });
           S.phase = "confirmation"; render(); setStatus("Sent to an Asshield licensed agent. No coverage is bound.");
         } catch(e){
@@ -974,6 +1013,7 @@
           setStatus("Your request was not sent. " + (e?.message||e));
         }
       };
+      ["btn-submit","btn-submit-top","btn-submit-sticky"].forEach(id => { const b = $(id); if (b) b.onclick = doSubmit; });
       bindCommon();
     }
 
@@ -1004,7 +1044,8 @@
       if (w.independent_section || sc.independent_section || sc.confirmation?.independent)
         S.independent_section = w.independent_section || sc.independent_section || sc.confirmation.independent;
       if (w.consent_nonce || sc.consent_nonce) S.consent_nonce = w.consent_nonce || sc.consent_nonce;
-      if (sc.submitted || w.phase === "confirmation") S.phase = "confirmation";
+      const serverSaysSent = (sc.submitted === true || sc.already_submitted === true) && (!incomingQid || !S.quote_id || incomingQid === S.quote_id);
+      if (serverSaysSent) { S.serverConfirmedFor = S.quote_id; S.phase = "confirmation"; }
       else if (w.phase === "consent") {
         // Only a brand-new quote starts at consent. Never pull the customer back once they moved on.
         if (!(sameQuote && (S.userAdvanced || S.phase === "form"))) S.phase = "consent";
@@ -1041,12 +1082,14 @@
           if (ws && qid && ws.quote_id === qid && ws.ready && typeof ws.ready === "object") S.ready = { ...ws.ready };
           if (ws && qid && ws.quote_id === qid && ws.phase && ws.phase !== "consent") {
             S.quote_id = qid; S.phase = ws.phase; S.step = Number(ws.step)||0; S.userAdvanced = true;
+            if (ws.phase === "confirmation") { S.phase = "form"; S.step = Math.max(0, stepsFor(sc?.widget?.product || sc?.product || S.product).length - 1); S._verifyOnLoad = true; }
             ["first_name","last_name","email","phone","coverage_preference","deductible_preference","drivers","vehicles"].forEach(f => { if (ws[f] != null) S.fields[f] = ws[f]; });
             if (ws.auth_ok) S.fields.auth_ok = true;
           }
         } catch(_){}
       }
       ingest({ structuredContent: sc }, { host: true });
+      if (S._verifyOnLoad) { S._verifyOnLoad = false; verifySubmittedOnServer(); }
     }
     function sync(){
       try {
@@ -1087,7 +1130,7 @@
       else if (mock==="prefs") { S.phase="form"; S.step=stepsFor("auto").findIndex(s=>s.id==="prefs"); }
       else if (mock==="review") { S.phase="form"; S.step=stepsFor("auto").length-1; }
       else if (mock==="confirmation") {
-        S.phase="confirmation";
+        S.phase="confirmation"; S.serverConfirmedFor = S.quote_id;
         S.product="auto"; S.state="KY";
         S.confirmation_banner = {
           heading: "You're all set.",

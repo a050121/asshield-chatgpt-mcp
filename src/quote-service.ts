@@ -917,6 +917,7 @@ export async function getMissingFields(quoteId: string) {
       "state",
       "zip",
       "status",
+      "submitted_at",
       "line_details"
     ]);
     if (!quote) throw new Error(`Quote not found: ${quoteId}`);
@@ -939,13 +940,13 @@ export async function getMissingFields(quoteId: string) {
       ),
       details
     });
-    return { quote_id: quoteId, product, ready_to_submit: missing.length === 0, missing };
+    return { quote_id: quoteId, product, ready_to_submit: missing.length === 0, missing, already_submitted: Boolean(quote.submitted_at) };
   }
 
   const client = requireDb();
   const [{ data: quote, error: quoteError }, { data: drivers }, { data: vehicles }, { data: policies }, { data: consents }] =
     await Promise.all([
-      client.from("quotes").select("id, customer_id, product, state, zip, status").eq("id", quoteId).single(),
+      client.from("quotes").select("id, customer_id, product, state, zip, status, submitted_at").eq("id", quoteId).single(),
       client.from("drivers").select("id").eq("quote_id", quoteId),
       client.from("vehicles").select("id").eq("quote_id", quoteId),
       client.from("current_policies").select("id").eq("quote_id", quoteId),
@@ -966,7 +967,8 @@ export async function getMissingFields(quoteId: string) {
     details
   });
 
-  return { quote_id: quoteId, product, ready_to_submit: missing.length === 0, missing };
+  // already_submitted comes from the database (submitted_at), so the card can verify a sent request on reload.
+  return { quote_id: quoteId, product, ready_to_submit: missing.length === 0, missing, already_submitted: Boolean(quote.submitted_at) };
 }
 
 export async function loadLeadSnapshot(quoteId: string): Promise<LeadSnapshot> {
@@ -1074,6 +1076,10 @@ export async function submitQuote(input: {
   assertNoRestrictedData(input as Record<string, unknown>, ["notes"]);
 
   const readiness = await getMissingFields(input.quote_id);
+  if (readiness.already_submitted) {
+    // Already sent once: confirm without re-sending the lead (no duplicate agency email).
+    return { submitted: true, already_submitted: true, quote_id: input.quote_id };
+  }
   if (!readiness.ready_to_submit) {
     return {
       submitted: false,

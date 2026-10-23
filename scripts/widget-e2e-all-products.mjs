@@ -31,9 +31,9 @@ async function mount(uri, toolOutput, rec) {
     return x.result;
   });
   await page.addInitScript((j) => {
-    let ws = null; window.__setWS = 0;
+    let ws = null; try { ws = JSON.parse(sessionStorage.getItem("ws") || "null"); } catch (_) {} window.__setWS = 0;
     window.openai = { get toolOutput() { return JSON.parse(j); }, theme: "light", get widgetState() { return ws; },
-      setWidgetState(s) { ws = s; window.__setWS++; setTimeout(() => window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { widgetState: s } } })), 0); },
+      setWidgetState(s) { ws = s; try { sessionStorage.setItem("ws", JSON.stringify(s)); } catch (_) {} window.__setWS++; setTimeout(() => window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { widgetState: s } } })), 0); },
       notifyIntrinsicHeight() {}, callTool: (n, a) => { const f = (window.__fault && window.__fault[n]) || null; if (f) delete window.__fault[n]; return window.__callTool(n, a, f); }, sendFollowUpMessage(p) { window.__follow = p; } };
   }, JSON.stringify(toolOutput));
   await page.route("http://widget.test/**", r => r.fulfill({ status: 200, contentType: "text/html", body: html }));
@@ -150,6 +150,20 @@ for (const [product, state, zip] of PRODUCTS) {
     { const rm = await rpc("tools/call", { name: "get_missing_quote_fields", arguments: { quote_id: rec.quote_id } });
       const sc = rm.result?.structuredContent || {}; const miss = sc.missing || sc.widget?.missing;
       rec.checks.server_ready_to_submit = sc.ready_to_submit === true || (Array.isArray(miss) && miss.length === 0) ? "pass" : "FAIL missing=" + JSON.stringify(miss); }
+    if (fin === "review") {
+      const rv = await page.evaluate(() => ({ badge: document.getElementById("phase-badge")?.textContent.trim(), title: document.getElementById("hero-title")?.textContent.trim(),
+        note: document.getElementById("hero-note")?.textContent.trim(), n: document.querySelectorAll(".send-btn").length,
+        topBtn: (() => { const b = document.getElementById("btn-submit-top"); if (!b) return null; const r = b.getBoundingClientRect(); return { top: Math.round(r.top + scrollY), w: Math.round(r.width), text: b.textContent.trim(), disabled: b.disabled }; })(),
+        quotes: /[\u201C\u201D"]/.test(document.querySelector(".card").innerText) }));
+      rec.checks.review_unmistakable = rv.badge.toUpperCase() === "NOT SENT YET" && /^Review your request\.$/.test(rv.title) && /^Not sent yet\./.test(rv.note) && rv.n === 3 && rv.topBtn && rv.topBtn.text === "Send my quote request" && rv.topBtn.w >= 300 && !rv.topBtn.disabled && !rv.quotes
+        ? `pass (top button at ${rv.topBtn.top}px)` : "FAIL " + JSON.stringify(rv);
+      // A stored widgetState that says confirmation must NOT show Sent unless the server confirms it.
+      await page.evaluate(() => { const w = window.openai.widgetState || {}; window.openai.setWidgetState({ ...w, phase: "confirmation" }); });
+      await sleep(300); await page.reload(); await sleep(4000);
+      const afterReload = await page.evaluate(() => ({ badge: document.getElementById("phase-badge")?.textContent.trim(), sent: !!document.getElementById("confirm-banner") }));
+      rec.checks.no_fake_sent_after_reload = !afterReload.sent && afterReload.badge.toUpperCase() !== "SENT" ? "pass (" + afterReload.badge + ")" : "FAIL " + JSON.stringify(afterReload);
+      if ((await stepId(page)) !== "review") { for (let g = 0; g < 10 && (await stepId(page)) !== "review"; g++) { if ((await stepId(page)) === "consent" && !(await page.isChecked("#auth_ok"))) await page.check("#auth_ok"); await clickWait(page, "#btn-next"); } }
+    }
     if (fin === "review" && product === "auto") {
       await page.evaluate(() => { window.__fault = { submit_quote: "not_ready" }; });
       await page.click("#btn-submit"); await sleep(2500);
@@ -164,7 +178,12 @@ for (const [product, state, zip] of PRODUCTS) {
     if (process.env.SUBMIT === "1" && (await stepId(page)) === "review") {
       await page.click("#btn-submit"); await sleep(6000);
       const conf = await page.evaluate(() => document.body.innerText);
-      rec.checks.real_submit = /received|reference/i.test(conf) && !(await page.$("#btn-submit")) ? "pass" : "FAIL " + conf.slice(0, 200);
+      const sentHdr = await page.evaluate(() => ({ badge: document.getElementById("phase-badge")?.textContent.trim(), title: document.getElementById("hero-title")?.textContent.trim(), note: document.getElementById("hero-note")?.textContent.trim() }));
+      rec.checks.real_submit = /reference/i.test(conf) && !(await page.$("#btn-submit")) && sentHdr.badge.toUpperCase() === "SENT" && sentHdr.title === "Sent." && /^Reference /.test(sentHdr.note) ? "pass " + JSON.stringify(sentHdr) : "FAIL " + JSON.stringify(sentHdr) + " " + conf.slice(0, 200);
+      await page.evaluate(() => scrollTo(0, 0)); await page.screenshot({ path: `${OUT}-${product}-sent.png` });
+      await page.reload(); await sleep(6000);
+      const rl = await page.evaluate(() => ({ badge: document.getElementById("phase-badge")?.textContent.trim(), sent: !!document.getElementById("confirm-banner") }));
+      rec.checks.sent_survives_reload_via_server = rl.sent && rl.badge.toUpperCase() === "SENT" ? "pass" : "FAIL " + JSON.stringify(rl);
     }
     rec.checks.ask_on_review = fin === "review" ? await askCheck(page, "What happens after I submit?") : "n/a";
     rec.checks.no_redraw_review_5s = fin === "review" ? ((await idle(page, 5000)) === 0 ? "pass" : "FAIL") : "n/a";
