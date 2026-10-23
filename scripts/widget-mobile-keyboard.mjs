@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 const MCP = process.env.MCP_URL || "https://mcp.asshield.com/mcp";
 const OUT = process.env.OUT_DIR || "/workspace/harness-out";
-const KB_H = 480;
+const KB = 336, OVERLAY = 110, KB_H = 844 - KB;
 const ONLY = process.argv.slice(2);
 let id = 1;
 async function rpc(method, params) {
@@ -35,17 +35,18 @@ async function mount(uri, toolOutput, rec) {
   await page.addInitScript((j) => {
     window.__fs = 0;
     window.openai = {
-      get toolOutput() { return JSON.parse(j); }, theme: "light", maxHeight: 844, displayMode: "inline",
+      get toolOutput() { return JSON.parse(j); }, theme: (new URLSearchParams(location.search).get("theme") || "light"), maxHeight: 844,
+      get displayMode() { return sessionStorage.getItem("dm") || "inline"; }, safeArea: { insets: { top: 110, bottom: 0, left: 0, right: 0 } },
       userAgent: { device: { type: "mobile" } },
       get widgetState() { try { return JSON.parse(sessionStorage.getItem("ws") || "null"); } catch (_) { return null; } },
       setWidgetState(s) { sessionStorage.setItem("ws", JSON.stringify(s)); },
       notifyIntrinsicHeight(h) { window.__h = h; },
-      requestDisplayMode(m) { window.__fs++; return Promise.resolve(m); },
+      requestDisplayMode(m) { window.__fs++; sessionStorage.setItem("dm", m.mode); setTimeout(() => window.dispatchEvent(new CustomEvent("openai:set_globals", { detail: { globals: { displayMode: m.mode } } })), 0); return Promise.resolve(m); },
       callTool: (n, a) => window.__callTool(n, a), sendFollowUpMessage(p) { window.__follow = p; }
     };
   }, JSON.stringify(toolOutput));
   await page.route("http://widget.test/**", r => r.fulfill({ status: 200, contentType: "text/html", body: html }));
-  await page.goto("http://widget.test/card.html");
+  await page.goto("http://widget.test/card.html" + (process.env.THEME ? "?theme=" + process.env.THEME : ""));
   return { page, ctx };
 }
 async function keyboard(page, open) {
@@ -67,14 +68,17 @@ async function checkFields(page, stepName, results) {
       const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
       return { top: Math.round(b.top), bottom: Math.round(b.bottom), vh: Math.round(vh), focused: document.activeElement === el, fontPx: parseFloat(getComputedStyle(el).fontSize) };
     }, sel);
-    const visible = r.top >= 0 && r.bottom <= r.vh;
+    const fs = await page.evaluate(() => window.openai.displayMode === "fullscreen");
+    const visible = fs ? (r.top >= OVERLAY && r.bottom <= r.vh) : (r.top >= 0 && r.bottom <= r.vh);
     results.push({ step: stepName, field: sel, pass: visible && r.focused && r.fontPx >= 16, detail: visible ? "" : `rect ${r.top}-${r.bottom} vs ${r.vh}`, fontPx: r.fontPx });
   }
   // scroll back to top with a real touch-style wheel gesture and confirm the card header is reachable
+  await page.mouse.move(195, 300);
   for (let i = 0; i < 12; i++) { await page.mouse.wheel(0, -600); await sleep(40); }
   await sleep(300);
-  const topOk = await page.evaluate(() => { const h = document.querySelector(".hero") || document.querySelector(".card"); const b = h.getBoundingClientRect(); return b.top >= -1 && b.top < 60; });
-  results.push({ step: stepName, field: "(scroll back to top)", pass: topOk, detail: topOk ? "" : "header not reachable" });
+  const topOk = await page.evaluate((ov) => { const fs = window.openai.displayMode === "fullscreen"; const h = document.querySelector(".hero") || document.querySelector(".card"); const b = h.getBoundingClientRect(); return fs ? (b.top >= ov - 2 && b.top < ov + 80) : (b.top >= -1 && b.top < 60); }, OVERLAY);
+  const dbg = topOk ? "" : await page.evaluate(() => { const h = document.querySelector(".hero") || document.querySelector(".card"); return `hero.top=${Math.round(h.getBoundingClientRect().top)} body.scrollTop=${document.body.scrollTop} doc.scrollTop=${document.scrollingElement.scrollTop}`; });
+  results.push({ step: stepName, field: "(scroll back to top)", pass: topOk, detail: topOk ? "" : "header not reachable " + dbg });
   await page.evaluate(() => document.activeElement?.blur?.());
   await keyboard(page, false);
 }
@@ -103,10 +107,18 @@ for (const [product, state, zip] of PRODUCTS) {
     rec.quote_id = sc.quote?.id || sc.quote_id;
     let { page, ctx } = await mount("ui://widget/asshield-quote-card/v1.html", sc, rec);
     await sleep(600);
+    rec.checks.inline_no_scroll_trap = await page.evaluate(() => {
+      const b = getComputedStyle(document.body), h = getComputedStyle(document.documentElement);
+      const trap = ["auto", "scroll"].includes(b.overflowY) || ["auto", "scroll"].includes(h.overflowY) || b.touchAction === "none" || h.touchAction === "none";
+      return !trap && !document.documentElement.classList.contains("is-fullscreen") ? "pass" : `FAIL body=${b.overflowY} html=${h.overflowY} touch=${b.touchAction}`;
+    });
+    const beginBottom = await page.$eval("#btn-begin", e => Math.round(e.getBoundingClientRect().bottom + window.scrollY));
+    rec.checks.consent_continue_offset_px = beginBottom <= 780 ? `pass (${beginBottom}px from card top)` : `FAIL ${beginBottom}px`;
     // consent checklist checkboxes
     const n = await page.$$eval("#ready-list input[type=checkbox]", l => l.length);
     const startUnchecked = await page.$$eval("#ready-list input[type=checkbox]", l => l.every(c => !c.checked));
     await page.evaluate(() => { window.__mut = 0; new MutationObserver(m => window.__mut += m.length).observe(document.getElementById("panels"), { childList: true, subtree: true }); });
+    await page.evaluate(() => { window.__touch = 0; document.addEventListener("touchstart", () => window.__touch++, { passive: true }); });
     const labels = await page.$$("#ready-list .ready-item span");
     if (labels[0]) await labels[0].tap(); if (labels[2]) await labels[2].tap();
     await sleep(300);
@@ -116,6 +128,7 @@ for (const [product, state, zip] of PRODUCTS) {
     const strike = await page.$$eval("#ready-list .ready-item span", l => l.some(e => getComputedStyle(e).textDecorationLine.includes("line-through")));
     const target = await page.$eval("#ready-list .ready-item", e => e.getBoundingClientRect().height);
     const redraws = await page.evaluate(() => window.__mut);
+    rec.checks.real_touch_events = (await page.evaluate(() => window.__touch)) >= 2 ? "pass" : "FAIL no touchstart";
     rec.checks.ready_checkboxes = n > 0 && startUnchecked && after[0] === true && (after.length < 3 || after[2] === false) && !strike && target >= 44 && redraws === 0
       ? `pass (${n} items, tap target ${Math.round(target)}px)` : `FAIL n=${n} startUnchecked=${startUnchecked} after=${after} strike=${strike} target=${target} redraws=${redraws}`;
     await page.reload(); await sleep(800);
