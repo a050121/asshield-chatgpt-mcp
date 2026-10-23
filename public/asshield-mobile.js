@@ -90,7 +90,7 @@
     applyMode();
     var el = e.target;
     clearTimeout(focusTimer);
-    focusTimer = setTimeout(function () { keepVisible(el); }, 380); // after iOS's own focus scroll + keyboard animation
+    focusTimer = setTimeout(function () { keepVisible(el); focusTimer = setTimeout(function () { keepVisible(el); }, 400); }, 380); // after iOS's own focus scroll + keyboard animation, then one settle re-check (no-op when already visible)
   });
   document.addEventListener("focusout", function () {
     clearTimeout(blurTimer);

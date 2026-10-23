@@ -66,11 +66,11 @@ async function checkFields(page, stepName, results) {
     const r = await page.evaluate((s) => {
       const el = document.querySelector(s); const b = el.getBoundingClientRect();
       const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-      return { top: Math.round(b.top), bottom: Math.round(b.bottom), vh: Math.round(vh), focused: document.activeElement === el, fontPx: parseFloat(getComputedStyle(el).fontSize) };
+      return { sy: Math.round(document.scrollingElement.scrollTop), dh: document.scrollingElement.scrollHeight, top: Math.round(b.top), bottom: Math.round(b.bottom), vh: Math.round(vh), focused: document.activeElement === el, fontPx: parseFloat(getComputedStyle(el).fontSize) };
     }, sel);
     const fs = await page.evaluate(() => window.openai.displayMode === "fullscreen");
     const visible = fs ? (r.top >= OVERLAY && r.bottom <= r.vh) : (r.top >= 0 && r.bottom <= r.vh);
-    results.push({ step: stepName, field: sel, pass: visible && r.focused && r.fontPx >= 16, detail: visible ? "" : `rect ${r.top}-${r.bottom} vs ${r.vh}`, fontPx: r.fontPx });
+    results.push({ step: stepName, field: sel, pass: visible && r.focused && r.fontPx >= 16, detail: visible ? "" : `rect ${r.top}-${r.bottom} vs ${r.vh} scrollY=${r.sy} docH=${r.dh} focused=${r.focused}`, fontPx: r.fontPx });
   }
   // scroll back to top with a real touch-style wheel gesture and confirm the card header is reachable
   await page.mouse.move(195, 300);
@@ -114,6 +114,7 @@ for (const [product, state, zip] of PRODUCTS) {
     });
     const beginBottom = await page.$eval("#btn-begin", e => Math.round(e.getBoundingClientRect().bottom + window.scrollY));
     rec.checks.consent_continue_offset_px = beginBottom <= 780 ? `pass (${beginBottom}px from card top)` : `FAIL ${beginBottom}px`;
+    await page.screenshot({ path: `${OUT}/mobile-${product}-consent${process.env.THEME ? "-" + process.env.THEME : ""}.png` }).catch(() => {});
     // consent checklist checkboxes
     const n = await page.$$eval("#ready-list input[type=checkbox]", l => l.length);
     const startUnchecked = await page.$$eval("#ready-list input[type=checkbox]", l => l.every(c => !c.checked));
