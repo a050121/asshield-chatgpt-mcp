@@ -178,6 +178,7 @@ export function buildDetailsSummary(
     if (d.operations_description) parts.push(`Operations: ${d.operations_description}`);
     if (d.desired_limits) parts.push(`Desired limits: ${d.desired_limits}`);
   }
+  if (product !== "commercial_gl" && d.desired_limits) parts.push(`Coverage preferences: ${d.desired_limits}`);
   if (product === "workers_comp") {
     if (d.annual_payroll_estimate) parts.push(`Payroll estimate: ${d.annual_payroll_estimate}`);
     if (d.employees_by_job_type) parts.push(`Employees by job type: ${d.employees_by_job_type}`);
