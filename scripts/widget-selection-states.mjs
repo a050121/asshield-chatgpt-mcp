@@ -140,7 +140,8 @@ for (const [product, state, zip] of PRODUCTS) {
       }
       if (sid === "review") break;
       if (sid === "consent") await page.tap("label[for=auth_ok]");
-      await page.tap("#btn-next"); await sleep(1800);
+      await page.tap("#btn-next");
+      for (let w = 0; w < 50 && (await stepId(page)) === sid; w++) await sleep(250); // live server: wait up to ~12s
       if ((await stepId(page)) === sid) { rec.stuck = sid + ": " + await page.$eval("#status", e => e.textContent).catch(() => ""); break; }
     }
     await ctx.close();
