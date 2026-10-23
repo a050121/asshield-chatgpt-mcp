@@ -680,7 +680,7 @@ label.toggle { min-height: 44px; cursor: pointer; -webkit-tap-highlight-color: r
   --sel-gold-edge: #8a6a12;      /* selected boundary on light surfaces (>= 3:1 vs white) */
   --sel-ink: #0b1622;            /* bold dark text on gold */
   --sel-tint: rgba(214,178,74,.16);
-  --unsel-edge: rgba(7,21,33,.42);   /* unselected boundary (>= 3:1 on white) */
+  --unsel-edge: rgba(7,21,33,.56);   /* unselected boundary (>= 3:1 on white) */
   --unsel-ink: #4a5a6a;
 }
 html.theme-dark {

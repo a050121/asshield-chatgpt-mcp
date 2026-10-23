@@ -54,8 +54,10 @@ async function mergeLineDetails(
   patch: LineDetails
 ): Promise<LineDetails> {
   const existing = await readLineDetails(quoteId);
-  const merged: LineDetails = { ...existing, ...patch };
-  // Drop undefined keys
+  // Only keys actually provided overwrite; an omitted (undefined) field never erases a saved one.
+  const provided: LineDetails = {};
+  for (const [k, v] of Object.entries(patch)) if (v !== undefined) (provided as Record<string, unknown>)[k] = v;
+  const merged: LineDetails = { ...existing, ...provided };
   for (const key of Object.keys(merged) as (keyof LineDetails)[]) {
     if (merged[key] === undefined) delete merged[key];
   }

@@ -606,12 +606,12 @@
         if (S.product === "boat") return `<div class="panel"><div class="stripe"></div>
           <label for="boat_year">Year</label><select id="boat_year"><option value="">Year</option>${YEAR_OPTS.map(y=>`<option>${y}</option>`).join("")}</select>
           <label for="boat_make">Make</label><input id="boat_make" value="${escapeHtml(f.boat_make||"")}"/>
-          <label>Length</label>${seg("boat_len",[["15","Under 20 ft"],["24","20–30 ft"],["35","30–40 ft"],["45","40+ ft"]], "24")}
+          <label>Length</label>${seg("boat_len",[["15","Under 20 ft"],["24","20–30 ft"],["35","30–40 ft"],["45","40+ ft"]], String(f.boat_length_ft || "24"))}
           ${navButtons()}</div>`;
         if (S.product === "golf_cart") return `<div class="panel"><div class="stripe"></div>
           <label for="cart_year">Year</label><select id="cart_year"><option value="">Year</option>${YEAR_OPTS.map(y=>`<option>${y}</option>`).join("")}</select>
           <label for="cart_make">Make</label><input id="cart_make"/>
-          <label>Street legal?</label>${seg("street",[["true","Yes"],["false","No"]],"false")}
+          <label>Street legal?</label>${seg("street",[["true","Yes"],["false","No"]], f.street_legal===true?"true":"false")}
           ${navButtons()}</div>`;
         if (S.product === "workers_comp") return `<div class="panel"><div class="stripe"></div>
           <label for="annual_payroll_estimate">Payroll estimate</label><input id="annual_payroll_estimate" value="${escapeHtml(f.annual_payroll_estimate||"")}"/>
@@ -837,7 +837,7 @@
           } else if (cur.id === "business") {
             const args={ quote_id:S.quote_id, business_name:val("business_name"), business_type_or_description:val("business_type_or_description")||undefined,
               business_address_state:(val("business_address_state")||"").toUpperCase()||undefined, business_address_zip:val("business_address_zip")||undefined,
-              number_of_employees: S.fields.number_of_employees };
+              number_of_employees: S.fields.number_of_employees ?? ({"1-5":3,"6-20":12,"21-50":30,"51+":60})[document.querySelector("#emp button.on")?.dataset.v || "1-5"] };
             if (!args.business_name) return setStatus("Business name required.");
             if (!args.business_type_or_description) return setStatus("Please describe the type of business.");
             if (!args.business_address_state || !args.business_address_zip) return setStatus("Business state and ZIP are required.");
@@ -868,8 +868,10 @@
               ["operations_description","annual_payroll_estimate","employees_by_job_type","boat_make","cart_make"].forEach(k=>{ const v=val(k); if(v) args[k]=v; });
               const by=val("boat_year"); if(by) args.boat_year=Number(by);
               const cy=val("cart_year"); if(cy) args.cart_year=Number(cy);
-              if (S.fields.boat_length_ft) args.boat_length_ft = S.fields.boat_length_ft;
-              if (S.fields.street_legal!=null) args.street_legal = S.fields.street_legal;
+              // The highlighted choice counts even if the customer never tapped it (it is shown as selected).
+              const segVal = id => document.querySelector(`#${id} button.on`)?.dataset.v;
+              if (S.product==="boat") { const bl = S.fields.boat_length_ft ?? Number(segVal("boat_len")); if (bl) { args.boat_length_ft = bl; S.fields.boat_length_ft = bl; } }
+              if (S.product==="golf_cart") { const sl = S.fields.street_legal ?? (segVal("street") != null ? segVal("street") === "true" : undefined); if (sl != null) { args.street_legal = sl; S.fields.street_legal = sl; } }
               await callToolChecked("save_line_details", args); Object.assign(S.fields, args);
             }
           } else if (cur.id === "policy") {

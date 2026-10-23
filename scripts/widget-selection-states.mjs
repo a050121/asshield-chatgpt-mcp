@@ -128,6 +128,7 @@ for (const [product, state, zip] of PRODUCTS) {
       if (sid === "policy") { await page.fill("#carrier", "TEST Carrier"); await page.fill("#current_premium", "1200"); }
       const picks = await pickAll(page);
       if (sid === "contact") await page.tap('#residence button[data-v="own"]');
+      await sleep(350); // let border/background transitions finish before measuring
       const m = await page.evaluate(MEASURE);
       const bad = judge(m);
       if (picks.redraws) bad.push(`redraws ${picks.redraws}`);
