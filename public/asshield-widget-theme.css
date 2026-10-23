@@ -632,10 +632,10 @@ html.theme-dark .ask-send { background: var(--accent); color: #071521; }
 /* Mobile keyboard and scroll (all cards) */
 :root { --asshield-env-top: env(safe-area-inset-top, 0px); }
 html, body { height: auto; overflow-x: clip; touch-action: manipulation; }
-/* Inline: never an inner scroller, so swipes scroll the chat. Fullscreen only: */
-html.is-fullscreen { overflow: hidden; }
-html.is-fullscreen, html.is-fullscreen body { height: var(--asshield-avail-h, 100%); }
-html.is-fullscreen body { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding-top: var(--asshield-top-pad, 120px); }
+/* Inline: never an inner scroller, so swipes scroll the chat. Fullscreen: the frame document scrolls
+   (one scroller only), with top padding that clears ChatGPT's overlay buttons. */
+html.is-fullscreen { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+html.is-fullscreen body { padding-top: var(--asshield-top-pad, 120px); }
 html.is-fullscreen.kb-open body { padding-bottom: max(45vh, 280px); }
 html.is-fullscreen input, html.is-fullscreen select, html.is-fullscreen textarea { scroll-margin-top: var(--asshield-top-pad, 120px); scroll-margin-bottom: 120px; }
 input, select, textarea, #ask-input { font-size: max(16px, 1rem); }

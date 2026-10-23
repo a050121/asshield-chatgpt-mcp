@@ -62,7 +62,7 @@
       }
     } catch (_) {}
   }
-  function scroller() { return isFullscreen() ? document.body : (document.scrollingElement || root); }
+  function scroller() { return document.scrollingElement || root; }
   // Put the field (and its label) inside the band between the top overlay and the keyboard; skip if already comfortable.
   function keepVisible(el) {
     if (!el || !el.isConnected || document.activeElement !== el) return;
