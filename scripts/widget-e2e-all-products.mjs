@@ -80,6 +80,15 @@ for (const [product, state, zip] of PRODUCTS) {
     rec.checks.no_redraw_consent_8s = m === 0 ? "pass" : `FAIL ${m} DOM changes`;
     rec.checks.no_strikethrough = (await page.evaluate(() => [...document.querySelectorAll(".checklist .txt")].some(e => getComputedStyle(e).textDecorationLine.includes("line-through")))) ? "FAIL" : "pass";
     await page.screenshot({ path: `${OUT}-${product}-1-consent.png`, fullPage: true });
+    {
+      const spans = await page.$$("#ready-list .ready-item span");
+      if (spans[0]) await spans[0].click(); if (spans[1]) { await spans[1].click(); await spans[1].click(); }
+      await sleep(200);
+      const st = await page.$$eval("#ready-list input[type=checkbox]", l => l.map(c => c.checked));
+      const ws = await page.evaluate(() => window.openai.widgetState?.ready || {});
+      const wsOn = Object.values(ws).filter(Boolean).length;
+      rec.checks.ready_checkbox_toggle_persist = spans.length && st[0] === true && st[1] === false && wsOn === 1 ? `pass (${spans.length} boxes)` : `FAIL boxes=${spans.length} state=${st} widgetState=${JSON.stringify(ws)}`;
+    }
     rec.checks.ask_on_consent = await askCheck(page, "Do I need my declarations page?");
     await page.evaluate(() => { window.__follow = null; }); await page.fill("#ask-input", "my ssn is 123-45-6789"); await page.click("#ask-send"); await sleep(200);
     rec.checks.ask_blocks_ssn = (await page.evaluate(() => window.__follow)) === null ? "pass" : "FAIL sent";
