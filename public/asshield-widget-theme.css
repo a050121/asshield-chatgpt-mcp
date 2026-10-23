@@ -628,3 +628,48 @@ html.theme-dark .entity { background: var(--tile); border-color: var(--line); }
 .ask-hint { margin: 6px 2px 0; font-size: .76rem; color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
 html.theme-dark .ask-send { background: var(--accent); color: #071521; }
+
+/* Mobile keyboard and scroll (all cards) */
+:root { --asshield-env-top: env(safe-area-inset-top, 0px); }
+html, body { height: auto; overflow-x: clip; touch-action: manipulation; }
+/* Inline: never an inner scroller, so swipes scroll the chat. Fullscreen only: */
+html.is-fullscreen { overflow: hidden; }
+html.is-fullscreen, html.is-fullscreen body { height: var(--asshield-avail-h, 100%); }
+html.is-fullscreen body { overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; padding-top: var(--asshield-top-pad, 120px); }
+html.is-fullscreen.kb-open body { padding-bottom: max(45vh, 280px); }
+html.is-fullscreen input, html.is-fullscreen select, html.is-fullscreen textarea { scroll-margin-top: var(--asshield-top-pad, 120px); scroll-margin-bottom: 120px; }
+input, select, textarea, #ask-input { font-size: max(16px, 1rem); }
+button, label, a { touch-action: manipulation; }
+
+/* Compact inline consent card */
+.card.is-compact .hero { padding: 14px 18px 16px; }
+.card.is-compact .hero-top { margin-bottom: 8px; }
+.card.is-compact .hero-logo { height: 52px; }
+.card.is-compact .hero-brand { font-size: 1.02rem; }
+.card.is-compact .hero-motto { font-size: .56rem; }
+.card.is-compact .hero-title { font-size: 1.4rem; margin-bottom: 4px; }
+.card.is-compact .hero-sub { font-size: .9rem; }
+.card.is-compact .hero-badge { margin-top: 8px; }
+.card.is-compact .body { padding: 12px 16px 6px; }
+.card.is-compact .panel p { margin: 6px 0; font-size: .92rem; line-height: 1.4; }
+.card.is-compact .panel .callout { padding: 9px 12px !important; font-size: .84rem !important; }
+.card.is-compact .stripe { margin-bottom: 8px; }
+.card.is-compact h3 { margin: 10px 0 2px; }
+.card.is-compact .actions { margin-top: 12px; }
+
+/* Tappable checklist (consent screen) and consent box: real checkbox inside a full-row label */
+.ready-list { list-style: none; padding: 0; margin: 0; }
+.ready-list li { border-bottom: 1px solid var(--line); }
+.ready-item { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 6px 2px; margin: 0; cursor: pointer; font-size: .88rem; font-weight: 550; color: var(--ink); letter-spacing: 0; text-transform: none; -webkit-tap-highlight-color: rgba(26,159,224,.15); pointer-events: auto; user-select: none; -webkit-user-select: none; }
+.ready-item input, label.toggle input[type=checkbox] {
+  -webkit-appearance: none; appearance: none; flex: none; width: 26px; height: 26px; min-width: 26px; margin: 0; padding: 0;
+  border-radius: 7px; border: 2px solid var(--line-strong); background: var(--card); cursor: pointer; display: grid; place-items: center;
+}
+.ready-item input::after, label.toggle input[type=checkbox]::after { content: ""; width: 7px; height: 13px; border: solid #f2c14e; border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px,-1px); opacity: 0; }
+.ready-item input:checked, label.toggle input[type=checkbox]:checked { background: #0f2149; border-color: #0f2149; }
+.ready-item input:checked::after, label.toggle input[type=checkbox]:checked::after { opacity: 1; }
+.ready-item input:focus-visible, label.toggle input[type=checkbox]:focus-visible { box-shadow: var(--focus); outline: none; }
+.ready-item input:checked + span { text-decoration: none; color: var(--ink); }
+html.theme-dark .ready-item input, html.theme-dark label.toggle input[type=checkbox] { border-color: #8fa3b8; }
+html.theme-dark .ready-item input:checked, html.theme-dark label.toggle input[type=checkbox]:checked { background: #0f2149; border-color: #f2c14e; }
+label.toggle { min-height: 44px; cursor: pointer; -webkit-tap-highlight-color: rgba(26,159,224,.15); }

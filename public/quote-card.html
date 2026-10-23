@@ -93,6 +93,21 @@
       if (/business name|type of operations|type of work/.test(t)) return Boolean(f.business_name) || !missingHas("business_name");
       return false;
     }
+    function readyKey(t){ return String(t||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim().slice(0,80); }
+    function renderReadyList(items) {
+      const list = (items||[]).map(c => typeof c === "string" ? c : (c.text||"")).filter(Boolean);
+      if (!list.length) return "";
+      S.ready = S.ready || {};
+      return `<ul class="ready-list" id="ready-list">${list.map((t,i) => {
+        const k = readyKey(t);
+        return `<li><label class="ready-item" for="ready_${i}"><input type="checkbox" id="ready_${i}" data-k="${escapeHtml(k)}" ${S.ready[k]?"checked":""}/><span>${escapeHtml(t)}</span></label></li>`;
+      }).join("")}</ul>`;
+    }
+    function bindReadyList() {
+      document.querySelectorAll("#ready-list input[type=checkbox]").forEach(cb => {
+        cb.onchange = () => { S.ready = S.ready || {}; S.ready[cb.dataset.k] = cb.checked; persistWidget(); };
+      });
+    }
     function renderChecklist(items, opts) {
       opts = opts || {};
       const list = (items||[]).map(c => {
@@ -133,7 +148,7 @@
       try {
         if (!window.openai?.setWidgetState) return;
         const snap = {
-          phase: S.phase, step: S.step, auth_ok: !!S.fields.auth_ok,
+          phase: S.phase, step: S.step, auth_ok: !!S.fields.auth_ok, ready: S.ready || {},
           quote_id: S.quote_id, product: S.product, state: S.state, zip: S.zip,
           first_name: S.fields.first_name, last_name: S.fields.last_name,
           email: S.fields.email, phone: S.fields.phone,
@@ -147,16 +162,8 @@
         window.openai.setWidgetState(snap);
       } catch(_){}
     }
-    let lastHeight = 0;
     function reportHeight() {
-      try {
-        if (!window.openai?.notifyIntrinsicHeight) return;
-        requestAnimationFrame(() => {
-          const h = Math.ceil(document.documentElement.scrollHeight);
-          if (Math.abs(h - lastHeight) < 4) return;
-          lastHeight = h; window.openai.notifyIntrinsicHeight(h);
-        });
-      } catch(_){}
+      try { requestAnimationFrame(() => { window.asshieldMobile?.report?.(); }); } catch(_){}
     }
 
     function stepsFor(product) {
@@ -254,6 +261,11 @@
 
     function render() {
       updateFoot();
+      try {
+        const cardEl = document.querySelector(".card");
+        if (cardEl) cardEl.classList.toggle("is-compact", S.phase === "consent" || S.phase === "unsupported");
+        if (S.phase === "form") window.asshieldMobile?.askFullscreen?.();
+      } catch(_){}
       Promise.resolve().then(reportHeight);
 
       renderStepper(); updateRing(); persistWidget();
@@ -281,9 +293,10 @@
             See our <a href="${escapeHtml(S.privacy_url)}" target="_blank" rel="noopener noreferrer">Privacy notice</a>.
           </div>
           <p class="muted">ChatGPT’s own answers are <strong>not</strong> Asshield’s advice or a quote.</p>
-          ${S.checklist?.length ? `<h3>What to have ready</h3>${renderChecklist(S.checklist,{neutral:true})}` : ""}
+          ${S.checklist?.length ? `<h3>What to have ready</h3>${renderReadyList(S.checklist)}` : ""}
           <div class="actions"><button type="button" class="cta" id="btn-begin">I understand — continue</button></div>
         </div>`;
+        bindReadyList();
         $("btn-begin").onclick = () => {
           const btn = $("btn-begin");
           if (!S.quote_id) {
@@ -295,6 +308,7 @@
           }
           if (btn) { btn.disabled = true; btn.textContent = "Opening your quote form…"; }
           S.phase = "form"; S.step = 0; S.userAdvanced = true;
+          try { window.asshieldMobile?.askFullscreen?.(); } catch(_){}
           render(); setStatus("Got it. Start with your contact details below.");
           try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch(_){}
         };
@@ -583,7 +597,7 @@
 
       if (cur.id === "consent") return `<div class="panel"><div class="stripe"></div>
         <p>I authorize Asshield Insurance to use these details to prepare a quote request and contact me about it.</p>
-        <label class="toggle"><input type="checkbox" id="auth_ok" ${f.auth_ok?"checked":""}/> I agree (required)</label>
+        <label class="toggle" for="auth_ok"><input type="checkbox" id="auth_ok" ${(f.auth_ok||f._auth_checked)?"checked":""}/> I agree (required)</label>
         <p class="muted">This does not bind coverage or create a policy. Asshield estimated starting prices (when shown after submit) are illustrations — not carrier quotes.</p>
         ${navButtons("Save & review")}</div>`;
 
@@ -704,6 +718,7 @@
       if (cur.id === "details" && S.product==="boat") bindSeg("boat_len", v => { S.fields.boat_length_ft = Number(v); });
       if (cur.id === "details" && S.product==="golf_cart") bindSeg("street", v => { S.fields.street_legal = v==="true"; });
       if (cur.id === "policy") bindSeg("freq", v => { S.fields.premium_frequency = v; });
+      if (cur.id === "consent" && $("auth_ok")) $("auth_ok").onchange = () => { S.fields._auth_checked = $("auth_ok").checked; };
       if (cur.id === "prefs") {
         $("cov-pref")?.querySelectorAll(".pref-card").forEach(b => b.onclick = () => {
           S.fields.coverage_preference = b.dataset.v;
@@ -910,6 +925,7 @@
         try {
           const ws = window.openai?.widgetState;
           const qid = sc?.widget?.quote_id || sc?.quote_id || sc?.quote?.id;
+          if (ws && qid && ws.quote_id === qid && ws.ready && typeof ws.ready === "object") S.ready = { ...ws.ready };
           if (ws && qid && ws.quote_id === qid && ws.phase && ws.phase !== "consent") {
             S.quote_id = qid; S.phase = ws.phase; S.step = Number(ws.step)||0; S.userAdvanced = true;
             ["first_name","last_name","email","phone","coverage_preference","deductible_preference","drivers","vehicles"].forEach(f => { if (ws[f] != null) S.fields[f] = ws[f]; });
